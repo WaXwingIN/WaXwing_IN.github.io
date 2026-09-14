@@ -224,7 +224,7 @@ draw=function(){
         tab='focus';oldDraw();
         content.querySelectorAll('.model').forEach(section=>{if(section.querySelector('h2')?.textContent!==modelName(id))section.remove()});
         const sessions=(performanceData?.history||[]).map(s=>({...s,date:s['选股日'],kind:'已结算'}));
-        const bar=filterBar(state,sessions);
+        const bar=filterBar(state,[{date:data.date,kind:'当前行情'} ,...sessions]);
         if(state.date!=='latest'){
             const session=sessions.find(s=>s.date===state.date),rows=(session?.rows||[]).filter(r=>r['模型']===modelName(id));
             content.innerHTML=`<h2>${modelName(id)} · 历史记录</h2><p class="daily-note">选股日 ${safe(state.date)} · 结果日 ${safe(session?.['结果日'])}</p>${table(rows,'当日无正式入选股票。')}`;
