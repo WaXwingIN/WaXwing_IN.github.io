@@ -241,4 +241,4 @@ draw=function(){
     const ref=document.getElementById('dailyReference');if(ref)ref.onchange=()=>{state.reference=ref.value;state.date='latest';draw()};
 };
 if(data)draw();
-</script></body></html>
+</script><script>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;el.textContent=el.textContent.replace(/(\d{4})-?(\d{2})-?(\d{2})(?=\D|$)/g,'$1/$2/$3').replace(/(\d{4})\/(\d{2})\/(\d{2})T/g,'$1/$2/$3 ')});</script></body></html>
