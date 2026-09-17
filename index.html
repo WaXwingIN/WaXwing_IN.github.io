@@ -233,7 +233,7 @@ function dailyChart(path=[],ref=[]){
 }
 function dailyReturn(row,n){const r=row.returns?.[n];return !r||r.value==null?'--':`<span class="${r.value>0?'pos':r.value<0?'neg':'flat'}" style="${r.value===0?'font-weight:700;':''}" title="${safe(r.date)}">${r.value>0?'+':''}${r.value.toFixed(2)}%${r.value===0?' 平盘':''}</span>`}
 function predictionDate(session){const formatDate=value=>{const digits=String(value??'').replace(/\D/g,'');return digits.length===8?`${digits.slice(0,4)}-${digits.slice(4,6)}-${digits.slice(6,8)}`:'待确定'};const known=session?.models&&Object.values(session.models).flatMap(g=>(g.rows||[]).map(r=>r.returns?.['1']?.date)).find(Boolean);if(known)return formatDate(known);const digits=String(session.date).replace(/\D/g,'');const d=new Date(`${digits.slice(0,4)}-${digits.slice(4,6)}-${digits.slice(6,8)}T12:00:00`);if(Number.isNaN(d.getTime()))return '待确定';do{d.setDate(d.getDate()+1)}while(d.getDay()===0||d.getDay()===6);return d.toISOString().slice(0,10)}
-function filterBar(state,sessions,references=[],dateLabel='选股日期'){const latestDate=sessions[0]?.date;return `<div class="daily-filters"><label>${safe(dateLabel)} <select id="dailyDate"><option value="latest" ${state.date==='latest'?'selected':''}>最新结果${latestDate?' · '+formatDate(latestDate):''}</option>${sessions.filter(s=>s.date!==latestDate).map(s=>`<option value="${safe(s.date)}" ${state.date===s.date?'selected':''}>${formatDate(s.date)} · ${safe(s.kind||'历史记录')}</option>`).join('')}</select></label>${references.length?`<label>参考形态 <select id="dailyReference">${references.map(t=>`<option value="${safe(t['代码'])}" ${state.reference===t['代码']?'selected':''}>${safe(t['名称'])} ${safe(t['代码'])}</option>`).join('')}</select></label>`:''}</div>`;}
+function filterBar(state,sessions,references=[],dateLabel='选股日期'){const latest=sessions[0],latestDate=latest?.date,latestLabel=latest?.displayDate||latestDate;return `<div class="daily-filters"><label>${safe(dateLabel)} <select id="dailyDate"><option value="latest" ${state.date==='latest'?'selected':''}>最新结果${latestLabel?' · '+formatDate(latestLabel):''}</option>${sessions.filter(s=>s.date!==latestDate).map(s=>`<option value="${safe(s.date)}" ${state.date===s.date?'selected':''}>${formatDate(s.displayDate||s.date)} · ${safe(s.kind||'历史记录')}</option>`).join('')}</select></label>${references.length?`<label>参考形态 <select id="dailyReference">${references.map(t=>`<option value="${safe(t['代码'])}" ${state.reference===t['代码']?'selected':''}>${safe(t['名称'])} ${safe(t['代码'])}</option>`).join('')}</select></label>`:''}</div>`;}
 function patternPanel(id,state){
     const second=id==='second',payload=second?dailyExtra.second:dailyExtra.patterns;
     if(!payload)return '<p class="daily-error">该模型尚未生成数据。</p>';
@@ -373,8 +373,8 @@ draw=function(){
     if(isMA){
         tab='focus';oldDraw();
         content.querySelectorAll('.model').forEach(section=>{if(section.querySelector('h2')?.textContent!==modelName(id))section.remove()});
-        const sessions=(performanceData?.history||[]).map(s=>({...s,date:s['选股日'],kind:'已结算'}));
-        const bar=filterBar(state,[{date:data.date,kind:'当前行情'} ,...sessions]);
+        const sessions=(performanceData?.history||[]).map(s=>({...s,date:s['选股日'],displayDate:s['结果日']||s['选股日'],kind:'已结算'}));
+        const bar=filterBar(state,[{date:data.date,displayDate:predictionDate({date:data.date}),kind:'当前行情'},...sessions],[],'预测日期');
         if(state.date!=='latest'){
             const session=sessions.find(s=>s.date===state.date),rows=(session?.rows||[]).filter(r=>r['模型']===modelName(id));
             content.innerHTML=`<h2>${modelName(id)} · 历史记录</h2><p class="daily-note">选股日 ${safe(state.date)} · 结果日 ${safe(session?.['结果日'])}</p>${table(rows,'当日无正式入选股票。')}`;
