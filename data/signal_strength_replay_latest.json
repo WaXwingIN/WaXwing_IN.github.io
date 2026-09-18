@@ -1,0 +1,1420 @@
+{
+  "version": "signal-strength-v1-time-frozen",
+  "replayed_at": "2026/09/18 16:21:48",
+  "dates": [
+    "2026-09-16",
+    "2026-09-17",
+    "2026-09-18"
+  ],
+  "time_policy": "优先使用腾讯原始M1；每个节点只截取该节点及以前数据。缺失时才用已完成M5边界回放；评分函数不读取当日收盘或T+1字段",
+  "result_policy": "收益仅在评分完成后计算，用于验证梯度，不参与评分",
+  "rows": [
+    {
+      "日期": "2026-09-16",
+      "股票": "勘设股份",
+      "代码": "603458",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:40",
+      "signal_price": 10.92,
+      "signal_type": "FAST_BUY",
+      "旧评级": "中",
+      "旧评分": 64.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 64,
+      "新评级": "弱",
+      "评分明细": {
+        "原始质量": {
+          "score": 14,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 10,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 5,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 10,
+          "max": 10
+        },
+        "量能": {
+          "score": 1,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 5,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": -1,
+          "max": 10,
+          "reasons": [
+            "-1 明显长上影"
+          ]
+        },
+        "基础得分": 65,
+        "总分": 64
+      },
+      "current_strength_score": 33,
+      "current_strength_level": "WATCH",
+      "当日收盘收益%": 2.56,
+      "T+1开盘收益%": 2.75,
+      "T+1最高收益%": 2.84,
+      "T+1收盘收益%": -0.27
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "大立科技",
+      "代码": "002214",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "10:15",
+      "signal_price": 17.14,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 77.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 77,
+      "新评级": "中",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 16,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 10,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 5,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -1,
+          "max": 10,
+          "reasons": [
+            "-1 短时间快速拉升"
+          ]
+        },
+        "基础得分": 78,
+        "总分": 77
+      },
+      "current_strength_score": 77,
+      "current_strength_level": "中",
+      "当日收盘收益%": 0.58,
+      "T+1开盘收益%": 0.93,
+      "T+1最高收益%": 3.79,
+      "T+1收盘收益%": 2.16
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "大港股份",
+      "代码": "002077",
+      "行情来源": "腾讯原始M1",
+      "signal_time": null,
+      "signal_price": null,
+      "signal_type": null,
+      "旧评级": "中",
+      "旧评分": 73.6,
+      "旧评分来源": "延迟启动分",
+      "new_signal_strength_score": null,
+      "新评级": "仅观察（未形成正式信号）",
+      "评分明细": null,
+      "current_strength_score": 44,
+      "current_strength_level": "WATCH",
+      "当日收盘收益%": null,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "长江通信",
+      "代码": "600345",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "11:00",
+      "signal_price": 53.79,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 74.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 74,
+      "新评级": "中",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 16,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 15,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 3,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 5,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": 0,
+          "max": 10,
+          "reasons": []
+        },
+        "基础得分": 74,
+        "总分": 74
+      },
+      "current_strength_score": 74,
+      "current_strength_level": "中",
+      "当日收盘收益%": 0.07,
+      "T+1开盘收益%": -0.95,
+      "T+1最高收益%": 3.1,
+      "T+1收盘收益%": 1.04
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "莱克电气",
+      "代码": "603355",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:40",
+      "signal_price": 29.71,
+      "signal_type": "FAST_BUY",
+      "旧评级": "弱",
+      "旧评分": 59.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 59,
+      "新评级": "弱",
+      "评分明细": {
+        "原始质量": {
+          "score": 14,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 10,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 16,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 5,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 10,
+          "max": 10
+        },
+        "量能": {
+          "score": 5,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 0,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": -1,
+          "max": 10,
+          "reasons": [
+            "-1 冲高衰竭"
+          ]
+        },
+        "基础得分": 60,
+        "总分": 59
+      },
+      "current_strength_score": 81,
+      "current_strength_level": "强",
+      "当日收盘收益%": 4.17,
+      "T+1开盘收益%": 3.16,
+      "T+1最高收益%": 4.31,
+      "T+1收盘收益%": 0.98
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "洪都航空",
+      "代码": "600316",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "10:10",
+      "signal_price": 32.66,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 72.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 72,
+      "新评级": "中",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 20,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 4,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 2,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -1,
+          "max": 10,
+          "reasons": [
+            "-1 明显长上影"
+          ]
+        },
+        "基础得分": 73,
+        "总分": 72
+      },
+      "current_strength_score": 72,
+      "current_strength_level": "中",
+      "当日收盘收益%": 0.24,
+      "T+1开盘收益%": -0.55,
+      "T+1最高收益%": 1.81,
+      "T+1收盘收益%": -0.98
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "林洋能源",
+      "代码": "601222",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:40",
+      "signal_price": 5.85,
+      "signal_type": "FAST_BUY",
+      "旧评级": "中",
+      "旧评分": 65.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 65,
+      "新评级": "中",
+      "评分明细": {
+        "原始质量": {
+          "score": 20,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 10,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 16,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 5,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 10,
+          "max": 10
+        },
+        "量能": {
+          "score": 1,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 3,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": 0,
+          "max": 10,
+          "reasons": []
+        },
+        "基础得分": 65,
+        "总分": 65
+      },
+      "current_strength_score": 52,
+      "current_strength_level": "弱",
+      "当日收盘收益%": 0.85,
+      "T+1开盘收益%": 0.0,
+      "T+1最高收益%": 0.68,
+      "T+1收盘收益%": 0.34
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "南卫股份",
+      "代码": "603880",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:40",
+      "signal_price": 9.9,
+      "signal_type": "FAST_BUY",
+      "旧评级": "强",
+      "旧评分": 91.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 91,
+      "新评级": "强",
+      "评分明细": {
+        "原始质量": {
+          "score": 17,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 20,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 20,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 8,
+          "max": 10
+        },
+        "量能": {
+          "score": 5,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 3,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": -2,
+          "max": 10,
+          "reasons": [
+            "-1 明显长上影",
+            "-1 冲高衰竭"
+          ]
+        },
+        "基础得分": 93,
+        "总分": 91
+      },
+      "current_strength_score": 86,
+      "current_strength_level": "强",
+      "当日收盘收益%": 0.61,
+      "T+1开盘收益%": 0.51,
+      "T+1最高收益%": 1.72,
+      "T+1收盘收益%": -1.92
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "高新发展",
+      "代码": "000628",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:40",
+      "signal_price": 53.35,
+      "signal_type": "FAST_BUY",
+      "旧评级": "强",
+      "旧评分": 82.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 82,
+      "新评级": "强",
+      "评分明细": {
+        "原始质量": {
+          "score": 14,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 20,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 15,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 10,
+          "max": 10
+        },
+        "量能": {
+          "score": 3,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 0,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": 0,
+          "max": 10,
+          "reasons": []
+        },
+        "基础得分": 82,
+        "总分": 82
+      },
+      "current_strength_score": 82,
+      "current_strength_level": "强",
+      "当日收盘收益%": 5.34,
+      "T+1开盘收益%": 4.87,
+      "T+1最高收益%": 8.28,
+      "T+1收盘收益%": 5.32
+    },
+    {
+      "日期": "2026-09-16",
+      "股票": "梦百合",
+      "代码": "603313",
+      "行情来源": null,
+      "signal_time": null,
+      "signal_price": null,
+      "signal_type": null,
+      "旧评级": "弱",
+      "旧评分": 59.4,
+      "旧评分来源": "实时可交易分",
+      "new_signal_strength_score": null,
+      "新评级": "仅观察（未形成正式信号）",
+      "评分明细": null,
+      "current_strength_score": null,
+      "current_strength_level": null,
+      "当日收盘收益%": null,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-17",
+      "股票": "大立科技",
+      "代码": "002214",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:45",
+      "signal_price": 17.46,
+      "signal_type": "FAST_BUY",
+      "旧评级": "强",
+      "旧评分": 87.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 87,
+      "新评级": "强",
+      "评分明细": {
+        "原始质量": {
+          "score": 14,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 20,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 15,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 10,
+          "max": 10
+        },
+        "量能": {
+          "score": 3,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 5,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": 0,
+          "max": 10,
+          "reasons": []
+        },
+        "基础得分": 87,
+        "总分": 87
+      },
+      "current_strength_score": 79,
+      "current_strength_level": "中",
+      "当日收盘收益%": 0.29,
+      "T+1开盘收益%": 0.23,
+      "T+1最高收益%": 4.81,
+      "T+1收盘收益%": 3.09
+    },
+    {
+      "日期": "2026-09-17",
+      "股票": "电光科技",
+      "代码": "002730",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "10:50",
+      "signal_price": 24.51,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 63.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 63,
+      "新评级": "弱",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 16,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 4,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 10,
+          "max": 15
+        },
+        "量能": {
+          "score": 2,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -1,
+          "max": 10,
+          "reasons": [
+            "-1 接近追高区"
+          ]
+        },
+        "基础得分": 64,
+        "总分": 63
+      },
+      "current_strength_score": 63,
+      "current_strength_level": "弱",
+      "当日收盘收益%": -0.2,
+      "T+1开盘收益%": 0.78,
+      "T+1最高收益%": 2.53,
+      "T+1收盘收益%": -1.47
+    },
+    {
+      "日期": "2026-09-17",
+      "股票": "梦百合",
+      "代码": "603313",
+      "行情来源": "腾讯原始M1",
+      "signal_time": null,
+      "signal_price": null,
+      "signal_type": null,
+      "旧评级": "弱",
+      "旧评分": 50.1,
+      "旧评分来源": "延迟启动分",
+      "new_signal_strength_score": null,
+      "新评级": "仅观察（未形成正式信号）",
+      "评分明细": null,
+      "current_strength_score": 48,
+      "current_strength_level": "WATCH",
+      "当日收盘收益%": null,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-17",
+      "股票": "林洋能源",
+      "代码": "601222",
+      "行情来源": "腾讯原始M1",
+      "signal_time": null,
+      "signal_price": null,
+      "signal_type": null,
+      "旧评级": "弱",
+      "旧评分": 44.3,
+      "旧评分来源": "延迟启动分",
+      "new_signal_strength_score": null,
+      "新评级": "仅观察（未形成正式信号）",
+      "评分明细": null,
+      "current_strength_score": 39,
+      "current_strength_level": "WATCH",
+      "当日收盘收益%": null,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-17",
+      "股票": "冠盛股份",
+      "代码": "605088",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "10:20",
+      "signal_price": 22.62,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 75.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 75,
+      "新评级": "中",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 20,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 10,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 10,
+          "max": 15
+        },
+        "量能": {
+          "score": 5,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -2,
+          "max": 10,
+          "reasons": [
+            "-1 冲高衰竭",
+            "-1 接近追高区"
+          ]
+        },
+        "基础得分": 77,
+        "总分": 75
+      },
+      "current_strength_score": 75,
+      "current_strength_level": "中",
+      "当日收盘收益%": 6.85,
+      "T+1开盘收益%": 11.98,
+      "T+1最高收益%": 15.52,
+      "T+1收盘收益%": 7.96
+    },
+    {
+      "日期": "2026-09-17",
+      "股票": "天马科技",
+      "代码": "603668",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:40",
+      "signal_price": 12.43,
+      "signal_type": "FAST_BUY",
+      "旧评级": "强",
+      "旧评分": 90.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 90,
+      "新评级": "强",
+      "评分明细": {
+        "原始质量": {
+          "score": 17,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 20,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 15,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 10,
+          "max": 10
+        },
+        "量能": {
+          "score": 5,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 5,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": -2,
+          "max": 10,
+          "reasons": [
+            "-2 明显长上影"
+          ]
+        },
+        "基础得分": 92,
+        "总分": 90
+      },
+      "current_strength_score": 84,
+      "current_strength_level": "强",
+      "当日收盘收益%": 2.57,
+      "T+1开盘收益%": 2.57,
+      "T+1最高收益%": 5.39,
+      "T+1收盘收益%": 4.1
+    },
+    {
+      "日期": "2026-09-17",
+      "股票": "浔兴股份",
+      "代码": "002098",
+      "行情来源": null,
+      "signal_time": null,
+      "signal_price": null,
+      "signal_type": null,
+      "旧评级": "弱",
+      "旧评分": 59.5,
+      "旧评分来源": "实时可交易分",
+      "new_signal_strength_score": null,
+      "新评级": "仅观察（未形成正式信号）",
+      "评分明细": null,
+      "current_strength_score": null,
+      "current_strength_level": null,
+      "当日收盘收益%": null,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-17",
+      "股票": "依米康",
+      "代码": "300249",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:40",
+      "signal_price": 13.32,
+      "signal_type": "FAST_BUY",
+      "旧评级": "强",
+      "旧评分": 87.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 87,
+      "新评级": "强",
+      "评分明细": {
+        "原始质量": {
+          "score": 17,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 17,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 15,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 10,
+          "max": 10
+        },
+        "量能": {
+          "score": 3,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 5,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": 0,
+          "max": 10,
+          "reasons": []
+        },
+        "基础得分": 87,
+        "总分": 87
+      },
+      "current_strength_score": 51,
+      "current_strength_level": "弱",
+      "当日收盘收益%": -0.9,
+      "T+1开盘收益%": 3.38,
+      "T+1最高收益%": 4.13,
+      "T+1收盘收益%": 0.75
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "绿色动力",
+      "代码": "601330",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "10:20",
+      "signal_price": 8.43,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 63.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 63,
+      "新评级": "弱",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 20,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 10,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 4,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 2,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": 0,
+          "max": 10,
+          "reasons": []
+        },
+        "基础得分": 63,
+        "总分": 63
+      },
+      "current_strength_score": 63,
+      "current_strength_level": "弱",
+      "当日收盘收益%": -0.95,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "勘设股份",
+      "代码": "603458",
+      "行情来源": null,
+      "signal_time": null,
+      "signal_price": null,
+      "signal_type": null,
+      "旧评级": "中",
+      "旧评分": 69.5,
+      "旧评分来源": "实时可交易分",
+      "new_signal_strength_score": null,
+      "新评级": "仅观察（未形成正式信号）",
+      "评分明细": null,
+      "current_strength_score": null,
+      "current_strength_level": null,
+      "当日收盘收益%": null,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "梦百合",
+      "代码": "603313",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:55",
+      "signal_price": 6.85,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 73.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 73,
+      "新评级": "中",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 16,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 10,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 20,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 2,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -2,
+          "max": 10,
+          "reasons": [
+            "-2 明显长上影"
+          ]
+        },
+        "基础得分": 75,
+        "总分": 73
+      },
+      "current_strength_score": 73,
+      "current_strength_level": "中",
+      "当日收盘收益%": -1.02,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "莱克电气",
+      "代码": "603355",
+      "行情来源": null,
+      "signal_time": null,
+      "signal_price": null,
+      "signal_type": null,
+      "旧评级": "中",
+      "旧评分": 78.8,
+      "旧评分来源": "实时可交易分",
+      "new_signal_strength_score": null,
+      "新评级": "仅观察（未形成正式信号）",
+      "评分明细": null,
+      "current_strength_score": null,
+      "current_strength_level": null,
+      "当日收盘收益%": null,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "安彩高科",
+      "代码": "600207",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:55",
+      "signal_price": 4.82,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 69.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 69,
+      "新评级": "中",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 20,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 0,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 20,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 2,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": 0,
+          "max": 10,
+          "reasons": []
+        },
+        "基础得分": 69,
+        "总分": 69
+      },
+      "current_strength_score": 69,
+      "current_strength_level": "中",
+      "当日收盘收益%": 0.0,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "南矿集团",
+      "代码": "001360",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:40",
+      "signal_price": 20.07,
+      "signal_type": "FAST_BUY",
+      "旧评级": "强",
+      "旧评分": 80.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 80,
+      "新评级": "强",
+      "评分明细": {
+        "原始质量": {
+          "score": 17,
+          "max": 20
+        },
+        "介入位置": {
+          "score": 8,
+          "max": 20
+        },
+        "VWAP控制": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 20,
+          "max": 20
+        },
+        "盈亏比": {
+          "score": 10,
+          "max": 10
+        },
+        "量能": {
+          "score": 5,
+          "max": 5
+        },
+        "HH/HL成熟度": {
+          "score": 5,
+          "max": 5
+        },
+        "风险扣分": {
+          "score": -5,
+          "max": 10,
+          "reasons": [
+            "-1 VWAP偏离开始过大",
+            "-2 短时间快速拉升",
+            "-2 接近追高区"
+          ]
+        },
+        "基础得分": 85,
+        "总分": 80
+      },
+      "current_strength_score": 42,
+      "current_strength_level": "WATCH",
+      "当日收盘收益%": 2.44,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "依米康",
+      "代码": "300249",
+      "行情来源": null,
+      "signal_time": null,
+      "signal_price": null,
+      "signal_type": null,
+      "旧评级": "弱",
+      "旧评分": 51.9,
+      "旧评分来源": "实时可交易分",
+      "new_signal_strength_score": null,
+      "新评级": "仅观察（未形成正式信号）",
+      "评分明细": null,
+      "current_strength_score": null,
+      "current_strength_level": null,
+      "当日收盘收益%": null,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "浔兴股份",
+      "代码": "002098",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:55",
+      "signal_price": 7.94,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "弱",
+      "旧评分": 57.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 57,
+      "新评级": "弱",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 16,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 10,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 4,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 2,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -2,
+          "max": 10,
+          "reasons": [
+            "-2 明显长上影"
+          ]
+        },
+        "基础得分": 59,
+        "总分": 57
+      },
+      "current_strength_score": 57,
+      "current_strength_level": "弱",
+      "当日收盘收益%": -0.38,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "林洋能源",
+      "代码": "601222",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:55",
+      "signal_price": 5.93,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 79.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 79,
+      "新评级": "中",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 16,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 10,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 7,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -1,
+          "max": 10,
+          "reasons": [
+            "-1 明显长上影"
+          ]
+        },
+        "基础得分": 80,
+        "总分": 79
+      },
+      "current_strength_score": 79,
+      "current_strength_level": "中",
+      "当日收盘收益%": 0.17,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "新 华 都",
+      "代码": "002264",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "09:55",
+      "signal_price": 7.35,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "中",
+      "旧评分": 73.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 73,
+      "新评级": "中",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 20,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 10,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 20,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 10,
+          "max": 15
+        },
+        "量能": {
+          "score": 5,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -4,
+          "max": 10,
+          "reasons": [
+            "-2 明显长上影",
+            "-1 冲高衰竭",
+            "-1 接近追高区"
+          ]
+        },
+        "基础得分": 77,
+        "总分": 73
+      },
+      "current_strength_score": 73,
+      "current_strength_level": "中",
+      "当日收盘收益%": 0.0,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "力鼎光电",
+      "代码": "605118",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "11:10",
+      "signal_price": 33.29,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "强",
+      "旧评分": 81.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 81,
+      "新评级": "强",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 16,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 10,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 12,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 15,
+          "max": 15
+        },
+        "量能": {
+          "score": 10,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -2,
+          "max": 10,
+          "reasons": [
+            "-2 短时间快速拉升"
+          ]
+        },
+        "基础得分": 83,
+        "总分": 81
+      },
+      "current_strength_score": 81,
+      "current_strength_level": "强",
+      "当日收盘收益%": -0.42,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    },
+    {
+      "日期": "2026-09-18",
+      "股票": "上海洗霸",
+      "代码": "603200",
+      "行情来源": "腾讯原始M1",
+      "signal_time": "10:35",
+      "signal_price": 40.58,
+      "signal_type": "EARLY_ENTRY",
+      "旧评级": "强",
+      "旧评分": 81.0,
+      "旧评分来源": "signal_strength_score",
+      "new_signal_strength_score": 81,
+      "新评级": "强",
+      "评分明细": {
+        "VWAP转强": {
+          "score": 16,
+          "max": 20
+        },
+        "HH/HL结构": {
+          "score": 20,
+          "max": 20
+        },
+        "突破承接": {
+          "score": 10,
+          "max": 20
+        },
+        "价格持续推进": {
+          "score": 15,
+          "max": 15
+        },
+        "介入位置": {
+          "score": 13,
+          "max": 15
+        },
+        "量能": {
+          "score": 10,
+          "max": 10
+        },
+        "风险扣分": {
+          "score": -3,
+          "max": 10,
+          "reasons": [
+            "-1 VWAP偏离开始过大",
+            "-2 短时间快速拉升"
+          ]
+        },
+        "基础得分": 84,
+        "总分": 81
+      },
+      "current_strength_score": 81,
+      "current_strength_level": "强",
+      "当日收盘收益%": -0.44,
+      "T+1开盘收益%": null,
+      "T+1最高收益%": null,
+      "T+1收盘收益%": null
+    }
+  ]
+}

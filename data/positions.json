@@ -1,0 +1,77 @@
+{
+  "account_capital": 19933.61,
+  "positions": [
+    {
+      "code": "603313",
+      "name": "梦百合",
+      "cost_price": 6.785,
+      "lots": [
+        {
+          "buy_datetime": "2026-09-17",
+          "buy_price": 6.785,
+          "qty": 200
+        }
+      ]
+    },
+    {
+      "code": "603668",
+      "name": "天马科技",
+      "cost_price": 12.48,
+      "lots": [
+        {
+          "buy_datetime": "2026-09-17",
+          "buy_price": 12.48,
+          "qty": 100
+        }
+      ]
+    },
+    {
+      "code": "002204",
+      "name": "大连重工",
+      "cost_price": 5.576,
+      "lots": [
+        {
+          "buy_datetime": "2026-09-18",
+          "buy_price": 5.576,
+          "qty": 200
+        }
+      ]
+    },
+    {
+      "code": "002214",
+      "name": "大立科技",
+      "cost_price": 17.47,
+      "lots": [
+        {
+          "buy_datetime": "2026-09-17",
+          "buy_price": 17.47,
+          "qty": 100
+        }
+      ]
+    },
+    {
+      "code": "002553",
+      "name": "南方精工",
+      "cost_price": 15.672,
+      "lots": [
+        {
+          "buy_datetime": "2026-09-18",
+          "buy_price": 15.672,
+          "qty": 100
+        }
+      ]
+    },
+    {
+      "code": "002721",
+      "name": "金一文化",
+      "cost_price": 2.7104,
+      "lots": [
+        {
+          "buy_datetime": "2026-09-18",
+          "buy_price": 2.7104,
+          "qty": 500
+        }
+      ]
+    }
+  ]
+}
