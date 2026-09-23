@@ -283,9 +283,10 @@ function intradayStartSummary(){
     if(!payload||!rows.length)return '';
     const counts={};rows.forEach(row=>{const label=row.latest.label;counts[label]=(counts[label]||0)+1});
     const countText=Object.entries(counts).map(([label,count])=>`${label} ${count}`).join(' · ');
-    const failed=rows.filter(row=>['FAILED','STRONG_FAILED'].includes(row.latest.state));
+    const failed=rows.filter(row=>['FAILED','STRONG_FAILED'].includes(row.latest.state)),cutoff=rows[0]?.latest?.cutoff||'最新';
     const items=(failed.length?failed:rows.slice(0,5)).map(row=>`<span class="intraday-start-badge intraday-start-${{VALID:'valid',FAILED:'failed',STRONG_FAILED:'strong-failed',RESTART_WATCH:'restart-watch'}[row.latest.state]||'waiting'}" title="${safe((row.latest.reasons||[]).join('；'))}"><b>${safe(row.name)} · ${safe(row.latest.label)}</b><small>${safe(row.latest.cutoff)} · 原排名${safe(row.original_rank??'--')}</small></span>`).join('');
-    return `<details class="intraday-start-summary"><summary>盘中验证（研究） · ${formatDate(payload.signal_date)}候选 → ${formatDate(payload.observation_date)}：${safe(countText)}</summary><p>只作同页风险提示，不改变类二买入选、爆发评分和原排名；展开优先查看失败样本。</p><div class="intraday-start-list">${items}</div></details>`;
+    const detail=failed.length?`下方仅列失败样本 ${failed.length}/${rows.length} 只。`:'当前没有失败样本，下方列出前5只供核对。';
+    return `<details class="intraday-start-summary"><summary>盘中验证（研究） · ${formatDate(payload.signal_date)}候选 → ${formatDate(payload.observation_date)} · ${safe(cutoff)}状态分布：${safe(countText)}</summary><p>这里是同一时点的状态分布，不是逐层筛选漏斗。${safe(detail)}标签只作风险提示，不改变类二买入选、爆发评分和原排名。</p><div class="intraday-start-list">${items}</div></details>`;
 }
 const priceStructureLabel=state=>({'HH / HL':'高点抬升 / 低点抬升','HH / LL':'高点抬升 / 低点下降','LH / HL':'高点下降 / 低点抬升','LH / LL':'高点下降 / 低点下降',INITIAL:'初始阶段'}[state]||'初始阶段');
 const patternSortLabels={rank:'排名',risk_adjusted_aux_rank:'风险辅助排名',explosive_score:'爆发潜力',center_similarity:'中枢结构相似',similarity:'整段相似'};
