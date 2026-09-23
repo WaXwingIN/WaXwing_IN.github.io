@@ -169,7 +169,7 @@ const oldDraw=draw;
 let activeDaily='second';
 try{const initialUrl=new URL(location.href);if(initialUrl.searchParams.has('model')){initialUrl.searchParams.delete('model');history.replaceState(null,'',initialUrl)}}catch(_error){}
 const modelName=()=> '首踩10日线';
-const stateFor=id=>{if(!dailyState.has(id))dailyState.set(id,{date:'latest',reference:id==='limit1'?'001299':'002155',sortKey:'rank',sortDirection:1,sortStack:[{key:'rank',direction:1}],combineSort:false,expandAll:id==='second',secondDetailCode:null});return dailyState.get(id)};
+const stateFor=id=>{if(!dailyState.has(id)){const second=id==='second',sortKey=second?'explosive_score':'rank',sortDirection=second?-1:1;dailyState.set(id,{date:'latest',reference:id==='limit1'?'001299':'002155',sortKey,sortDirection,sortStack:[{key:sortKey,direction:sortDirection}],combineSort:false,expandAll:second,secondDetailCode:null})}return dailyState.get(id)};
 const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const formatDate=value=>{const digits=String(value??'').replace(/\D/g,'');return digits.length>=8?`${digits.slice(0,4)}/${digits.slice(4,6)}/${digits.slice(6,8)}`:'--'};
 const formatDateTime=value=>{const text=String(value??''),date=formatDate(text),match=text.match(/(?:T|\s)(\d{2}:\d{2}:\d{2})/);return date==='--'?'--':date+(match?' '+match[1]:'')};
@@ -289,7 +289,7 @@ function intradayStartSummary(){
     return `<details class="intraday-start-summary"><summary>盘中验证（研究） · ${formatDate(payload.signal_date)}候选 → ${formatDate(payload.observation_date)} · ${safe(cutoff)}状态分布：${safe(countText)}</summary><p>这里是同一时点的状态分布，不是逐层筛选漏斗。下方分别列出有效启动和启动失败明细，鼠标停留可查看判断依据；等待验证只保留统计。标签只作风险提示，不改变类二买入选、爆发评分和原排名。</p>${group('valid','有效启动',valid)}${group('failed','启动失败',failed)}</details>`;
 }
 const priceStructureLabel=state=>({'HH / HL':'高点抬升 / 低点抬升','HH / LL':'高点抬升 / 低点下降','LH / HL':'高点下降 / 低点抬升','LH / LL':'高点下降 / 低点下降',INITIAL:'初始阶段'}[state]||'初始阶段');
-const patternSortLabels={rank:'排名',risk_adjusted_aux_rank:'风险辅助排名',explosive_score:'爆发潜力',center_similarity:'中枢结构相似',similarity:'整段相似'};
+const patternSortLabels={rank:'原排名',risk_adjusted_aux_rank:'风险辅助排名',explosive_score:'爆发潜力',center_similarity:'中枢结构相似',similarity:'整段相似'};
 const patternDefaultDirection=key=>key==='rank'||key==='risk_adjusted_aux_rank'?1:-1;
 function patternSortValue(row,key){
     const raw=key==='rank'?(row.research_rank??row.rank):row[key],value=Number(raw);
@@ -313,7 +313,7 @@ function patternSortArrow(sorts,key){const sort=sorts.find(item=>item.key===key)
 function patternSortActive(sorts,key){return sorts.some(item=>item.key===key)?' active':''}
 function secondSortTools(state,sorts){
     const chips=sorts.length?sorts.map((sort,index)=>`<button type="button" class="second-sort-chip" data-remove-pattern-sort="${safe(sort.key)}" title="从组合排序移除"><b>${index+1}</b>${safe(patternSortLabels[sort.key]||sort.key)} ${sort.direction===1?'↑':'↓'} ×</button>`).join(''):'<em>请依次点击需要交叉的表头</em>';
-    const tip=state.combineSort?'依次点击可排序表头追加条件；系统按优先级逐层排序，不生成新分数。':'默认保持冻结原排名；组合排序需手动开启，机会阶段与重合状态仅作辅助说明。';
+    const tip=state.combineSort?'依次点击可排序表头追加条件；系统按优先级逐层排序，不生成新分数。':'默认按爆发潜力评分从高到低排列；原结构排名仍可查看和恢复。机会阶段与重合状态仅作辅助说明。';
     return `<div class="second-sort-tools"><button type="button" class="${state.combineSort?'active':''}" data-combine-pattern-sort aria-pressed="${state.combineSort}">${state.combineSort?'组合排序已开启':'开启组合排序'}</button><button type="button" data-reset-pattern-sort>恢复原排名</button><span class="second-sort-sequence"><strong>${state.combineSort?'交叉优先级：':'当前排序：'}</strong>${chips}</span>${hoverHelp('排序说明',tip)}</div>`;
 }
 function secondDetailModal(row){
@@ -343,7 +343,7 @@ function patternPanel(id,state){
     if(second)html+=secondOverviewHelp(payload,template,session)+intradayStartSummary();
     else html+=(preview?previewDateScopeNote(session.date):dateScopeNote(session.date,predictionDate(session)))+'<p class="daily-note"><span style="color:#2563eb">━━ 候选走势</span>　<span style="color:#b87915">━━ 参考走势</span></p>';
     const researchRows=second&&group.research_rows?.length?group.research_rows:group.rows,sourceRows=second&&state.expandAll?researchRows:group.rows;
-    if(second){const allowed=new Set(Object.keys(patternSortLabels));state.sortStack=(state.sortStack||[]).filter(item=>allowed.has(item.key));if(!allowed.has(state.sortKey)){state.sortKey='rank';state.sortDirection=1}if(!state.combineSort)state.sortStack=[{key:state.sortKey,direction:state.sortDirection}]}
+    if(second){const allowed=new Set(Object.keys(patternSortLabels));state.sortStack=(state.sortStack||[]).filter(item=>allowed.has(item.key));if(!allowed.has(state.sortKey)){state.sortKey='explosive_score';state.sortDirection=-1}if(!state.combineSort)state.sortStack=[{key:state.sortKey,direction:state.sortDirection}]}
     const activeSorts=activePatternSorts(state,second),displayed=[...sourceRows].sort((a,b)=>comparePatternRows(a,b,activeSorts));
     if(second)html+=secondSortTools(state,activeSorts);
     const factorHead=`<th>走势对照</th>${rulesUnlocked?`${second?`<th><button type="button" class="sort-button${patternSortActive(activeSorts,'center_similarity')}" data-pattern-sort="center_similarity">中枢结构相似 ${patternSortArrow(activeSorts,'center_similarity')}</button></th>`:''}<th><button type="button" class="sort-button${patternSortActive(activeSorts,'similarity')}" data-pattern-sort="similarity">整段相似 ${patternSortArrow(activeSorts,'similarity')}</button></th>${second?`<th><button type="button" class="sort-button${patternSortActive(activeSorts,'risk_adjusted_aux_rank')}" data-pattern-sort="risk_adjusted_aux_rank">风险辅助排名 ${patternSortArrow(activeSorts,'risk_adjusted_aux_rank')}</button>${tableHelp(secondHelpTips.risk)}<br><small>纯研究</small></th><th>机会阶段 ${tableHelp(secondHelpTips.stage)}<br><small>辅助标签</small></th><th>D1 / D2</th><th>低点价差</th><th>D2 状态</th>`:''}<th>${second?'上涨段涨停':'近30日涨停'}</th><th>选股收盘</th>`:''}`;
@@ -351,7 +351,7 @@ function patternPanel(id,state){
     const overlapCell=r=>{const type=r.overlap_type||'首次出现',cls=type==='强化型重合'?'strong':type==='弱化型重合'?'weak':'stagnant',arrow=type==='强化型重合'?' ↑':type==='弱化型重合'?' ↓':type==='停滞型重合'?' →':'';return `<td><span class="second-overlap ${cls}">${safe(type)}${arrow}</span></td>`};
     const opportunityCell=r=>{const state=r.realization_state||'UNSTARTED',cls=state==='ACTIVE'?'active':state==='EXHAUSTED'?'exhausted':'unstarted';return `<td><span class="opportunity-badge opportunity-${cls}"><b>${safe(realizationStateLabel(state))}</b></span></td>`};
     const riskAuxCell=r=>{const details=Object.entries(r.risk_penalty_breakdown||{}).map(([label,value])=>`${label} -${Number(value).toFixed(0)}`).join('；')||'无风险扣分';return `<td><span class="risk-aux-badge" title="${safe(details)}"><b>#${safe(r.risk_adjusted_aux_rank??'--')}</b><small>${Number(r.risk_adjusted_aux_score??0).toFixed(1)} · 扣${Number(r.risk_penalty_score??0).toFixed(1)}</small></span></td>`};
-    html+=`<div class="wrap"><table><thead><tr><th class="stock-sticky">股票</th><th><button type="button" class="sort-button${patternSortActive(activeSorts,'rank')}" data-pattern-sort="rank">排名 ${patternSortArrow(activeSorts,'rank')}</button></th>${second?`<th><button type="button" class="sort-button${patternSortActive(activeSorts,'explosive_score')}" data-pattern-sort="explosive_score">爆发潜力评分 ${patternSortArrow(activeSorts,'explosive_score')}</button>${tableHelp(secondHelpTips.explosive)}</th><th>盘中验证 ${tableHelp('研究提示：根据下一交易日5分钟行情判断启动是否兑现；不参与类二买入选、爆发评分、原排名或自动剔除。')}<br><small>研究提示</small></th>`:``}<th>T+1收益<br><small>${preview?'收盘后确定':formatDate(predictionDate(session))}</small></th><th>T+3收益</th><th>T+5收益</th>${second?`<th>是否继续持有 ${tableHelp(secondHelpTips.holding)}</th>`:''}${overlapHead}${factorHead}</tr></thead><tbody>`;
+    html+=`<div class="wrap"><table><thead><tr><th class="stock-sticky">股票</th><th><button type="button" class="sort-button${patternSortActive(activeSorts,'rank')}" data-pattern-sort="rank">${second?'原排名':'排名'} ${patternSortArrow(activeSorts,'rank')}</button></th>${second?`<th><button type="button" class="sort-button${patternSortActive(activeSorts,'explosive_score')}" data-pattern-sort="explosive_score">爆发潜力评分 ${patternSortArrow(activeSorts,'explosive_score')}</button>${tableHelp(secondHelpTips.explosive)}</th><th>盘中验证 ${tableHelp('研究提示：根据下一交易日5分钟行情判断启动是否兑现；不参与类二买入选、爆发评分、原排名或自动剔除。')}<br><small>研究提示</small></th>`:``}<th>T+1收益<br><small>${preview?'收盘后确定':formatDate(predictionDate(session))}</small></th><th>T+3收益</th><th>T+5收益</th>${second?`<th>是否继续持有 ${tableHelp(secondHelpTips.holding)}</th>`:''}${overlapHead}${factorHead}</tr></thead><tbody>`;
     html+=displayed.map(r=>{const stock=second&&rulesUnlocked?`<button type="button" class="second-stock-detail" data-second-detail="${safe(r.code)}" aria-label="查看 ${safe(r.name)} 爆发潜力与结构动态"><b>${safe(r.name)}</b><small>${safe(r.code)}</small></button>`:`<b>${safe(r.name)}</b><br>${safe(r.code)}`;return `<tr><td class="stock-sticky">${stock}</td><td>${r.research_rank??r.rank}</td>${second?`<td><span class="explosive-badge explosive-${r.explosive_level==='强'?'strong':r.explosive_level==='中'?'medium':r.explosive_level==='观察'?'watch':'low'}"><b>${Number(r.explosive_score??0).toFixed(1)}</b><small>${safe(r.explosive_level||'低')}</small></span></td><td>${intradayStartCell(session.date,r.code)}</td>`:``}<td>${dailyReturn(r,'1')}</td><td>${dailyReturn(r,'3')}</td><td>${dailyReturn(r,'5')}</td>${second?`<td>${holdingCell('second',session.date,r.code)}</td>`:''}${second?overlapCell(r):''}<td><div class="daily-chart-box">${dailyChart(r.path,template.path)}<small class="daily-chart-dates"><span>${safe(r.start)}</span><span>${safe(session.date)}</span></small></div></td>${rulesUnlocked?`${second?`<td>${Number(r.center_similarity??r.similarity).toFixed(1)}</td>`:''}<td>${r.similarity.toFixed(1)}</td>${second?`${riskAuxCell(r)}${opportunityCell(r)}<td>${r.structure.D1.price.toFixed(2)} / ${r.structure.D2.price.toFixed(2)}</td><td>${r.structure.gap_pct.toFixed(2)}%</td><td>${r.structure.d2_confirmed?'底分型已确认':'回调低点待确认'}${r.strong_second_buy?' · 强势类二买':''}</td>`:''}<td>${r.limit_dates.map(safe).join('<br>')||'无'}</td><td>${r.close.toFixed(2)}</td>`:''}</tr>`}).join('')||`<tr><td colspan="${rulesUnlocked?(second?19:9):second?10:6}">暂无符合条件的股票，不足15只不补位。</td></tr>`;
     html+='</tbody></table></div>';
     if(second&&researchRows.length>group.rows.length)html+=`<button type="button" class="second-expand" data-second-expand>${state.expandAll?'收起，仅显示前15只':`展开全部（${researchRows.length}只）`}</button>`;
@@ -720,13 +720,13 @@ draw=function(){
     content.querySelector('[data-combine-pattern-sort]')?.addEventListener('click',()=>{
         state.combineSort=!state.combineSort;
         if(state.combineSort)state.sortStack=[];
-        else{const first=state.sortStack?.[0]||{key:'rank',direction:1};state.sortKey=first.key;state.sortDirection=first.direction;state.sortStack=[first]}
+        else{const first=state.sortStack?.[0]||{key:'explosive_score',direction:-1};state.sortKey=first.key;state.sortDirection=first.direction;state.sortStack=[first]}
         draw();
     });
     content.querySelector('[data-reset-pattern-sort]')?.addEventListener('click',()=>{state.combineSort=false;state.sortKey='rank';state.sortDirection=1;state.sortStack=[{key:'rank',direction:1}];draw()});
     content.querySelectorAll('[data-remove-pattern-sort]').forEach(button=>button.onclick=()=>{
         let stack=(state.sortStack||[]).filter(item=>item.key!==button.dataset.removePatternSort);
-        if(!stack.length&&!state.combineSort)stack=[{key:'rank',direction:1}];
+        if(!stack.length&&!state.combineSort)stack=[{key:'explosive_score',direction:-1}];
         state.sortStack=stack;
         if(!state.combineSort){state.sortKey=stack[0].key;state.sortDirection=stack[0].direction}
         draw();
