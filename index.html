@@ -865,7 +865,10 @@ let lastD2QuickRefresh=dailyExtra.d2Proximity?.generated_at||'',lastSecondBuyRef
 async function refreshD2MonitorData(){
     if(location.protocol==='file:')return;
     try{
-        const response=await fetch(`data/d2_proximity_latest.json?v=${Date.now()}`,{cache:'no-store'});
+        const remoteHost=location.hostname.toLowerCase()==='waxwingin.github.io';
+        const liveUrl=remoteHost?`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/d2_proximity_latest.json?v=${Date.now()}`:`data/d2_proximity_latest.json?v=${Date.now()}`;
+        let response=await fetch(liveUrl,{cache:'no-store'});
+        if(!response.ok&&remoteHost)response=await fetch(`data/d2_proximity_latest.json?v=${Date.now()}`,{cache:'no-store'});
         if(!response.ok)return;
         const payload=await response.json();
         if(!payload||payload.generated_at===lastD2QuickRefresh)return;
