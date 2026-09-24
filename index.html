@@ -375,7 +375,7 @@ function d2ProximityModal(rows,signature,scanAt){
     const confirmed=rows.filter(row=>d2SignalState(row)==='BUY_CONFIRMED').length,candidates=rows.filter(row=>d2SignalState(row)==='BUY_CANDIDATE').length;
     const title=confirmed?`买点确认：${confirmed}只`:candidates?`买点候选：${candidates}只`:`D2状态更新：${rows.length}只`;
     const items=rows.map(row=>d2Card(row,scanAt)).join('');
-    return `<div class="d2-proximity-modal" data-d2-proximity-modal data-signature="${safe(signature)}" role="alertdialog" aria-modal="true" aria-labelledby="d2ProximityTitle"><section class="d2-proximity-dialog"><header class="d2-proximity-head"><div><span class="d2-proximity-priority">D2买点状态提醒</span><h3 id="d2ProximityTitle">${title}</h3><p>买点候选只表示进入确认流程，建议仓位始终为0%；只有买点确认才可介入并发送推送。候选池每30分钟快刷，待确认状态只更新页面。</p></div><button type="button" class="second-detail-close" data-d2-proximity-close aria-label="关闭">×</button></header><div class="d2-proximity-list">${items}</div><button type="button" class="d2-proximity-confirm" data-d2-proximity-close>已查看，关闭提醒</button></section></div>`;
+    return `<div class="d2-proximity-modal" data-d2-proximity-modal data-signature="${safe(signature)}" role="alertdialog" aria-modal="true" aria-labelledby="d2ProximityTitle"><section class="d2-proximity-dialog"><header class="d2-proximity-head"><div><span class="d2-proximity-priority">D2买点状态提醒</span><h3 id="d2ProximityTitle">${title}</h3><p>买点候选只表示进入确认流程，建议仓位始终为0%；只有买点确认才可介入并发送推送。候选池每10分钟快刷，待确认状态只更新页面。</p></div><button type="button" class="second-detail-close" data-d2-proximity-close aria-label="关闭">×</button></header><div class="d2-proximity-list">${items}</div><button type="button" class="d2-proximity-confirm" data-d2-proximity-close>已查看，关闭提醒</button></section></div>`;
 }
 function d2TriggerLabel(row,fallback){
     const value=row.d2_near_d1_triggered_at||fallback;
@@ -397,7 +397,7 @@ function d2AlertSnapshot(){
 function d2AlertPanel(state){
     const snapshot=d2AlertSnapshot(),{payload,session,candidates,rows,unstartedCount,candidateCount,confirmedCount,waitCount,failedCount,signature,summary,scanAt}=snapshot;
     if(!payload)return '<p class="daily-error">D2临近提醒数据尚未生成。</p>';
-    let html='<section class="d2-alert-page"><h2>D2临近提醒 <span class="d2-nav-count">'+rows.length+'</span></h2><div class="d2-alert-rule"><strong>类二买买点状态</strong>本页只展示当前最新扫描，不提供历史重算。候选只表示D2反弹结构已进入确认流程，仓位为0%；确认还需D2稳定、回调不扩大、1分钟VWAP守稳及至少两项量价确认。振幅位置超过85%转为等待回踩。候选池每30分钟快刷，只有升级为买点确认才推送。</div>';
+    let html='<section class="d2-alert-page"><h2>D2临近提醒 <span class="d2-nav-count">'+rows.length+'</span></h2><div class="d2-alert-rule"><strong>类二买买点状态</strong>本页只展示当前最新扫描，不提供历史重算。候选只表示D2反弹结构已进入确认流程，仓位为0%；确认还需D2稳定、回调不扩大、1分钟VWAP守稳及至少两项量价确认。振幅位置超过85%转为等待回踩。候选池每10分钟快刷，只有升级为买点确认才推送。</div>';
     if(!session)return html+'<p class="daily-error">当前最新扫描结果尚未生成。</p></section>';
     html+=`<p class="daily-summary"><span>扫描日 ${formatDate(session.date)}</span><span>${safe(session.kind)}</span><span>生成 ${formatDateTime(payload.generated_at)}</span></p>`;
     html+=`<div class="d2-alert-stats"><span><b>${candidates.length}</b><small>全部形态相似候选</small></span><span><b>${confirmedCount}</b><small>买点确认</small></span><span><b>${candidateCount}</b><small>买点候选</small></span><span><b>${waitCount}</b><small>等待回踩</small></span><span><b>${unstartedCount}</b><small>尚未启动</small></span><span><b>${failedCount}</b><small>结构失败</small></span></div>`;
