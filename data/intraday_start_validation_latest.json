@@ -2,10 +2,10 @@
   "version": "intraday-start-validation-v2-close",
   "research_only": true,
   "affects_official_model": false,
-  "generated_at": "2026-09-23 17:25:34",
-  "signal_date": "2026-09-22",
-  "observation_date": "2026-09-23",
-  "is_intraday_preview": false,
+  "generated_at": "2026-09-24 12:14:55",
+  "signal_date": "2026-09-23",
+  "observation_date": "2026-09-24",
+  "is_intraday_preview": true,
   "snapshot_times": [
     "10:30",
     "11:30",
@@ -15,17 +15,17 @@
   ],
   "rows": [
     {
-      "key": "2026-09-22|2026-09-23|002040",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "002040",
-      "name": "南 京 港",
+      "key": "2026-09-23|2026-09-24|002300",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "002300",
+      "name": "太阳电缆",
       "original_rank": 1,
-      "explosive_score": 62.0,
+      "explosive_score": 91.0,
       "forward_returns": {
         "1": {
-          "date": "2026-09-23",
-          "value": -2.69
+          "date": "2026-09-24",
+          "value": null
         },
         "3": {
           "date": null,
@@ -36,153 +36,83 @@
           "value": null
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
+          "bar_time": "2026-09-24 10:30",
           "state": "WAITING",
           "label": "等待验证",
-          "latest_price": 9.06,
-          "latest_return_pct": -2.48,
-          "morning_high_pct": -0.65,
-          "peak_giveback_pct": 1.84,
-          "estimated_vwap": 9.085,
-          "below_vwap_bar_ratio": 0.833,
-          "continuous_below_vwap_minutes": 20,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.6,
-          "recent_volume_ratio": 0.87,
+          "latest_price": 7.79,
+          "latest_return_pct": -2.38,
+          "morning_high_pct": -0.75,
+          "peak_giveback_pct": 1.64,
+          "estimated_vwap": 7.805,
+          "below_vwap_bar_ratio": 0.5,
+          "continuous_below_vwap_minutes": 10,
+          "vwap_reclaim_count": 2,
+          "post_peak_volume_ratio": 0.55,
+          "recent_volume_ratio": 0.34,
           "reasons": [
-            "冲高后83%的5分钟收盘低于估算VWAP",
-            "冲高后平均量能为启动段0.60倍",
+            "冲高后平均量能为启动段0.55倍",
             "尚未同时满足有效启动或失败条件"
           ]
         },
         {
           "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
+          "bar_time": "2026-09-24 11:30",
           "state": "WAITING",
           "label": "等待验证",
-          "latest_price": 9.06,
-          "latest_return_pct": -2.48,
-          "morning_high_pct": -0.65,
-          "peak_giveback_pct": 1.84,
-          "estimated_vwap": 9.074,
-          "below_vwap_bar_ratio": 0.875,
-          "continuous_below_vwap_minutes": 5,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.4,
-          "recent_volume_ratio": 0.55,
-          "reasons": [
-            "冲高后88%的5分钟收盘低于估算VWAP",
-            "冲高后平均量能为启动段0.40倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "FAILED",
-          "label": "启动失败",
-          "latest_price": 9.03,
-          "latest_return_pct": -2.8,
-          "morning_high_pct": -0.65,
-          "peak_giveback_pct": 2.17,
-          "estimated_vwap": 9.072,
-          "below_vwap_bar_ratio": 0.9,
-          "continuous_below_vwap_minutes": 35,
-          "vwap_reclaim_count": 2,
+          "latest_price": 7.8,
+          "latest_return_pct": -2.26,
+          "morning_high_pct": -0.75,
+          "peak_giveback_pct": 1.52,
+          "estimated_vwap": 7.804,
+          "below_vwap_bar_ratio": 0.542,
+          "continuous_below_vwap_minutes": 10,
+          "vwap_reclaim_count": 5,
           "post_peak_volume_ratio": 0.34,
-          "recent_volume_ratio": 1.44,
+          "recent_volume_ratio": 0.7,
           "reasons": [
-            "较日内高点回吐2.17%",
-            "冲高后90%的5分钟收盘低于估算VWAP",
-            "连续35个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.34倍"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 9.04,
-          "latest_return_pct": -2.69,
-          "morning_high_pct": -0.65,
-          "peak_giveback_pct": 2.06,
-          "estimated_vwap": 9.066,
-          "below_vwap_bar_ratio": 0.929,
-          "continuous_below_vwap_minutes": 95,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.29,
-          "recent_volume_ratio": 0.54,
-          "reasons": [
-            "较日内高点回吐2.06%",
-            "冲高后93%的5分钟收盘低于估算VWAP",
-            "连续95个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.29倍"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 9.04,
-          "latest_return_pct": -2.69,
-          "morning_high_pct": -0.65,
-          "peak_giveback_pct": 2.06,
-          "estimated_vwap": 9.059,
-          "below_vwap_bar_ratio": 0.938,
-          "continuous_below_vwap_minutes": 125,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.33,
-          "recent_volume_ratio": 1.75,
-          "reasons": [
-            "较日内高点回吐2.06%",
-            "冲高后94%的5分钟收盘低于估算VWAP",
-            "连续125个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.33倍"
+            "冲高后平均量能为启动段0.34倍",
+            "尚未同时满足有效启动或失败条件"
           ]
         }
       ],
       "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "STRONG_FAILED",
-        "label": "强启动失败",
-        "latest_price": 9.04,
-        "latest_return_pct": -2.69,
-        "morning_high_pct": -0.65,
-        "peak_giveback_pct": 2.06,
-        "estimated_vwap": 9.059,
-        "below_vwap_bar_ratio": 0.938,
-        "continuous_below_vwap_minutes": 125,
-        "vwap_reclaim_count": 2,
-        "post_peak_volume_ratio": 0.33,
-        "recent_volume_ratio": 1.75,
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "WAITING",
+        "label": "等待验证",
+        "latest_price": 7.8,
+        "latest_return_pct": -2.26,
+        "morning_high_pct": -0.75,
+        "peak_giveback_pct": 1.52,
+        "estimated_vwap": 7.804,
+        "below_vwap_bar_ratio": 0.542,
+        "continuous_below_vwap_minutes": 10,
+        "vwap_reclaim_count": 5,
+        "post_peak_volume_ratio": 0.34,
+        "recent_volume_ratio": 0.7,
         "reasons": [
-          "较日内高点回吐2.06%",
-          "冲高后94%的5分钟收盘低于估算VWAP",
-          "连续125个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.33倍"
+          "冲高后平均量能为启动段0.34倍",
+          "尚未同时满足有效启动或失败条件"
         ]
       },
       "error": null
     },
     {
-      "key": "2026-09-22|2026-09-23|002068",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
+      "key": "2026-09-23|2026-09-24|002068",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
       "code": "002068",
       "name": "黑猫股份",
       "original_rank": 2,
       "explosive_score": 93.0,
       "forward_returns": {
         "1": {
-          "date": "2026-09-23",
-          "value": -4.73
+          "date": "2026-09-24",
+          "value": null
         },
         "3": {
           "date": null,
@@ -193,778 +123,88 @@
           "value": null
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 9.96,
-          "latest_return_pct": -3.77,
-          "morning_high_pct": -1.64,
-          "peak_giveback_pct": 2.16,
-          "estimated_vwap": 9.983,
-          "below_vwap_bar_ratio": 0.1,
-          "continuous_below_vwap_minutes": 5,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.29,
-          "recent_volume_ratio": 1.48,
-          "reasons": [
-            "较日内高点回吐2.16%",
-            "冲高后平均量能为启动段0.29倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 10.01,
-          "latest_return_pct": -3.29,
-          "morning_high_pct": -1.64,
-          "peak_giveback_pct": 1.67,
-          "estimated_vwap": 9.98,
-          "below_vwap_bar_ratio": 0.455,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.18,
-          "recent_volume_ratio": 1.03,
-          "reasons": [
-            "冲高后平均量能为启动段0.18倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
+          "bar_time": "2026-09-24 10:30",
           "state": "WAITING",
           "label": "等待验证",
           "latest_price": 9.93,
-          "latest_return_pct": -4.06,
-          "morning_high_pct": -1.64,
-          "peak_giveback_pct": 2.46,
-          "estimated_vwap": 9.976,
-          "below_vwap_bar_ratio": 0.571,
-          "continuous_below_vwap_minutes": 30,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.17,
-          "recent_volume_ratio": 0.75,
-          "reasons": [
-            "较日内高点回吐2.46%",
-            "连续30个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.17倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 9.89,
-          "latest_return_pct": -4.44,
-          "morning_high_pct": -1.64,
-          "peak_giveback_pct": 2.85,
-          "estimated_vwap": 9.958,
-          "below_vwap_bar_ratio": 0.7,
-          "continuous_below_vwap_minutes": 90,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.18,
-          "recent_volume_ratio": 0.35,
-          "reasons": [
-            "较日内高点回吐2.85%",
-            "冲高后70%的5分钟收盘低于估算VWAP",
-            "连续90个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.18倍"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 9.86,
-          "latest_return_pct": -4.73,
-          "morning_high_pct": -1.64,
-          "peak_giveback_pct": 3.14,
-          "estimated_vwap": 9.945,
-          "below_vwap_bar_ratio": 0.739,
-          "continuous_below_vwap_minutes": 120,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.19,
-          "recent_volume_ratio": 3.16,
-          "reasons": [
-            "较日内高点回吐3.14%",
-            "冲高后74%的5分钟收盘低于估算VWAP",
-            "连续120个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.19倍"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "STRONG_FAILED",
-        "label": "强启动失败",
-        "latest_price": 9.86,
-        "latest_return_pct": -4.73,
-        "morning_high_pct": -1.64,
-        "peak_giveback_pct": 3.14,
-        "estimated_vwap": 9.945,
-        "below_vwap_bar_ratio": 0.739,
-        "continuous_below_vwap_minutes": 120,
-        "vwap_reclaim_count": 3,
-        "post_peak_volume_ratio": 0.19,
-        "recent_volume_ratio": 3.16,
-        "reasons": [
-          "较日内高点回吐3.14%",
-          "冲高后74%的5分钟收盘低于估算VWAP",
-          "连续120个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.19倍"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|002846",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "002846",
-      "name": "英联股份",
-      "original_rank": 3,
-      "explosive_score": 84.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": -1.64
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "FAILED",
-          "label": "启动失败",
-          "latest_price": 11.43,
-          "latest_return_pct": -1.38,
-          "morning_high_pct": 1.38,
-          "peak_giveback_pct": 2.72,
-          "estimated_vwap": 11.545,
-          "below_vwap_bar_ratio": 0.9,
-          "continuous_below_vwap_minutes": 45,
+          "latest_return_pct": 0.71,
+          "morning_high_pct": 4.26,
+          "peak_giveback_pct": 3.4,
+          "estimated_vwap": 9.939,
+          "below_vwap_bar_ratio": 0.2,
+          "continuous_below_vwap_minutes": 10,
           "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.62,
-          "recent_volume_ratio": 0.42,
-          "reasons": [
-            "较日内高点回吐2.72%",
-            "冲高后90%的5分钟收盘低于估算VWAP",
-            "连续45个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.62倍"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 11.38,
-          "latest_return_pct": -1.81,
-          "morning_high_pct": 1.38,
-          "peak_giveback_pct": 3.15,
-          "estimated_vwap": 11.527,
-          "below_vwap_bar_ratio": 0.955,
-          "continuous_below_vwap_minutes": 105,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.34,
-          "recent_volume_ratio": 1.11,
-          "reasons": [
-            "较日内高点回吐3.15%",
-            "冲高后95%的5分钟收盘低于估算VWAP",
-            "连续105个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.34倍"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 11.4,
-          "latest_return_pct": -1.64,
-          "morning_high_pct": 1.38,
-          "peak_giveback_pct": 2.98,
-          "estimated_vwap": 11.517,
-          "below_vwap_bar_ratio": 0.964,
-          "continuous_below_vwap_minutes": 135,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.3,
-          "recent_volume_ratio": 0.96,
-          "reasons": [
-            "较日内高点回吐2.98%",
-            "冲高后96%的5分钟收盘低于估算VWAP",
-            "连续135个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.30倍"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 11.4,
-          "latest_return_pct": -1.64,
-          "morning_high_pct": 1.38,
-          "peak_giveback_pct": 2.98,
-          "estimated_vwap": 11.503,
-          "below_vwap_bar_ratio": 0.975,
-          "continuous_below_vwap_minutes": 195,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.26,
-          "recent_volume_ratio": 0.65,
-          "reasons": [
-            "较日内高点回吐2.98%",
-            "冲高后98%的5分钟收盘低于估算VWAP",
-            "连续195个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.26倍"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 11.4,
-          "latest_return_pct": -1.64,
-          "morning_high_pct": 1.38,
-          "peak_giveback_pct": 2.98,
-          "estimated_vwap": 11.489,
-          "below_vwap_bar_ratio": 0.978,
-          "continuous_below_vwap_minutes": 225,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.27,
-          "recent_volume_ratio": 1.99,
-          "reasons": [
-            "较日内高点回吐2.98%",
-            "冲高后98%的5分钟收盘低于估算VWAP",
-            "连续225个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.27倍"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "STRONG_FAILED",
-        "label": "强启动失败",
-        "latest_price": 11.4,
-        "latest_return_pct": -1.64,
-        "morning_high_pct": 1.38,
-        "peak_giveback_pct": 2.98,
-        "estimated_vwap": 11.489,
-        "below_vwap_bar_ratio": 0.978,
-        "continuous_below_vwap_minutes": 225,
-        "vwap_reclaim_count": 1,
-        "post_peak_volume_ratio": 0.27,
-        "recent_volume_ratio": 1.99,
-        "reasons": [
-          "较日内高点回吐2.98%",
-          "冲高后98%的5分钟收盘低于估算VWAP",
-          "连续225个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.27倍"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|300319",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "300319",
-      "name": "麦捷科技",
-      "original_rank": 4,
-      "explosive_score": 80.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": 0.7
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "FAILED",
-          "label": "启动失败",
-          "latest_price": 21.18,
-          "latest_return_pct": -0.98,
-          "morning_high_pct": 2.1,
-          "peak_giveback_pct": 3.02,
-          "estimated_vwap": 21.314,
-          "below_vwap_bar_ratio": 0.917,
-          "continuous_below_vwap_minutes": 55,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.47,
-          "recent_volume_ratio": 0.57,
-          "reasons": [
-            "较日内高点回吐3.02%",
-            "冲高后92%的5分钟收盘低于估算VWAP",
-            "连续55个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.47倍"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 21.54,
-          "latest_return_pct": 0.7,
-          "morning_high_pct": 2.1,
-          "peak_giveback_pct": 1.37,
-          "estimated_vwap": 21.367,
-          "below_vwap_bar_ratio": 0.625,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.37,
-          "recent_volume_ratio": 0.59,
-          "reasons": [
-            "冲高后62%的5分钟收盘低于估算VWAP",
-            "冲高后平均量能为启动段0.37倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 21.44,
-          "latest_return_pct": 0.23,
-          "morning_high_pct": 2.1,
-          "peak_giveback_pct": 1.83,
-          "estimated_vwap": 21.372,
-          "below_vwap_bar_ratio": 0.5,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 2,
           "post_peak_volume_ratio": 0.32,
-          "recent_volume_ratio": 0.53,
+          "recent_volume_ratio": 0.52,
           "reasons": [
+            "较日内高点回吐3.40%",
             "冲高后平均量能为启动段0.32倍",
             "尚未同时满足有效启动或失败条件"
           ]
         },
         {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 21.44,
-          "latest_return_pct": 0.23,
-          "morning_high_pct": 2.1,
-          "peak_giveback_pct": 1.83,
-          "estimated_vwap": 21.377,
-          "below_vwap_bar_ratio": 0.429,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 4,
-          "post_peak_volume_ratio": 0.26,
-          "recent_volume_ratio": 1.07,
-          "reasons": [
-            "冲高后平均量能为启动段0.26倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 21.54,
-          "latest_return_pct": 0.7,
-          "morning_high_pct": 2.1,
-          "peak_giveback_pct": 1.37,
-          "estimated_vwap": 21.387,
-          "below_vwap_bar_ratio": 0.375,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 4,
-          "post_peak_volume_ratio": 0.26,
-          "recent_volume_ratio": 2.92,
-          "reasons": [
-            "冲高后平均量能为启动段0.26倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "VALID",
-        "label": "有效启动",
-        "latest_price": 21.54,
-        "latest_return_pct": 0.7,
-        "morning_high_pct": 2.1,
-        "peak_giveback_pct": 1.37,
-        "estimated_vwap": 21.387,
-        "below_vwap_bar_ratio": 0.375,
-        "continuous_below_vwap_minutes": 0,
-        "vwap_reclaim_count": 4,
-        "post_peak_volume_ratio": 0.26,
-        "recent_volume_ratio": 2.92,
-        "reasons": [
-          "冲高后平均量能为启动段0.26倍",
-          "价格位于估算VWAP上方且高点回吐受控"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|600966",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "600966",
-      "name": "博汇纸业",
-      "original_rank": 5,
-      "explosive_score": 48.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": -1.81
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 4.92,
-          "latest_return_pct": -1.01,
-          "morning_high_pct": 0.2,
-          "peak_giveback_pct": 1.2,
-          "estimated_vwap": 4.948,
-          "below_vwap_bar_ratio": 0.75,
-          "continuous_below_vwap_minutes": 20,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.7,
-          "recent_volume_ratio": 3.02,
-          "reasons": [
-            "冲高后75%的5分钟收盘低于估算VWAP",
-            "冲高后平均量能为启动段0.70倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
           "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
+          "bar_time": "2026-09-24 11:30",
           "state": "WAITING",
           "label": "等待验证",
-          "latest_price": 4.92,
-          "latest_return_pct": -1.01,
-          "morning_high_pct": 0.2,
-          "peak_giveback_pct": 1.2,
-          "estimated_vwap": 4.932,
-          "below_vwap_bar_ratio": 0.875,
-          "continuous_below_vwap_minutes": 80,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.61,
-          "recent_volume_ratio": 0.12,
-          "reasons": [
-            "冲高后88%的5分钟收盘低于估算VWAP",
-            "连续80个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.61倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 4.89,
-          "latest_return_pct": -1.61,
-          "morning_high_pct": 0.2,
-          "peak_giveback_pct": 1.81,
-          "estimated_vwap": 4.927,
-          "below_vwap_bar_ratio": 0.9,
-          "continuous_below_vwap_minutes": 110,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.59,
-          "recent_volume_ratio": 0.64,
-          "reasons": [
-            "冲高后90%的5分钟收盘低于估算VWAP",
-            "连续110个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.59倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 4.9,
-          "latest_return_pct": -1.41,
-          "morning_high_pct": 0.2,
-          "peak_giveback_pct": 1.61,
-          "estimated_vwap": 4.922,
-          "below_vwap_bar_ratio": 0.929,
-          "continuous_below_vwap_minutes": 170,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.51,
-          "recent_volume_ratio": 2.97,
-          "reasons": [
-            "冲高后93%的5分钟收盘低于估算VWAP",
-            "连续170个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.51倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 4.88,
-          "latest_return_pct": -1.81,
-          "morning_high_pct": 0.2,
-          "peak_giveback_pct": 2.01,
-          "estimated_vwap": 4.916,
-          "below_vwap_bar_ratio": 0.938,
-          "continuous_below_vwap_minutes": 200,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.55,
-          "recent_volume_ratio": 1.28,
-          "reasons": [
-            "较日内高点回吐2.01%",
-            "冲高后94%的5分钟收盘低于估算VWAP",
-            "连续200个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.55倍"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "STRONG_FAILED",
-        "label": "强启动失败",
-        "latest_price": 4.88,
-        "latest_return_pct": -1.81,
-        "morning_high_pct": 0.2,
-        "peak_giveback_pct": 2.01,
-        "estimated_vwap": 4.916,
-        "below_vwap_bar_ratio": 0.938,
-        "continuous_below_vwap_minutes": 200,
-        "vwap_reclaim_count": 1,
-        "post_peak_volume_ratio": 0.55,
-        "recent_volume_ratio": 1.28,
-        "reasons": [
-          "较日内高点回吐2.01%",
-          "冲高后94%的5分钟收盘低于估算VWAP",
-          "连续200个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.55倍"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|600101",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "600101",
-      "name": "明星电力",
-      "original_rank": 6,
-      "explosive_score": 44.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": -1.88
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 7.85,
-          "latest_return_pct": -1.51,
-          "morning_high_pct": -0.13,
-          "peak_giveback_pct": 1.38,
-          "estimated_vwap": 7.882,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 60,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.66,
-          "recent_volume_ratio": 1.5,
-          "reasons": [
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续60个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.66倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 7.83,
-          "latest_return_pct": -1.76,
-          "morning_high_pct": -0.13,
-          "peak_giveback_pct": 1.63,
-          "estimated_vwap": 7.865,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 120,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.53,
+          "latest_price": 9.91,
+          "latest_return_pct": 0.51,
+          "morning_high_pct": 4.26,
+          "peak_giveback_pct": 3.6,
+          "estimated_vwap": 9.934,
+          "below_vwap_bar_ratio": 0.591,
+          "continuous_below_vwap_minutes": 55,
+          "vwap_reclaim_count": 2,
+          "post_peak_volume_ratio": 0.19,
           "recent_volume_ratio": 0.68,
           "reasons": [
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续120个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.53倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 7.83,
-          "latest_return_pct": -1.76,
-          "morning_high_pct": -0.13,
-          "peak_giveback_pct": 1.63,
-          "estimated_vwap": 7.864,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 150,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.45,
-          "recent_volume_ratio": 1.72,
-          "reasons": [
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续150个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.45倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 7.83,
-          "latest_return_pct": -1.76,
-          "morning_high_pct": -0.13,
-          "peak_giveback_pct": 1.63,
-          "estimated_vwap": 7.859,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 210,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.37,
-          "recent_volume_ratio": 1.49,
-          "reasons": [
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续210个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.37倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 7.82,
-          "latest_return_pct": -1.88,
-          "morning_high_pct": -0.13,
-          "peak_giveback_pct": 1.76,
-          "estimated_vwap": 7.855,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 240,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.37,
-          "recent_volume_ratio": 1.26,
-          "reasons": [
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续240个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.37倍",
+            "较日内高点回吐3.60%",
+            "连续55个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.19倍",
             "尚未同时满足有效启动或失败条件"
           ]
         }
       ],
       "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
         "state": "WAITING",
         "label": "等待验证",
-        "latest_price": 7.82,
-        "latest_return_pct": -1.88,
-        "morning_high_pct": -0.13,
-        "peak_giveback_pct": 1.76,
-        "estimated_vwap": 7.855,
-        "below_vwap_bar_ratio": 1.0,
-        "continuous_below_vwap_minutes": 240,
-        "vwap_reclaim_count": 0,
-        "post_peak_volume_ratio": 0.37,
-        "recent_volume_ratio": 1.26,
+        "latest_price": 9.91,
+        "latest_return_pct": 0.51,
+        "morning_high_pct": 4.26,
+        "peak_giveback_pct": 3.6,
+        "estimated_vwap": 9.934,
+        "below_vwap_bar_ratio": 0.591,
+        "continuous_below_vwap_minutes": 55,
+        "vwap_reclaim_count": 2,
+        "post_peak_volume_ratio": 0.19,
+        "recent_volume_ratio": 0.68,
         "reasons": [
-          "冲高后100%的5分钟收盘低于估算VWAP",
-          "连续240个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.37倍",
+          "较日内高点回吐3.60%",
+          "连续55个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.19倍",
           "尚未同时满足有效启动或失败条件"
         ]
       },
       "error": null
     },
     {
-      "key": "2026-09-22|2026-09-23|002637",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "002637",
-      "name": "赞宇科技",
-      "original_rank": 7,
-      "explosive_score": 52.0,
+      "key": "2026-09-23|2026-09-24|603608",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "603608",
+      "name": "天创时尚",
+      "original_rank": 3,
+      "explosive_score": 83.0,
       "forward_returns": {
         "1": {
-          "date": "2026-09-23",
-          "value": -2.23
+          "date": "2026-09-24",
+          "value": null
         },
         "3": {
           "date": null,
@@ -975,789 +215,822 @@
           "value": null
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "FAILED",
+          "label": "启动失败",
+          "latest_price": 20.59,
+          "latest_return_pct": -2.56,
+          "morning_high_pct": -0.52,
+          "peak_giveback_pct": 2.05,
+          "estimated_vwap": 20.811,
+          "below_vwap_bar_ratio": 0.667,
+          "continuous_below_vwap_minutes": 30,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.82,
+          "recent_volume_ratio": 0.61,
+          "reasons": [
+            "较日内高点回吐2.05%",
+            "冲高后67%的5分钟收盘低于估算VWAP",
+            "连续30个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.82倍"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "STRONG_FAILED",
+          "label": "强启动失败",
+          "latest_price": 20.35,
+          "latest_return_pct": -3.69,
+          "morning_high_pct": -0.52,
+          "peak_giveback_pct": 3.19,
+          "estimated_vwap": 20.698,
+          "below_vwap_bar_ratio": 0.833,
+          "continuous_below_vwap_minutes": 90,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.65,
+          "recent_volume_ratio": 0.72,
+          "reasons": [
+            "较日内高点回吐3.19%",
+            "冲高后83%的5分钟收盘低于估算VWAP",
+            "连续90个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.65倍"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "STRONG_FAILED",
+        "label": "强启动失败",
+        "latest_price": 20.35,
+        "latest_return_pct": -3.69,
+        "morning_high_pct": -0.52,
+        "peak_giveback_pct": 3.19,
+        "estimated_vwap": 20.698,
+        "below_vwap_bar_ratio": 0.833,
+        "continuous_below_vwap_minutes": 90,
+        "vwap_reclaim_count": 1,
+        "post_peak_volume_ratio": 0.65,
+        "recent_volume_ratio": 0.72,
+        "reasons": [
+          "较日内高点回吐3.19%",
+          "冲高后83%的5分钟收盘低于估算VWAP",
+          "连续90个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.65倍"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|300690",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "300690",
+      "name": "双一科技",
+      "original_rank": 4,
+      "explosive_score": 73.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "VALID",
+          "label": "有效启动",
+          "latest_price": 25.05,
+          "latest_return_pct": 4.81,
+          "morning_high_pct": 6.19,
+          "peak_giveback_pct": 1.3,
+          "estimated_vwap": 24.716,
+          "below_vwap_bar_ratio": 0.0,
+          "continuous_below_vwap_minutes": 0,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.64,
+          "recent_volume_ratio": 0.3,
+          "reasons": [
+            "冲高后平均量能为启动段0.64倍",
+            "价格位于估算VWAP上方且高点回吐受控"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "VALID",
+          "label": "有效启动",
+          "latest_price": 25.3,
+          "latest_return_pct": 5.86,
+          "morning_high_pct": 6.19,
+          "peak_giveback_pct": 0.32,
+          "estimated_vwap": 24.823,
+          "below_vwap_bar_ratio": 0.0,
+          "continuous_below_vwap_minutes": 0,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.39,
+          "recent_volume_ratio": 2.28,
+          "reasons": [
+            "冲高后平均量能为启动段0.39倍",
+            "价格位于估算VWAP上方且高点回吐受控"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "VALID",
+        "label": "有效启动",
+        "latest_price": 25.3,
+        "latest_return_pct": 5.86,
+        "morning_high_pct": 6.19,
+        "peak_giveback_pct": 0.32,
+        "estimated_vwap": 24.823,
+        "below_vwap_bar_ratio": 0.0,
+        "continuous_below_vwap_minutes": 0,
+        "vwap_reclaim_count": 1,
+        "post_peak_volume_ratio": 0.39,
+        "recent_volume_ratio": 2.28,
+        "reasons": [
+          "冲高后平均量能为启动段0.39倍",
+          "价格位于估算VWAP上方且高点回吐受控"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|603138",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "603138",
+      "name": "海量数据",
+      "original_rank": 5,
+      "explosive_score": 93.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "STRONG_FAILED",
+          "label": "强启动失败",
+          "latest_price": 14.9,
+          "latest_return_pct": -0.93,
+          "morning_high_pct": 1.66,
+          "peak_giveback_pct": 2.55,
+          "estimated_vwap": 14.963,
+          "below_vwap_bar_ratio": 1.0,
+          "continuous_below_vwap_minutes": 60,
+          "vwap_reclaim_count": 0,
+          "post_peak_volume_ratio": 0.44,
+          "recent_volume_ratio": 0.5,
+          "reasons": [
+            "较日内高点回吐2.55%",
+            "冲高后100%的5分钟收盘低于估算VWAP",
+            "连续60个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.44倍"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "STRONG_FAILED",
+          "label": "强启动失败",
+          "latest_price": 14.77,
+          "latest_return_pct": -1.8,
+          "morning_high_pct": 1.66,
+          "peak_giveback_pct": 3.4,
+          "estimated_vwap": 14.936,
+          "below_vwap_bar_ratio": 1.0,
+          "continuous_below_vwap_minutes": 120,
+          "vwap_reclaim_count": 0,
+          "post_peak_volume_ratio": 0.3,
+          "recent_volume_ratio": 2.12,
+          "reasons": [
+            "较日内高点回吐3.40%",
+            "冲高后100%的5分钟收盘低于估算VWAP",
+            "连续120个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.30倍"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "STRONG_FAILED",
+        "label": "强启动失败",
+        "latest_price": 14.77,
+        "latest_return_pct": -1.8,
+        "morning_high_pct": 1.66,
+        "peak_giveback_pct": 3.4,
+        "estimated_vwap": 14.936,
+        "below_vwap_bar_ratio": 1.0,
+        "continuous_below_vwap_minutes": 120,
+        "vwap_reclaim_count": 0,
+        "post_peak_volume_ratio": 0.3,
+        "recent_volume_ratio": 2.12,
+        "reasons": [
+          "较日内高点回吐3.40%",
+          "冲高后100%的5分钟收盘低于估算VWAP",
+          "连续120个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.30倍"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|002846",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "002846",
+      "name": "英联股份",
+      "original_rank": 6,
+      "explosive_score": 87.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "FAILED",
+          "label": "启动失败",
+          "latest_price": 11.38,
+          "latest_return_pct": -0.18,
+          "morning_high_pct": 5.09,
+          "peak_giveback_pct": 5.01,
+          "estimated_vwap": 11.62,
+          "below_vwap_bar_ratio": 0.917,
+          "continuous_below_vwap_minutes": 55,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.33,
+          "recent_volume_ratio": 1.0,
+          "reasons": [
+            "较日内高点回吐5.01%",
+            "冲高后92%的5分钟收盘低于估算VWAP",
+            "连续55个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.33倍"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "STRONG_FAILED",
+          "label": "强启动失败",
+          "latest_price": 11.2,
+          "latest_return_pct": -1.75,
+          "morning_high_pct": 5.09,
+          "peak_giveback_pct": 6.51,
+          "estimated_vwap": 11.56,
+          "below_vwap_bar_ratio": 0.958,
+          "continuous_below_vwap_minutes": 115,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.22,
+          "recent_volume_ratio": 1.39,
+          "reasons": [
+            "较日内高点回吐6.51%",
+            "冲高后96%的5分钟收盘低于估算VWAP",
+            "连续115个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.22倍"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "STRONG_FAILED",
+        "label": "强启动失败",
+        "latest_price": 11.2,
+        "latest_return_pct": -1.75,
+        "morning_high_pct": 5.09,
+        "peak_giveback_pct": 6.51,
+        "estimated_vwap": 11.56,
+        "below_vwap_bar_ratio": 0.958,
+        "continuous_below_vwap_minutes": 115,
+        "vwap_reclaim_count": 1,
+        "post_peak_volume_ratio": 0.22,
+        "recent_volume_ratio": 1.39,
+        "reasons": [
+          "较日内高点回吐6.51%",
+          "冲高后96%的5分钟收盘低于估算VWAP",
+          "连续115个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.22倍"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|301317",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "301317",
+      "name": "鑫磊股份",
+      "original_rank": 7,
+      "explosive_score": 80.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
           "state": "WAITING",
           "label": "等待验证",
-          "latest_price": 10.89,
-          "latest_return_pct": -2.77,
-          "morning_high_pct": -0.62,
-          "peak_giveback_pct": 2.16,
-          "estimated_vwap": 10.987,
-          "below_vwap_bar_ratio": 0.75,
-          "continuous_below_vwap_minutes": 20,
+          "latest_price": 49.49,
+          "latest_return_pct": -2.08,
+          "morning_high_pct": 0.77,
+          "peak_giveback_pct": 2.83,
+          "estimated_vwap": 49.813,
+          "below_vwap_bar_ratio": 0.5,
+          "continuous_below_vwap_minutes": 10,
           "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.73,
-          "recent_volume_ratio": 1.27,
+          "post_peak_volume_ratio": 0.68,
+          "recent_volume_ratio": 0.61,
           "reasons": [
-            "较日内高点回吐2.16%",
+            "较日内高点回吐2.83%",
+            "冲高后平均量能为启动段0.68倍",
+            "尚未同时满足有效启动或失败条件"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "FAILED",
+          "label": "启动失败",
+          "latest_price": 49.56,
+          "latest_return_pct": -1.94,
+          "morning_high_pct": 0.77,
+          "peak_giveback_pct": 2.69,
+          "estimated_vwap": 49.739,
+          "below_vwap_bar_ratio": 0.75,
+          "continuous_below_vwap_minutes": 70,
+          "vwap_reclaim_count": 2,
+          "post_peak_volume_ratio": 0.42,
+          "recent_volume_ratio": 1.59,
+          "reasons": [
+            "较日内高点回吐2.69%",
             "冲高后75%的5分钟收盘低于估算VWAP",
+            "连续70个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.42倍"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "FAILED",
+        "label": "启动失败",
+        "latest_price": 49.56,
+        "latest_return_pct": -1.94,
+        "morning_high_pct": 0.77,
+        "peak_giveback_pct": 2.69,
+        "estimated_vwap": 49.739,
+        "below_vwap_bar_ratio": 0.75,
+        "continuous_below_vwap_minutes": 70,
+        "vwap_reclaim_count": 2,
+        "post_peak_volume_ratio": 0.42,
+        "recent_volume_ratio": 1.59,
+        "reasons": [
+          "较日内高点回吐2.69%",
+          "冲高后75%的5分钟收盘低于估算VWAP",
+          "连续70个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.42倍"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|000553",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "000553",
+      "name": "安道麦A",
+      "original_rank": 8,
+      "explosive_score": 50.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "WAITING",
+          "label": "等待验证",
+          "latest_price": 5.48,
+          "latest_return_pct": 0.37,
+          "morning_high_pct": 1.47,
+          "peak_giveback_pct": 1.08,
+          "estimated_vwap": 5.48,
+          "below_vwap_bar_ratio": 0.167,
+          "continuous_below_vwap_minutes": 5,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.37,
+          "recent_volume_ratio": 0.37,
+          "reasons": [
+            "冲高后平均量能为启动段0.37倍",
+            "尚未同时满足有效启动或失败条件"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "WAITING",
+          "label": "等待验证",
+          "latest_price": 5.45,
+          "latest_return_pct": -0.18,
+          "morning_high_pct": 1.47,
+          "peak_giveback_pct": 1.62,
+          "estimated_vwap": 5.478,
+          "below_vwap_bar_ratio": 0.722,
+          "continuous_below_vwap_minutes": 65,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.21,
+          "recent_volume_ratio": 0.95,
+          "reasons": [
+            "冲高后72%的5分钟收盘低于估算VWAP",
+            "连续65个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.21倍",
+            "尚未同时满足有效启动或失败条件"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "WAITING",
+        "label": "等待验证",
+        "latest_price": 5.45,
+        "latest_return_pct": -0.18,
+        "morning_high_pct": 1.47,
+        "peak_giveback_pct": 1.62,
+        "estimated_vwap": 5.478,
+        "below_vwap_bar_ratio": 0.722,
+        "continuous_below_vwap_minutes": 65,
+        "vwap_reclaim_count": 1,
+        "post_peak_volume_ratio": 0.21,
+        "recent_volume_ratio": 0.95,
+        "reasons": [
+          "冲高后72%的5分钟收盘低于估算VWAP",
+          "连续65个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.21倍",
+          "尚未同时满足有效启动或失败条件"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|601088",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "601088",
+      "name": "中国神华",
+      "original_rank": 9,
+      "explosive_score": 40.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "VALID",
+          "label": "有效启动",
+          "latest_price": 47.86,
+          "latest_return_pct": 1.38,
+          "morning_high_pct": 1.86,
+          "peak_giveback_pct": 0.48,
+          "estimated_vwap": 47.768,
+          "below_vwap_bar_ratio": 0.0,
+          "continuous_below_vwap_minutes": 0,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.4,
+          "recent_volume_ratio": 0.47,
+          "reasons": [
+            "冲高后平均量能为启动段0.40倍",
+            "价格位于估算VWAP上方且高点回吐受控"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "WAITING",
+          "label": "等待验证",
+          "latest_price": 47.49,
+          "latest_return_pct": 0.59,
+          "morning_high_pct": 1.86,
+          "peak_giveback_pct": 1.25,
+          "estimated_vwap": 47.719,
+          "below_vwap_bar_ratio": 0.625,
+          "continuous_below_vwap_minutes": 50,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.34,
+          "recent_volume_ratio": 0.87,
+          "reasons": [
+            "冲高后62%的5分钟收盘低于估算VWAP",
+            "连续50个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.34倍",
+            "尚未同时满足有效启动或失败条件"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "WAITING",
+        "label": "等待验证",
+        "latest_price": 47.49,
+        "latest_return_pct": 0.59,
+        "morning_high_pct": 1.86,
+        "peak_giveback_pct": 1.25,
+        "estimated_vwap": 47.719,
+        "below_vwap_bar_ratio": 0.625,
+        "continuous_below_vwap_minutes": 50,
+        "vwap_reclaim_count": 1,
+        "post_peak_volume_ratio": 0.34,
+        "recent_volume_ratio": 0.87,
+        "reasons": [
+          "冲高后62%的5分钟收盘低于估算VWAP",
+          "连续50个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.34倍",
+          "尚未同时满足有效启动或失败条件"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|600113",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "600113",
+      "name": "浙江东日",
+      "original_rank": 10,
+      "explosive_score": 53.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "WAITING",
+          "label": "等待验证",
+          "latest_price": 29.69,
+          "latest_return_pct": -0.54,
+          "morning_high_pct": 0.84,
+          "peak_giveback_pct": 1.36,
+          "estimated_vwap": 29.773,
+          "below_vwap_bar_ratio": 0.917,
+          "continuous_below_vwap_minutes": 55,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.79,
+          "recent_volume_ratio": 0.69,
+          "reasons": [
+            "冲高后92%的5分钟收盘低于估算VWAP",
+            "连续55个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.79倍",
+            "尚未同时满足有效启动或失败条件"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "WAITING",
+          "label": "等待验证",
+          "latest_price": 29.5,
+          "latest_return_pct": -1.17,
+          "morning_high_pct": 0.84,
+          "peak_giveback_pct": 1.99,
+          "estimated_vwap": 29.69,
+          "below_vwap_bar_ratio": 0.958,
+          "continuous_below_vwap_minutes": 115,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.62,
+          "recent_volume_ratio": 3.14,
+          "reasons": [
+            "冲高后96%的5分钟收盘低于估算VWAP",
+            "连续115个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.62倍",
+            "尚未同时满足有效启动或失败条件"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "WAITING",
+        "label": "等待验证",
+        "latest_price": 29.5,
+        "latest_return_pct": -1.17,
+        "morning_high_pct": 0.84,
+        "peak_giveback_pct": 1.99,
+        "estimated_vwap": 29.69,
+        "below_vwap_bar_ratio": 0.958,
+        "continuous_below_vwap_minutes": 115,
+        "vwap_reclaim_count": 1,
+        "post_peak_volume_ratio": 0.62,
+        "recent_volume_ratio": 3.14,
+        "reasons": [
+          "冲高后96%的5分钟收盘低于估算VWAP",
+          "连续115个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.62倍",
+          "尚未同时满足有效启动或失败条件"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|603766",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "603766",
+      "name": "隆鑫通用",
+      "original_rank": 11,
+      "explosive_score": 59.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "WAITING",
+          "label": "等待验证",
+          "latest_price": 14.56,
+          "latest_return_pct": 0.0,
+          "morning_high_pct": 1.3,
+          "peak_giveback_pct": 1.29,
+          "estimated_vwap": 14.6,
+          "below_vwap_bar_ratio": 0.8,
+          "continuous_below_vwap_minutes": 40,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.73,
+          "recent_volume_ratio": 1.12,
+          "reasons": [
+            "冲高后80%的5分钟收盘低于估算VWAP",
+            "连续40个交易分钟未收复估算VWAP",
             "冲高后平均量能为启动段0.73倍",
             "尚未同时满足有效启动或失败条件"
           ]
         },
         {
           "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
+          "bar_time": "2026-09-24 11:30",
           "state": "WAITING",
           "label": "等待验证",
-          "latest_price": 10.93,
-          "latest_return_pct": -2.41,
-          "morning_high_pct": -0.62,
-          "peak_giveback_pct": 1.8,
-          "estimated_vwap": 10.965,
-          "below_vwap_bar_ratio": 0.875,
-          "continuous_below_vwap_minutes": 80,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.48,
-          "recent_volume_ratio": 0.96,
+          "latest_price": 14.5,
+          "latest_return_pct": -0.41,
+          "morning_high_pct": 1.3,
+          "peak_giveback_pct": 1.69,
+          "estimated_vwap": 14.569,
+          "below_vwap_bar_ratio": 0.909,
+          "continuous_below_vwap_minutes": 100,
+          "vwap_reclaim_count": 1,
+          "post_peak_volume_ratio": 0.65,
+          "recent_volume_ratio": 0.85,
           "reasons": [
-            "冲高后88%的5分钟收盘低于估算VWAP",
-            "连续80个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.48倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 10.98,
-          "latest_return_pct": -1.96,
-          "morning_high_pct": -0.62,
-          "peak_giveback_pct": 1.35,
-          "estimated_vwap": 10.965,
-          "below_vwap_bar_ratio": 0.767,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 4,
-          "post_peak_volume_ratio": 0.42,
-          "recent_volume_ratio": 0.47,
-          "reasons": [
-            "冲高后77%的5分钟收盘低于估算VWAP",
-            "冲高后平均量能为启动段0.42倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 10.96,
-          "latest_return_pct": -2.14,
-          "morning_high_pct": -0.62,
-          "peak_giveback_pct": 1.53,
-          "estimated_vwap": 10.966,
-          "below_vwap_bar_ratio": 0.69,
-          "continuous_below_vwap_minutes": 5,
-          "vwap_reclaim_count": 5,
-          "post_peak_volume_ratio": 0.34,
-          "recent_volume_ratio": 0.65,
-          "reasons": [
-            "冲高后69%的5分钟收盘低于估算VWAP",
-            "冲高后平均量能为启动段0.34倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 10.95,
-          "latest_return_pct": -2.23,
-          "morning_high_pct": -0.62,
-          "peak_giveback_pct": 1.62,
-          "estimated_vwap": 10.963,
-          "below_vwap_bar_ratio": 0.729,
-          "continuous_below_vwap_minutes": 35,
-          "vwap_reclaim_count": 5,
-          "post_peak_volume_ratio": 0.35,
-          "recent_volume_ratio": 2.49,
-          "reasons": [
-            "冲高后73%的5分钟收盘低于估算VWAP",
-            "连续35个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.35倍",
+            "冲高后91%的5分钟收盘低于估算VWAP",
+            "连续100个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.65倍",
             "尚未同时满足有效启动或失败条件"
           ]
         }
       ],
       "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
         "state": "WAITING",
         "label": "等待验证",
-        "latest_price": 10.95,
-        "latest_return_pct": -2.23,
-        "morning_high_pct": -0.62,
-        "peak_giveback_pct": 1.62,
-        "estimated_vwap": 10.963,
-        "below_vwap_bar_ratio": 0.729,
-        "continuous_below_vwap_minutes": 35,
-        "vwap_reclaim_count": 5,
-        "post_peak_volume_ratio": 0.35,
-        "recent_volume_ratio": 2.49,
-        "reasons": [
-          "冲高后73%的5分钟收盘低于估算VWAP",
-          "连续35个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.35倍",
-          "尚未同时满足有效启动或失败条件"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|000767",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "000767",
-      "name": "晋控电力",
-      "original_rank": 8,
-      "explosive_score": 34.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": -2.94
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 3.32,
-          "latest_return_pct": -2.35,
-          "morning_high_pct": -0.29,
-          "peak_giveback_pct": 2.06,
-          "estimated_vwap": 3.341,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 60,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.71,
-          "recent_volume_ratio": 0.17,
-          "reasons": [
-            "较日内高点回吐2.06%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续60个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.71倍"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 3.3,
-          "latest_return_pct": -2.94,
-          "morning_high_pct": -0.29,
-          "peak_giveback_pct": 2.65,
-          "estimated_vwap": 3.334,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 120,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.45,
-          "recent_volume_ratio": 0.79,
-          "reasons": [
-            "较日内高点回吐2.65%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续120个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.45倍"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 3.32,
-          "latest_return_pct": -2.35,
-          "morning_high_pct": -0.29,
-          "peak_giveback_pct": 2.06,
-          "estimated_vwap": 3.334,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 150,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.37,
-          "recent_volume_ratio": 0.64,
-          "reasons": [
-            "较日内高点回吐2.06%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续150个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.37倍"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 3.3,
-          "latest_return_pct": -2.94,
-          "morning_high_pct": -0.29,
-          "peak_giveback_pct": 2.65,
-          "estimated_vwap": 3.33,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 210,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.3,
-          "recent_volume_ratio": 1.39,
-          "reasons": [
-            "较日内高点回吐2.65%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续210个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.30倍"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 3.3,
-          "latest_return_pct": -2.94,
-          "morning_high_pct": -0.29,
-          "peak_giveback_pct": 2.65,
-          "estimated_vwap": 3.327,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 240,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.31,
-          "recent_volume_ratio": 2.3,
-          "reasons": [
-            "较日内高点回吐2.65%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续240个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.31倍"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "STRONG_FAILED",
-        "label": "强启动失败",
-        "latest_price": 3.3,
-        "latest_return_pct": -2.94,
-        "morning_high_pct": -0.29,
-        "peak_giveback_pct": 2.65,
-        "estimated_vwap": 3.327,
-        "below_vwap_bar_ratio": 1.0,
-        "continuous_below_vwap_minutes": 240,
-        "vwap_reclaim_count": 0,
-        "post_peak_volume_ratio": 0.31,
-        "recent_volume_ratio": 2.3,
-        "reasons": [
-          "较日内高点回吐2.65%",
-          "冲高后100%的5分钟收盘低于估算VWAP",
-          "连续240个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.31倍"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|002692",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "002692",
-      "name": "远程股份",
-      "original_rank": 9,
-      "explosive_score": 44.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": -2.95
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 4.25,
-          "latest_return_pct": -3.41,
-          "morning_high_pct": 0.23,
-          "peak_giveback_pct": 3.63,
-          "estimated_vwap": 4.314,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 60,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.61,
-          "recent_volume_ratio": 1.07,
-          "reasons": [
-            "较日内高点回吐3.63%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续60个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.61倍"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 4.26,
-          "latest_return_pct": -3.18,
-          "morning_high_pct": 0.23,
-          "peak_giveback_pct": 3.4,
-          "estimated_vwap": 4.297,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 120,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.43,
-          "recent_volume_ratio": 0.7,
-          "reasons": [
-            "较日内高点回吐3.40%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续120个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.43倍"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 4.26,
-          "latest_return_pct": -3.18,
-          "morning_high_pct": 0.23,
-          "peak_giveback_pct": 3.4,
-          "estimated_vwap": 4.295,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 150,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.36,
-          "recent_volume_ratio": 1.11,
-          "reasons": [
-            "较日内高点回吐3.40%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续150个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.36倍"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 4.27,
-          "latest_return_pct": -2.95,
-          "morning_high_pct": 0.23,
-          "peak_giveback_pct": 3.17,
-          "estimated_vwap": 4.291,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 210,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.31,
-          "recent_volume_ratio": 0.95,
-          "reasons": [
-            "较日内高点回吐3.17%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续210个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.31倍"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 4.27,
-          "latest_return_pct": -2.95,
-          "morning_high_pct": 0.23,
-          "peak_giveback_pct": 3.17,
-          "estimated_vwap": 4.29,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 240,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.31,
-          "recent_volume_ratio": 1.54,
-          "reasons": [
-            "较日内高点回吐3.17%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续240个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.31倍"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "STRONG_FAILED",
-        "label": "强启动失败",
-        "latest_price": 4.27,
-        "latest_return_pct": -2.95,
-        "morning_high_pct": 0.23,
-        "peak_giveback_pct": 3.17,
-        "estimated_vwap": 4.29,
-        "below_vwap_bar_ratio": 1.0,
-        "continuous_below_vwap_minutes": 240,
-        "vwap_reclaim_count": 0,
-        "post_peak_volume_ratio": 0.31,
-        "recent_volume_ratio": 1.54,
-        "reasons": [
-          "较日内高点回吐3.17%",
-          "冲高后100%的5分钟收盘低于估算VWAP",
-          "连续240个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.31倍"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|000839",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "000839",
-      "name": "国安股份",
-      "original_rank": 10,
-      "explosive_score": 59.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": -4.08
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 2.83,
-          "latest_return_pct": -3.74,
-          "morning_high_pct": -0.68,
-          "peak_giveback_pct": 3.08,
-          "estimated_vwap": 2.856,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 60,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.47,
-          "recent_volume_ratio": 0.46,
-          "reasons": [
-            "较日内高点回吐3.08%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续60个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.47倍"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 2.84,
-          "latest_return_pct": -3.4,
-          "morning_high_pct": -0.68,
-          "peak_giveback_pct": 2.74,
-          "estimated_vwap": 2.848,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 120,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.34,
-          "recent_volume_ratio": 0.35,
-          "reasons": [
-            "较日内高点回吐2.74%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续120个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.34倍"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 2.83,
-          "latest_return_pct": -3.74,
-          "morning_high_pct": -0.68,
-          "peak_giveback_pct": 3.08,
-          "estimated_vwap": 2.847,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 150,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.29,
-          "recent_volume_ratio": 1.63,
-          "reasons": [
-            "较日内高点回吐3.08%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续150个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.29倍"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 2.83,
-          "latest_return_pct": -3.74,
-          "morning_high_pct": -0.68,
-          "peak_giveback_pct": 3.08,
-          "estimated_vwap": 2.845,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 210,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.23,
-          "recent_volume_ratio": 0.49,
-          "reasons": [
-            "较日内高点回吐3.08%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续210个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.23倍"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "STRONG_FAILED",
-          "label": "强启动失败",
-          "latest_price": 2.82,
-          "latest_return_pct": -4.08,
-          "morning_high_pct": -0.68,
-          "peak_giveback_pct": 3.42,
-          "estimated_vwap": 2.842,
-          "below_vwap_bar_ratio": 1.0,
-          "continuous_below_vwap_minutes": 240,
-          "vwap_reclaim_count": 0,
-          "post_peak_volume_ratio": 0.24,
-          "recent_volume_ratio": 2.87,
-          "reasons": [
-            "较日内高点回吐3.42%",
-            "冲高后100%的5分钟收盘低于估算VWAP",
-            "连续240个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.24倍"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "STRONG_FAILED",
-        "label": "强启动失败",
-        "latest_price": 2.82,
-        "latest_return_pct": -4.08,
-        "morning_high_pct": -0.68,
-        "peak_giveback_pct": 3.42,
-        "estimated_vwap": 2.842,
-        "below_vwap_bar_ratio": 1.0,
-        "continuous_below_vwap_minutes": 240,
-        "vwap_reclaim_count": 0,
-        "post_peak_volume_ratio": 0.24,
-        "recent_volume_ratio": 2.87,
-        "reasons": [
-          "较日内高点回吐3.42%",
-          "冲高后100%的5分钟收盘低于估算VWAP",
-          "连续240个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.24倍"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|601088",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "601088",
-      "name": "中国神华",
-      "original_rank": 11,
-      "explosive_score": 40.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": -0.63
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 47.34,
-          "latest_return_pct": -0.36,
-          "morning_high_pct": 0.51,
-          "peak_giveback_pct": 0.86,
-          "estimated_vwap": 47.488,
-          "below_vwap_bar_ratio": 0.917,
-          "continuous_below_vwap_minutes": 45,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.62,
-          "recent_volume_ratio": 0.6,
-          "reasons": [
-            "冲高后92%的5分钟收盘低于估算VWAP",
-            "连续45个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.62倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 47.28,
-          "latest_return_pct": -0.48,
-          "morning_high_pct": 0.51,
-          "peak_giveback_pct": 0.98,
-          "estimated_vwap": 47.421,
-          "below_vwap_bar_ratio": 0.958,
-          "continuous_below_vwap_minutes": 105,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.47,
-          "recent_volume_ratio": 0.82,
-          "reasons": [
-            "冲高后96%的5分钟收盘低于估算VWAP",
-            "连续105个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.47倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 47.33,
-          "latest_return_pct": -0.38,
-          "morning_high_pct": 0.51,
-          "peak_giveback_pct": 0.88,
-          "estimated_vwap": 47.406,
-          "below_vwap_bar_ratio": 0.967,
-          "continuous_below_vwap_minutes": 135,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.44,
-          "recent_volume_ratio": 0.92,
-          "reasons": [
-            "冲高后97%的5分钟收盘低于估算VWAP",
-            "连续135个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.44倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 47.33,
-          "latest_return_pct": -0.38,
-          "morning_high_pct": 0.51,
-          "peak_giveback_pct": 0.88,
-          "estimated_vwap": 47.389,
-          "below_vwap_bar_ratio": 0.976,
-          "continuous_below_vwap_minutes": 195,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.39,
-          "recent_volume_ratio": 1.22,
-          "reasons": [
-            "冲高后98%的5分钟收盘低于估算VWAP",
-            "连续195个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.39倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 47.21,
-          "latest_return_pct": -0.63,
-          "morning_high_pct": 0.51,
-          "peak_giveback_pct": 1.13,
-          "estimated_vwap": 47.371,
-          "below_vwap_bar_ratio": 0.979,
-          "continuous_below_vwap_minutes": 225,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.41,
-          "recent_volume_ratio": 1.88,
-          "reasons": [
-            "冲高后98%的5分钟收盘低于估算VWAP",
-            "连续225个交易分钟未收复估算VWAP",
-            "冲高后平均量能为启动段0.41倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "WAITING",
-        "label": "等待验证",
-        "latest_price": 47.21,
-        "latest_return_pct": -0.63,
-        "morning_high_pct": 0.51,
-        "peak_giveback_pct": 1.13,
-        "estimated_vwap": 47.371,
-        "below_vwap_bar_ratio": 0.979,
-        "continuous_below_vwap_minutes": 225,
+        "latest_price": 14.5,
+        "latest_return_pct": -0.41,
+        "morning_high_pct": 1.3,
+        "peak_giveback_pct": 1.69,
+        "estimated_vwap": 14.569,
+        "below_vwap_bar_ratio": 0.909,
+        "continuous_below_vwap_minutes": 100,
         "vwap_reclaim_count": 1,
-        "post_peak_volume_ratio": 0.41,
-        "recent_volume_ratio": 1.88,
+        "post_peak_volume_ratio": 0.65,
+        "recent_volume_ratio": 0.85,
         "reasons": [
-          "冲高后98%的5分钟收盘低于估算VWAP",
-          "连续225个交易分钟未收复估算VWAP",
-          "冲高后平均量能为启动段0.41倍",
+          "冲高后91%的5分钟收盘低于估算VWAP",
+          "连续100个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.65倍",
           "尚未同时满足有效启动或失败条件"
         ]
       },
       "error": null
     },
     {
-      "key": "2026-09-22|2026-09-23|603209",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "603209",
-      "name": "兴通股份",
+      "key": "2026-09-23|2026-09-24|600798",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "600798",
+      "name": "宁波海运",
       "original_rank": 12,
-      "explosive_score": 45.0,
+      "explosive_score": 61.0,
       "forward_returns": {
         "1": {
-          "date": "2026-09-23",
-          "value": -0.34
+          "date": "2026-09-24",
+          "value": null
         },
         "3": {
           "date": null,
@@ -1768,143 +1041,83 @@
           "value": null
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
+          "bar_time": "2026-09-24 10:30",
           "state": "VALID",
           "label": "有效启动",
-          "latest_price": 14.69,
-          "latest_return_pct": 0.2,
-          "morning_high_pct": 0.75,
-          "peak_giveback_pct": 0.54,
-          "estimated_vwap": 14.639,
+          "latest_price": 3.37,
+          "latest_return_pct": 0.6,
+          "morning_high_pct": 1.19,
+          "peak_giveback_pct": 0.59,
+          "estimated_vwap": 3.364,
           "below_vwap_bar_ratio": 0.0,
           "continuous_below_vwap_minutes": 0,
           "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.66,
-          "recent_volume_ratio": 0.54,
+          "post_peak_volume_ratio": 0.33,
+          "recent_volume_ratio": 0.41,
           "reasons": [
-            "冲高后平均量能为启动段0.66倍",
+            "冲高后平均量能为启动段0.33倍",
             "价格位于估算VWAP上方且高点回吐受控"
           ]
         },
         {
           "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
+          "bar_time": "2026-09-24 11:30",
           "state": "WAITING",
           "label": "等待验证",
-          "latest_price": 14.65,
-          "latest_return_pct": -0.07,
-          "morning_high_pct": 0.75,
-          "peak_giveback_pct": 0.81,
-          "estimated_vwap": 14.639,
-          "below_vwap_bar_ratio": 0.167,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.35,
-          "recent_volume_ratio": 0.4,
-          "reasons": [
-            "冲高后平均量能为启动段0.35倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 14.66,
-          "latest_return_pct": 0.0,
-          "morning_high_pct": 0.75,
-          "peak_giveback_pct": 0.74,
-          "estimated_vwap": 14.64,
-          "below_vwap_bar_ratio": 0.125,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.3,
-          "recent_volume_ratio": 0.76,
-          "reasons": [
-            "冲高后平均量能为启动段0.30倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 14.67,
-          "latest_return_pct": 0.07,
-          "morning_high_pct": 0.75,
-          "peak_giveback_pct": 0.68,
-          "estimated_vwap": 14.647,
-          "below_vwap_bar_ratio": 0.083,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 3,
+          "latest_price": 3.36,
+          "latest_return_pct": 0.3,
+          "morning_high_pct": 1.19,
+          "peak_giveback_pct": 0.88,
+          "estimated_vwap": 3.366,
+          "below_vwap_bar_ratio": 0.267,
+          "continuous_below_vwap_minutes": 15,
+          "vwap_reclaim_count": 2,
           "post_peak_volume_ratio": 0.27,
-          "recent_volume_ratio": 1.55,
+          "recent_volume_ratio": 1.26,
           "reasons": [
             "冲高后平均量能为启动段0.27倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 14.61,
-          "latest_return_pct": -0.34,
-          "morning_high_pct": 0.75,
-          "peak_giveback_pct": 1.08,
-          "estimated_vwap": 14.645,
-          "below_vwap_bar_ratio": 0.19,
-          "continuous_below_vwap_minutes": 25,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.28,
-          "recent_volume_ratio": 1.88,
-          "reasons": [
-            "冲高后平均量能为启动段0.28倍",
             "尚未同时满足有效启动或失败条件"
           ]
         }
       ],
       "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
         "state": "WAITING",
         "label": "等待验证",
-        "latest_price": 14.61,
-        "latest_return_pct": -0.34,
-        "morning_high_pct": 0.75,
-        "peak_giveback_pct": 1.08,
-        "estimated_vwap": 14.645,
-        "below_vwap_bar_ratio": 0.19,
-        "continuous_below_vwap_minutes": 25,
-        "vwap_reclaim_count": 3,
-        "post_peak_volume_ratio": 0.28,
-        "recent_volume_ratio": 1.88,
+        "latest_price": 3.36,
+        "latest_return_pct": 0.3,
+        "morning_high_pct": 1.19,
+        "peak_giveback_pct": 0.88,
+        "estimated_vwap": 3.366,
+        "below_vwap_bar_ratio": 0.267,
+        "continuous_below_vwap_minutes": 15,
+        "vwap_reclaim_count": 2,
+        "post_peak_volume_ratio": 0.27,
+        "recent_volume_ratio": 1.26,
         "reasons": [
-          "冲高后平均量能为启动段0.28倍",
+          "冲高后平均量能为启动段0.27倍",
           "尚未同时满足有效启动或失败条件"
         ]
       },
       "error": null
     },
     {
-      "key": "2026-09-22|2026-09-23|001965",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "001965",
-      "name": "招商公路",
+      "key": "2026-09-23|2026-09-24|002272",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "002272",
+      "name": "川润股份",
       "original_rank": 13,
-      "explosive_score": 43.0,
+      "explosive_score": 73.0,
       "forward_returns": {
         "1": {
-          "date": "2026-09-23",
-          "value": 0.61
+          "date": "2026-09-24",
+          "value": null
         },
         "3": {
           "date": null,
@@ -1915,288 +1128,176 @@
           "value": null
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
+          "bar_time": "2026-09-24 10:30",
+          "state": "WAITING",
+          "label": "等待验证",
+          "latest_price": 15.75,
+          "latest_return_pct": -1.69,
+          "morning_high_pct": 0.12,
+          "peak_giveback_pct": 1.81,
+          "estimated_vwap": 15.896,
+          "below_vwap_bar_ratio": 0.667,
+          "continuous_below_vwap_minutes": 30,
+          "vwap_reclaim_count": 2,
+          "post_peak_volume_ratio": 0.81,
+          "recent_volume_ratio": 0.88,
+          "reasons": [
+            "冲高后67%的5分钟收盘低于估算VWAP",
+            "连续30个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.81倍",
+            "尚未同时满足有效启动或失败条件"
+          ]
+        },
+        {
+          "cutoff": "11:30",
+          "bar_time": "2026-09-24 11:30",
+          "state": "WAITING",
+          "label": "等待验证",
+          "latest_price": 15.72,
+          "latest_return_pct": -1.87,
+          "morning_high_pct": 0.12,
+          "peak_giveback_pct": 2.0,
+          "estimated_vwap": 15.836,
+          "below_vwap_bar_ratio": 0.833,
+          "continuous_below_vwap_minutes": 90,
+          "vwap_reclaim_count": 2,
+          "post_peak_volume_ratio": 0.6,
+          "recent_volume_ratio": 0.59,
+          "reasons": [
+            "冲高后83%的5分钟收盘低于估算VWAP",
+            "连续90个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.60倍",
+            "尚未同时满足有效启动或失败条件"
+          ]
+        }
+      ],
+      "latest": {
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "WAITING",
+        "label": "等待验证",
+        "latest_price": 15.72,
+        "latest_return_pct": -1.87,
+        "morning_high_pct": 0.12,
+        "peak_giveback_pct": 2.0,
+        "estimated_vwap": 15.836,
+        "below_vwap_bar_ratio": 0.833,
+        "continuous_below_vwap_minutes": 90,
+        "vwap_reclaim_count": 2,
+        "post_peak_volume_ratio": 0.6,
+        "recent_volume_ratio": 0.59,
+        "reasons": [
+          "冲高后83%的5分钟收盘低于估算VWAP",
+          "连续90个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.60倍",
+          "尚未同时满足有效启动或失败条件"
+        ]
+      },
+      "error": null
+    },
+    {
+      "key": "2026-09-23|2026-09-24|300443",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "300443",
+      "name": "金雷股份",
+      "original_rank": 14,
+      "explosive_score": 56.0,
+      "forward_returns": {
+        "1": {
+          "date": "2026-09-24",
+          "value": null
+        },
+        "3": {
+          "date": null,
+          "value": null
+        },
+        "5": {
+          "date": null,
+          "value": null
+        }
+      },
+      "data_source": "腾讯直连",
+      "snapshots": [
+        {
+          "cutoff": "10:30",
+          "bar_time": "2026-09-24 10:30",
           "state": "VALID",
           "label": "有效启动",
-          "latest_price": 9.81,
-          "latest_return_pct": 0.1,
-          "morning_high_pct": 0.41,
-          "peak_giveback_pct": 0.3,
-          "estimated_vwap": 9.803,
+          "latest_price": 19.9,
+          "latest_return_pct": 1.84,
+          "morning_high_pct": 2.66,
+          "peak_giveback_pct": 0.8,
+          "estimated_vwap": 19.837,
           "below_vwap_bar_ratio": 0.0,
           "continuous_below_vwap_minutes": 0,
           "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.42,
-          "recent_volume_ratio": 0.73,
+          "post_peak_volume_ratio": 0.53,
+          "recent_volume_ratio": 0.38,
           "reasons": [
-            "冲高后平均量能为启动段0.42倍",
+            "冲高后平均量能为启动段0.53倍",
             "价格位于估算VWAP上方且高点回吐受控"
           ]
         },
         {
           "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
+          "bar_time": "2026-09-24 11:30",
           "state": "VALID",
           "label": "有效启动",
-          "latest_price": 9.84,
-          "latest_return_pct": 0.41,
-          "morning_high_pct": 0.51,
-          "peak_giveback_pct": 0.1,
-          "estimated_vwap": 9.809,
-          "below_vwap_bar_ratio": 0.25,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.65,
-          "recent_volume_ratio": 0.73,
-          "reasons": [
-            "冲高后平均量能为启动段0.65倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 9.82,
-          "latest_return_pct": 0.2,
-          "morning_high_pct": 0.61,
-          "peak_giveback_pct": 0.41,
-          "estimated_vwap": 9.814,
+          "latest_price": 19.99,
+          "latest_return_pct": 2.3,
+          "morning_high_pct": 2.76,
+          "peak_giveback_pct": 0.45,
+          "estimated_vwap": 19.878,
           "below_vwap_bar_ratio": 0.0,
           "continuous_below_vwap_minutes": 0,
           "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.92,
-          "recent_volume_ratio": 1.0,
+          "post_peak_volume_ratio": 0.25,
+          "recent_volume_ratio": 0.48,
           "reasons": [
-            "冲高后平均量能为启动段0.92倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 9.86,
-          "latest_return_pct": 0.61,
-          "morning_high_pct": 0.71,
-          "peak_giveback_pct": 0.1,
-          "estimated_vwap": 9.821,
-          "below_vwap_bar_ratio": 0.0,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.69,
-          "recent_volume_ratio": 1.3,
-          "reasons": [
-            "冲高后平均量能为启动段0.69倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 9.86,
-          "latest_return_pct": 0.61,
-          "morning_high_pct": 0.92,
-          "peak_giveback_pct": 0.3,
-          "estimated_vwap": 9.83,
-          "below_vwap_bar_ratio": 0.0,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 1.01,
-          "recent_volume_ratio": 0.71,
-          "reasons": [
+            "冲高后平均量能为启动段0.25倍",
             "价格位于估算VWAP上方且高点回吐受控"
           ]
         }
       ],
       "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
         "state": "VALID",
         "label": "有效启动",
-        "latest_price": 9.86,
-        "latest_return_pct": 0.61,
-        "morning_high_pct": 0.92,
-        "peak_giveback_pct": 0.3,
-        "estimated_vwap": 9.83,
+        "latest_price": 19.99,
+        "latest_return_pct": 2.3,
+        "morning_high_pct": 2.76,
+        "peak_giveback_pct": 0.45,
+        "estimated_vwap": 19.878,
         "below_vwap_bar_ratio": 0.0,
         "continuous_below_vwap_minutes": 0,
         "vwap_reclaim_count": 1,
-        "post_peak_volume_ratio": 1.01,
-        "recent_volume_ratio": 0.71,
+        "post_peak_volume_ratio": 0.25,
+        "recent_volume_ratio": 0.48,
         "reasons": [
+          "冲高后平均量能为启动段0.25倍",
           "价格位于估算VWAP上方且高点回吐受控"
         ]
       },
       "error": null
     },
     {
-      "key": "2026-09-22|2026-09-23|603755",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "603755",
-      "name": "日辰股份",
-      "original_rank": 14,
-      "explosive_score": 49.0,
-      "forward_returns": {
-        "1": {
-          "date": "2026-09-23",
-          "value": -0.9
-        },
-        "3": {
-          "date": null,
-          "value": null
-        },
-        "5": {
-          "date": null,
-          "value": null
-        }
-      },
-      "data_source": "本地缓存",
-      "snapshots": [
-        {
-          "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 24.42,
-          "latest_return_pct": 0.16,
-          "morning_high_pct": 0.82,
-          "peak_giveback_pct": 0.65,
-          "estimated_vwap": 24.287,
-          "below_vwap_bar_ratio": 0.0,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.45,
-          "recent_volume_ratio": 0.83,
-          "reasons": [
-            "冲高后平均量能为启动段0.45倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 24.29,
-          "latest_return_pct": -0.37,
-          "morning_high_pct": 0.82,
-          "peak_giveback_pct": 1.18,
-          "estimated_vwap": 24.283,
-          "below_vwap_bar_ratio": 0.375,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.36,
-          "recent_volume_ratio": 0.75,
-          "reasons": [
-            "冲高后平均量能为启动段0.36倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 24.41,
-          "latest_return_pct": 0.12,
-          "morning_high_pct": 0.82,
-          "peak_giveback_pct": 0.69,
-          "estimated_vwap": 24.291,
-          "below_vwap_bar_ratio": 0.273,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.32,
-          "recent_volume_ratio": 2.08,
-          "reasons": [
-            "冲高后平均量能为启动段0.32倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 24.28,
-          "latest_return_pct": -0.41,
-          "morning_high_pct": 0.82,
-          "peak_giveback_pct": 1.22,
-          "estimated_vwap": 24.294,
-          "below_vwap_bar_ratio": 0.265,
-          "continuous_below_vwap_minutes": 15,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.35,
-          "recent_volume_ratio": 2.79,
-          "reasons": [
-            "冲高后平均量能为启动段0.35倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 24.16,
-          "latest_return_pct": -0.9,
-          "morning_high_pct": 0.82,
-          "peak_giveback_pct": 1.71,
-          "estimated_vwap": 24.287,
-          "below_vwap_bar_ratio": 0.3,
-          "continuous_below_vwap_minutes": 15,
-          "vwap_reclaim_count": 3,
-          "post_peak_volume_ratio": 0.43,
-          "recent_volume_ratio": 1.21,
-          "reasons": [
-            "冲高后平均量能为启动段0.43倍",
-            "尚未同时满足有效启动或失败条件"
-          ]
-        }
-      ],
-      "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "WAITING",
-        "label": "等待验证",
-        "latest_price": 24.16,
-        "latest_return_pct": -0.9,
-        "morning_high_pct": 0.82,
-        "peak_giveback_pct": 1.71,
-        "estimated_vwap": 24.287,
-        "below_vwap_bar_ratio": 0.3,
-        "continuous_below_vwap_minutes": 15,
-        "vwap_reclaim_count": 3,
-        "post_peak_volume_ratio": 0.43,
-        "recent_volume_ratio": 1.21,
-        "reasons": [
-          "冲高后平均量能为启动段0.43倍",
-          "尚未同时满足有效启动或失败条件"
-        ]
-      },
-      "error": null
-    },
-    {
-      "key": "2026-09-22|2026-09-23|603766",
-      "signal_date": "2026-09-22",
-      "observation_date": "2026-09-23",
-      "code": "603766",
-      "name": "隆鑫通用",
+      "key": "2026-09-23|2026-09-24|000859",
+      "signal_date": "2026-09-23",
+      "observation_date": "2026-09-24",
+      "code": "000859",
+      "name": "国风新材",
       "original_rank": 15,
-      "explosive_score": 59.0,
+      "explosive_score": 69.0,
       "forward_returns": {
         "1": {
-          "date": "2026-09-23",
-          "value": 1.18
+          "date": "2026-09-24",
+          "value": null
         },
         "3": {
           "date": null,
@@ -2207,127 +1308,73 @@
           "value": null
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
-          "bar_time": "2026-09-23 10:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 14.59,
-          "latest_return_pct": 1.39,
-          "morning_high_pct": 2.02,
-          "peak_giveback_pct": 0.61,
-          "estimated_vwap": 14.471,
-          "below_vwap_bar_ratio": 0.0,
-          "continuous_below_vwap_minutes": 0,
+          "bar_time": "2026-09-24 10:30",
+          "state": "FAILED",
+          "label": "启动失败",
+          "latest_price": 9.18,
+          "latest_return_pct": -1.82,
+          "morning_high_pct": 1.07,
+          "peak_giveback_pct": 2.86,
+          "estimated_vwap": 9.268,
+          "below_vwap_bar_ratio": 0.917,
+          "continuous_below_vwap_minutes": 55,
           "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.38,
-          "recent_volume_ratio": 0.47,
+          "post_peak_volume_ratio": 0.73,
+          "recent_volume_ratio": 1.01,
           "reasons": [
-            "冲高后平均量能为启动段0.38倍",
-            "价格位于估算VWAP上方且高点回吐受控"
+            "较日内高点回吐2.86%",
+            "冲高后92%的5分钟收盘低于估算VWAP",
+            "连续55个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.73倍"
           ]
         },
         {
           "cutoff": "11:30",
-          "bar_time": "2026-09-23 11:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 14.57,
-          "latest_return_pct": 1.25,
-          "morning_high_pct": 2.02,
-          "peak_giveback_pct": 0.75,
-          "estimated_vwap": 14.5,
-          "below_vwap_bar_ratio": 0.0,
-          "continuous_below_vwap_minutes": 0,
+          "bar_time": "2026-09-24 11:30",
+          "state": "STRONG_FAILED",
+          "label": "强启动失败",
+          "latest_price": 9.11,
+          "latest_return_pct": -2.57,
+          "morning_high_pct": 1.07,
+          "peak_giveback_pct": 3.6,
+          "estimated_vwap": 9.231,
+          "below_vwap_bar_ratio": 0.958,
+          "continuous_below_vwap_minutes": 115,
           "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.29,
-          "recent_volume_ratio": 0.92,
+          "post_peak_volume_ratio": 0.51,
+          "recent_volume_ratio": 2.25,
           "reasons": [
-            "冲高后平均量能为启动段0.29倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "13:30",
-          "bar_time": "2026-09-23 13:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 14.73,
-          "latest_return_pct": 2.36,
-          "morning_high_pct": 2.71,
-          "peak_giveback_pct": 0.34,
-          "estimated_vwap": 14.541,
-          "below_vwap_bar_ratio": 0.0,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.35,
-          "recent_volume_ratio": 2.36,
-          "reasons": [
-            "冲高后平均量能为启动段0.35倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "14:30",
-          "bar_time": "2026-09-23 14:30",
-          "state": "VALID",
-          "label": "有效启动",
-          "latest_price": 14.61,
-          "latest_return_pct": 1.53,
-          "morning_high_pct": 2.71,
-          "peak_giveback_pct": 1.15,
-          "estimated_vwap": 14.574,
-          "below_vwap_bar_ratio": 0.0,
-          "continuous_below_vwap_minutes": 0,
-          "vwap_reclaim_count": 1,
-          "post_peak_volume_ratio": 0.75,
-          "recent_volume_ratio": 0.9,
-          "reasons": [
-            "冲高后平均量能为启动段0.75倍",
-            "价格位于估算VWAP上方且高点回吐受控"
-          ]
-        },
-        {
-          "cutoff": "15:00",
-          "bar_time": "2026-09-23 15:00",
-          "state": "WAITING",
-          "label": "等待验证",
-          "latest_price": 14.56,
-          "latest_return_pct": 1.18,
-          "morning_high_pct": 2.71,
-          "peak_giveback_pct": 1.49,
-          "estimated_vwap": 14.574,
-          "below_vwap_bar_ratio": 0.15,
-          "continuous_below_vwap_minutes": 10,
-          "vwap_reclaim_count": 2,
-          "post_peak_volume_ratio": 0.89,
-          "recent_volume_ratio": 0.91,
-          "reasons": [
-            "冲高后平均量能为启动段0.89倍",
-            "尚未同时满足有效启动或失败条件"
+            "较日内高点回吐3.60%",
+            "冲高后96%的5分钟收盘低于估算VWAP",
+            "连续115个交易分钟未收复估算VWAP",
+            "冲高后平均量能为启动段0.51倍"
           ]
         }
       ],
       "latest": {
-        "cutoff": "15:00",
-        "bar_time": "2026-09-23 15:00",
-        "state": "WAITING",
-        "label": "等待验证",
-        "latest_price": 14.56,
-        "latest_return_pct": 1.18,
-        "morning_high_pct": 2.71,
-        "peak_giveback_pct": 1.49,
-        "estimated_vwap": 14.574,
-        "below_vwap_bar_ratio": 0.15,
-        "continuous_below_vwap_minutes": 10,
-        "vwap_reclaim_count": 2,
-        "post_peak_volume_ratio": 0.89,
-        "recent_volume_ratio": 0.91,
+        "cutoff": "11:30",
+        "bar_time": "2026-09-24 11:30",
+        "state": "STRONG_FAILED",
+        "label": "强启动失败",
+        "latest_price": 9.11,
+        "latest_return_pct": -2.57,
+        "morning_high_pct": 1.07,
+        "peak_giveback_pct": 3.6,
+        "estimated_vwap": 9.231,
+        "below_vwap_bar_ratio": 0.958,
+        "continuous_below_vwap_minutes": 115,
+        "vwap_reclaim_count": 1,
+        "post_peak_volume_ratio": 0.51,
+        "recent_volume_ratio": 2.25,
         "reasons": [
-          "冲高后平均量能为启动段0.89倍",
-          "尚未同时满足有效启动或失败条件"
+          "较日内高点回吐3.60%",
+          "冲高后96%的5分钟收盘低于估算VWAP",
+          "连续115个交易分钟未收复估算VWAP",
+          "冲高后平均量能为启动段0.51倍"
         ]
       },
       "error": null
@@ -2336,9 +1383,10 @@
   "summary": {
     "candidate_count": 15,
     "state_counts": {
-      "STRONG_FAILED": 7,
+      "WAITING": 8,
+      "STRONG_FAILED": 4,
       "VALID": 2,
-      "WAITING": 6
+      "FAILED": 1
     }
   },
   "historical_performance": {
