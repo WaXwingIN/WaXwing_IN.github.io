@@ -1,0 +1,46 @@
+{
+  "version": "pre-close-shadow-v1",
+  "research_only": true,
+  "broker_connected": false,
+  "generated_at": "2026-09-24 20:36:46",
+  "observation_date": "2026-09-24",
+  "source_v6_signal_date": "2026-09-24",
+  "expected_v6_signal_date": "2026-09-23",
+  "phase": "CLOSED",
+  "phase_label": "尾盘窗口已关闭",
+  "cutoff": "14:56",
+  "new_order_cutoff": "14:56:30",
+  "cancel_cutoff": "14:56:45",
+  "market_regime": {
+    "scale": 1.0,
+    "label": "强市",
+    "market_ret_20": 0.041320357006043196,
+    "breadth_5": 0.5813947856426239,
+    "volatility_rank_120": 0.14166666666666666
+  },
+  "error": "需要上一交易日V6信号 2026-09-23，当前为 2026-09-24；未使用同日收盘数据冒充尾盘信号",
+  "summary": {
+    "watch_count": 10,
+    "frozen_count": 0,
+    "ready_count": 0,
+    "shadow_order_count": 0,
+    "shadow_filled_count": 0
+  },
+  "rows": [],
+  "shadow_orders": [],
+  "rules": {
+    "candidate_source": "上一交易日正式V6 Top10观察；原始排名前5才可冻结",
+    "position": "正常单股10%；当日涨3%至5%且通过极强门为5%；最多2只；总仓位不超过20%",
+    "execution": "仅影子限价单，14:53至14:56记录；不连接券商",
+    "next_day": "次日高开达到3.3%开盘止盈；低开低于-2%开盘止损；否则次日收盘退出"
+  },
+  "shadow_history_summary": {
+    "sessions": 0,
+    "orders": 0,
+    "filled": 0,
+    "settled": 0,
+    "t1_net_win_rate_pct": null,
+    "average_t1_net_return_pct": null,
+    "average_overnight_gap_pct": null
+  }
+}
