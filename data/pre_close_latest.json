@@ -2,13 +2,13 @@
   "version": "pre-close-shadow-v1",
   "research_only": true,
   "broker_connected": false,
-  "generated_at": "2026-09-29 14:53:02",
+  "generated_at": "2026-09-29 14:54:02",
   "observation_date": "2026-09-29",
   "source_v6_signal_date": "2026-09-28",
   "expected_v6_signal_date": "2026-09-28",
   "phase": "PRE_CLOSE_READY",
   "phase_label": "尾盘先手准备执行",
-  "cutoff": "14:53",
+  "cutoff": "14:54",
   "new_order_cutoff": "14:56:30",
   "cancel_cutoff": "14:56:45",
   "market_regime": {
@@ -149,7 +149,7 @@
       "state_label": "尾盘条件不满足",
       "data_source": "腾讯直连",
       "features": {
-        "cutoff": "14:53",
+        "cutoff": "14:54",
         "bar_time": "2026-09-29 14:50:00",
         "latest_price": 37.66,
         "day_return_pct": -9.99,
@@ -200,7 +200,7 @@
       "state_label": "尾盘条件不满足",
       "data_source": "腾讯直连",
       "features": {
-        "cutoff": "14:53",
+        "cutoff": "14:54",
         "bar_time": "2026-09-29 14:50:00",
         "latest_price": 14.27,
         "day_return_pct": -9.97,
@@ -251,7 +251,7 @@
       "state_label": "尾盘条件不满足",
       "data_source": "腾讯直连",
       "features": {
-        "cutoff": "14:53",
+        "cutoff": "14:54",
         "bar_time": "2026-09-29 14:50:00",
         "latest_price": 29.17,
         "day_return_pct": 4.03,
@@ -303,7 +303,7 @@
       "state_label": "尾盘条件不满足",
       "data_source": "腾讯直连",
       "features": {
-        "cutoff": "14:53",
+        "cutoff": "14:54",
         "bar_time": "2026-09-29 14:50:00",
         "latest_price": 16.36,
         "day_return_pct": -5.92,
@@ -354,7 +354,7 @@
       "state_label": "尾盘条件不满足",
       "data_source": "腾讯直连",
       "features": {
-        "cutoff": "14:53",
+        "cutoff": "14:54",
         "bar_time": "2026-09-29 14:50:00",
         "latest_price": 37.62,
         "day_return_pct": -10.0,
