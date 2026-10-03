@@ -875,7 +875,7 @@ function shortCycleFlag(value){
     return `<span class="short-cycle-flag unknown" aria-label="${safe(value||'无法检测')}"><b aria-hidden="true">?</b> ${safe(value||'无法检测')}</span>`;
 }
 function shortCycleConditionCell(evidence){
-    const flags=shortCycleConditionState(evidence),view=shortCycleReminderView(flags.signal),origin=flags.appeared?(view.live?'实时归档':'历史回放，非当时推送'):view.detail;
+    const flags=shortCycleConditionState(evidence),view=shortCycleReminderView(flags.signal),origin=flags.appeared?(view.live?'实时扫描归档':'历史回算'):view.detail;
     const fractalTiming=flags.fractal['发生时间']||flags.fractal['确认时间']
         ?`<small class="short-cycle-time">30分钟底分型时间：${safe(formatDateTime(flags.fractal['发生时间']))} · 确认 ${safe(formatDateTime(flags.fractal['确认时间']))}</small>`:'';
     const outcome=!flags.legacyEvidence&&evidence?.['回放事件']==='短周期预测首次出现'
