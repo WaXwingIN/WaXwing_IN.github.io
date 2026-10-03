@@ -1,8 +1,12 @@
 {
-  "version": "intraday-start-validation-v2-close",
-  "research_only": true,
+  "version": "intraday-start-validation-v3-entry-gate",
+  "research_only": false,
   "affects_official_model": false,
-  "generated_at": "2026-09-30 16:32:55",
+  "controls_entry_action": true,
+  "live_entry_enabled": false,
+  "live_entry_block_reason": "首次有效启动的可执行历史收益尚未形成稳定正优势",
+  "entry_rule": "class-ii-first-valid-snapshot-v1",
+  "generated_at": "2026-10-03 14:07:44",
   "signal_date": "2026-09-29",
   "observation_date": "2026-09-30",
   "is_intraday_preview": false,
@@ -22,6 +26,7 @@
       "name": "一拖股份",
       "original_rank": 1,
       "explosive_score": 88.0,
+      "signal_close": 13.67,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -34,9 +39,46 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "SHADOW_ENTERED",
+        "action": "启动通过 · 仅模拟",
+        "entry_triggered": true,
+        "entry_allowed_now": false,
+        "triggered_at": "2026-09-30 14:30",
+        "entry_price": 13.74,
+        "latest_state": "VALID"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": -0.22,
+          "status": "已结算",
+          "target_close": 13.71
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -169,6 +211,7 @@
       "name": "南矿集团",
       "original_rank": 2,
       "explosive_score": 73.0,
+      "signal_close": 19.01,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -181,9 +224,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "STRONG_FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -326,10 +405,11 @@
       "name": "迈瑞医疗",
       "original_rank": 3,
       "explosive_score": 68.0,
+      "signal_close": 159.01,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
-          "value": 1.76
+          "value": 1.45
         },
         "3": {
           "date": null,
@@ -338,9 +418,46 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "SHADOW_ENTERED",
+        "action": "启动通过 · 仅模拟",
+        "entry_triggered": true,
+        "entry_allowed_now": false,
+        "triggered_at": "2026-09-30 14:30",
+        "entry_price": 161.57,
+        "latest_state": "VALID"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": -0.16,
+          "status": "已结算",
+          "target_close": 161.316
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -473,6 +590,7 @@
       "name": "皇台酒业",
       "original_rank": 4,
       "explosive_score": 89.0,
+      "signal_close": 11.28,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -485,9 +603,46 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "SHADOW_ENTERED",
+        "action": "启动通过 · 仅模拟",
+        "entry_triggered": true,
+        "entry_allowed_now": false,
+        "triggered_at": "2026-09-30 13:30",
+        "entry_price": 11.45,
+        "latest_state": "WAITING"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": -0.44,
+          "status": "已结算",
+          "target_close": 11.4
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -625,6 +780,7 @@
       "name": "华升股份",
       "original_rank": 5,
       "explosive_score": 69.0,
+      "signal_close": 8.17,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -637,9 +793,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "STRONG_FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -784,6 +976,7 @@
       "name": "新 华 都",
       "original_rank": 6,
       "explosive_score": 83.0,
+      "signal_close": 7.57,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -796,9 +989,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "STRONG_FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -943,6 +1172,7 @@
       "name": "中国动力",
       "original_rank": 7,
       "explosive_score": 65.0,
+      "signal_close": 33.8,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -955,9 +1185,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "STRONG_FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1102,6 +1368,7 @@
       "name": "曙光股份",
       "original_rank": 8,
       "explosive_score": 73.0,
+      "signal_close": 3.06,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -1114,9 +1381,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1255,6 +1558,7 @@
       "name": "鼎际得",
       "original_rank": 9,
       "explosive_score": 88.0,
+      "signal_close": 30.82,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -1267,9 +1571,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "STRONG_FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1414,6 +1754,7 @@
       "name": "航天彩虹",
       "original_rank": 10,
       "explosive_score": 63.0,
+      "signal_close": 17.93,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -1426,9 +1767,46 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "SHADOW_ENTERED",
+        "action": "启动通过 · 仅模拟",
+        "entry_triggered": true,
+        "entry_allowed_now": false,
+        "triggered_at": "2026-09-30 10:30",
+        "entry_price": 18.17,
+        "latest_state": "WAITING"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": -0.33,
+          "status": "已结算",
+          "target_close": 18.109
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1562,6 +1940,7 @@
       "name": "电魂网络",
       "original_rank": 11,
       "explosive_score": 84.0,
+      "signal_close": 14.19,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -1574,9 +1953,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "STRONG_FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1720,6 +2135,7 @@
       "name": "模塑科技",
       "original_rank": 12,
       "explosive_score": 72.0,
+      "signal_close": 12.25,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -1732,9 +2148,46 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "SHADOW_ENTERED",
+        "action": "启动通过 · 仅模拟",
+        "entry_triggered": true,
+        "entry_allowed_now": false,
+        "triggered_at": "2026-09-30 10:30",
+        "entry_price": 12.43,
+        "latest_state": "WAITING"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": -1.21,
+          "status": "已结算",
+          "target_close": 12.279
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "待结算"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1872,10 +2325,11 @@
       "name": "远翔新材",
       "original_rank": 13,
       "explosive_score": 79.0,
+      "signal_close": 32.73,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
-          "value": 0.82
+          "value": 0.64
         },
         "3": {
           "date": null,
@@ -1884,9 +2338,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "WAITING",
+        "action": "等待有效启动",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "WAITING"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -2023,10 +2513,11 @@
       "name": "趣睡科技",
       "original_rank": 14,
       "explosive_score": 54.0,
+      "signal_close": 42.18,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
-          "value": -1.16
+          "value": -1.21
         },
         "3": {
           "date": null,
@@ -2035,9 +2526,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "STRONG_FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -2182,6 +2709,7 @@
       "name": "海量数据",
       "original_rank": 15,
       "explosive_score": 87.0,
+      "signal_close": 15.1,
       "forward_returns": {
         "1": {
           "date": "2026-09-30",
@@ -2194,9 +2722,45 @@
         "5": {
           "date": null,
           "value": null
+        },
+        "10": {
+          "date": null,
+          "value": null
         }
       },
-      "data_source": "腾讯直连",
+      "entry_gate": {
+        "rule_version": "class-ii-first-valid-snapshot-v1",
+        "status": "BLOCKED",
+        "action": "不介入",
+        "entry_triggered": false,
+        "entry_allowed_now": false,
+        "triggered_at": null,
+        "entry_price": null,
+        "latest_state": "STRONG_FAILED"
+      },
+      "execution_returns": {
+        "1": {
+          "date": "2026-09-30",
+          "value": null,
+          "status": "未触发介入"
+        },
+        "3": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "5": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        },
+        "10": {
+          "date": null,
+          "value": null,
+          "status": "未触发介入"
+        }
+      },
+      "data_source": "本地缓存",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -2358,7 +2922,7 @@
       "VALID": {
         "samples": 23,
         "win_rate_pct": 100.0,
-        "average_return_pct": 2.58
+        "average_return_pct": 2.54
       },
       "FAILED": {
         "samples": 3,
@@ -2370,17 +2934,17 @@
       "STRONG_FAILED": {
         "samples": 23,
         "win_rate_pct": 13.04,
-        "average_return_pct": -5.36
+        "average_return_pct": -5.41
       },
       "WAITING": {
         "samples": 23,
         "win_rate_pct": 39.13,
-        "average_return_pct": -1.48
+        "average_return_pct": -1.49
       },
       "VALID": {
         "samples": 12,
         "win_rate_pct": 66.67,
-        "average_return_pct": 0.46
+        "average_return_pct": 0.42
       },
       "FAILED": {
         "samples": 2,
@@ -2402,7 +2966,35 @@
       "VALID": {
         "samples": 6,
         "win_rate_pct": 33.33,
+        "average_return_pct": -3.81
+      }
+    },
+    "10": {}
+  },
+  "entry_performance": {
+    "rule_version": "class-ii-first-valid-snapshot-v1",
+    "triggered": 32,
+    "blocked": 36,
+    "horizons": {
+      "1": {
+        "settled": 32,
+        "win_rate_pct": 40.62,
+        "average_return_pct": 0.04
+      },
+      "3": {
+        "settled": 16,
+        "win_rate_pct": 50.0,
+        "average_return_pct": -1.14
+      },
+      "5": {
+        "settled": 10,
+        "win_rate_pct": 40.0,
         "average_return_pct": -3.84
+      },
+      "10": {
+        "settled": 0,
+        "win_rate_pct": null,
+        "average_return_pct": null
       }
     }
   }
