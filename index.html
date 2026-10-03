@@ -2000,16 +2000,17 @@ async function loadDailyConsolidationSessions(){
         if(activeDaily==='daily_consolidation_first'||activeDaily==='stock_lookup')draw();
     }catch(_error){}
 }
+let shortCycleRefreshPromise=null,lastShortCycleFetchAt=0;
 async function refreshShortCycleData(){
-    if(location.protocol==='file:')return;
-    const remoteHost=location.hostname.toLowerCase()==='waxwingin.github.io';
+    if(location.protocol==='file:'||Date.now()-lastShortCycleFetchAt<300000)return;
+    if(shortCycleRefreshPromise)return shortCycleRefreshPromise;
+    lastShortCycleFetchAt=Date.now();
     const fetchLatest=async name=>{
         const path=`data/${name}?v=${Date.now()}`;
-        let response=await fetch(remoteHost?`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/${path}`:path,{cache:'no-store'});
-        if(!response.ok&&remoteHost)response=await fetch(path,{cache:'no-store'});
+        const response=await fetch(path,{cache:'no-store'});
         return response.ok?response.json():null;
     };
-    try{
+    shortCycleRefreshPromise=(async()=>{try{
         const [minute,outcomes,alertRates]=await Promise.all([fetchLatest('weekly_short_cycle_latest.json'),fetchLatest('short_cycle_outcomes_latest.json'),fetchLatest('short_cycle_alert_win_rates.json')]);
         let changed=false;
         if(minute?.version==='weekly-short-cycle-v1'&&String(minute.generated_at||'')>String(lastShortCycleRefresh||'')){
@@ -2022,7 +2023,8 @@ async function refreshShortCycleData(){
             dailyExtra.shortCycleAlertRates=alertRates;lastShortCycleAlertRateRefresh=alertRates.generated_at;changed=true;
         }
         if(changed&&['daily_consolidation_first','two_centers','weekly_first','weekly_consolidation_first'].includes(activeDaily))draw();
-    }catch(_error){}
+    }catch(_error){}finally{shortCycleRefreshPromise=null}})();
+    return shortCycleRefreshPromise;
 }
 if(location.protocol!=='file:'){
     refreshD2MonitorData();
