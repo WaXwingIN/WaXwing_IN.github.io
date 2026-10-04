@@ -537,7 +537,7 @@ function d2ConditionList(checks,passed,code,date){
     const kdjActual=d&&j?`D ${value(d)} / J ${value(j)}`:value(combined),bottom=d2DailyBottomState(code,date);
     const finalDetail=passed?'原有组合路径':'原有组合路径未触发；日线分型仅作提示';
     const row=(label,status,detail,final=false)=>`<tr${final?' class="d2-condition-final"':''}><th scope="row">${label}</th><td class="d2-condition-status">${status==='yes'?'✅ '+(final?'触发':'满足'):status==='no'?'❌ '+(final?'未触发':'不满足'):'❔ 无法检测'}</td><td>${detail}</td></tr>`;
-    return `<div class="d2-condition-list"><b>提醒条件</b>${bottom.status==='yes'?`<small class="fractal-hint">⚠️ 日线底分型提示：${bottom.detail}（不参与买入触发）</small>`:''}<table class="d2-condition-table"><thead><tr><th>条件</th><th>状态</th><th>实际／说明</th></tr></thead><tbody>${row('日线KDJ（D≥49且J≤20）',kdjKnown?kdjPassed?'yes':'no':'unknown',kdjActual)}${row('30分钟理想MACD底背离＋底分型',ideal?ideal.passed?'yes':'no':'unknown',value(ideal))}${row('买入提醒',passed?'yes':'no',finalDetail,true)}</tbody></table></div>`;
+    return `<div class="d2-condition-list"><b>买入提醒条件</b>${bottom.status==='yes'?`<small class="fractal-hint">⚠️ 日线底分型提示：${bottom.detail}（不参与买入触发）</small>`:''}<table class="d2-condition-table"><thead><tr><th>条件</th><th>状态</th><th>实际／说明</th></tr></thead><tbody>${row('日线KDJ（D≥49且J≤20）',kdjKnown?kdjPassed?'yes':'no':'unknown',kdjActual)}${row('30分钟理想MACD底背离＋底分型',ideal?ideal.passed?'yes':'no':'unknown',value(ideal))}${row('买入提醒',passed?'yes':'no',finalDetail,true)}</tbody></table></div>`;
 }
 function compareD2Rows(a,b){
     const aFirst=a.d2_first_strengthening?.status==='active',bFirst=b.d2_first_strengthening?.status==='active';
