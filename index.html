@@ -908,6 +908,11 @@ function shortCycleDate(date){
     const raw=String(date||dailyExtra.dailyFractalAlerts?.data_through||''),digits=raw.replace(/\D/g,'').slice(0,8);
     return digits.length===8?`${digits.slice(0,4)}-${digits.slice(4,6)}-${digits.slice(6,8)}`:raw.slice(0,10);
 }
+function shortCycleCompactTime(value){
+    if(!value)return '时间待归档';
+    const full=String(formatDateTime(value)),match=full.match(/^\d{4}[/-](\d{2})[/-](\d{2})\s+(\d{2}):(\d{2})/);
+    return match?`<time title="${safe(full)}">${match[1]}/${match[2]} ${match[3]}:${match[4]}</time>`:safe(full);
+}
 function shortCycleDailyBottomState(modelName,code,date){
     const day=shortCycleDate(date);
     const normalized=String(code||'').padStart(6,'0'),payload=dailyExtra.dailyFractalAlerts;
@@ -919,11 +924,8 @@ function shortCycleDailyBottomState(modelName,code,date){
 }
 function shortCycleConditionCell(evidence,modelName,code,date){
     const flags=shortCycleConditionState(evidence),daily=shortCycleDailyBottomState(modelName,code,date);
-    const diverged=flags.m30==='是'||flags.m60==='是',minuteReady=flags.appeared,alert=minuteReady;
+    const minuteReady=flags.appeared,alert=minuteReady;
     const unknown=!alert&&(flags.m30==='无法检测'||flags.m60==='无法检测'||flags.bottom==='无法检测');
-    const mark=value=>value==='是'?'✅':value==='无法检测'?'❔':'❌';
-    const divergenceMark=diverged?'✅':flags.m30==='无法检测'||flags.m60==='无法检测'?'❔':'❌';
-    const minuteStatus=value=>value==='是'?'是':value==='无法检测'?'无法检测':'否';
     const dailyEvent=daily==='是'?dailyFractalEvent(modelName,code,shortCycleDate(date)):null;
     const dailyTime=dailyEvent?.trigger_at||dailyEvent?.fractal?.confirmed_at||'';
     const minuteEvent=minuteReady?shortCycleAlertEvent(modelName,{code},evidence):null;
@@ -931,12 +933,13 @@ function shortCycleConditionCell(evidence,modelName,code,date){
     const comboTime=flags.signal?.['提醒确认时间']||minuteEvent?.shape_confirmed_at||'';
     const laterCombo=minuteTime&&comboTime&&String(comboTime)>String(minuteTime);
     const divergenceTime=item=>item?.['低点2']?.confirm_time||item?.['提醒确认时间']||'';
-    const timeText=value=>value?safe(formatDateTime(value)):'时间待归档';
-    const m30Time=flags.m30==='是'?`<small class="short-cycle-time">30分钟底背离确认：${timeText(divergenceTime(flags.one))}</small>`:'';
-    const m60Time=flags.m60==='是'?`<small class="short-cycle-time">60分钟底背离确认：${timeText(divergenceTime(flags.two))}</small>`:'';
-    const bottomTime=flags.bottom==='是'?`<small class="short-cycle-time">背离后30分钟底分型确认：${timeText(flags.fractal?.['确认时间'])}</small>`:'';
-    const dailyHint=daily==='是'?`<small class="fractal-hint">⚠️ 日线底分型提示：${timeText(dailyTime)}${dailyEvent?.origin==='历史规则回放'?'（历史回放）':''} · 不参与买入触发</small>`:'';
-    return `<td class="short-cycle-condition${alert?' daily-consolidation-minute-first':''}">${dailyHint}<small>${divergenceMark} 底背离：30分钟 ${minuteStatus(flags.m30)}　60分钟 ${minuteStatus(flags.m60)}</small>${m30Time}${m60Time}<small>${mark(flags.bottom)} 背离后30分钟底分型${flags.bottom==='无法检测'?'：无法检测':''}</small>${bottomTime}<small><strong>${alert?'✅ 满足提醒条件':unknown?'❔ 提醒条件无法检测':'❌ 未满足提醒条件'}</strong></small>${alert?`<small class="short-cycle-trigger-time">触发时间：30分钟底分型 ${timeText(minuteTime)}</small>`:''}${laterCombo?`<small class="fractal-hint">⚠️ 背离 ${timeText(comboTime)} 才确认；以上触发日收益为历史回算</small>`:''}</td>`;
+    const status=(value,time)=>value==='是'?`✅ ${shortCycleCompactTime(time)}`:value==='无法检测'?'❔ 无法检测':value==='已失效'?'❌ 已失效':'❌ 未出现';
+    const renderRow=(label,result,kind='')=>`<tr class="${kind}"><th scope="row">${label}</th><td>${result}</td></tr>`;
+    const dailyHint=daily==='是'?renderRow('日线底分型',`⚠️ ${shortCycleCompactTime(dailyTime)} · 仅提示${dailyEvent?.origin==='历史规则回放'?'（历史回放）':''}`,'reminder-hint-row'):'';
+    const readyTime=comboTime||minuteTime;
+    const reminder=alert?`✅ 条件于 ${shortCycleCompactTime(readyTime)} 齐备`:unknown?'❔ 无法检测':'❌ 未触发';
+    const baseline=alert?`${safe(formatDate(minuteTime||minuteEvent?.baseline_date))} 收盘${laterCombo?'（历史回算）':''}`:'— 不适用';
+    return `<td class="short-cycle-condition"><table class="reminder-condition-table"><thead><tr><th>买入条件</th><th>结果／确认时间</th></tr></thead><tbody>${renderRow('30分钟底分型',status(flags.bottom,flags.fractal?.['确认时间']))}${renderRow('30分钟底背离',status(flags.m30,divergenceTime(flags.one)))}${renderRow('60分钟底背离',status(flags.m60,divergenceTime(flags.two)))}${dailyHint}${renderRow('买入提醒',reminder,'reminder-final-row')}${renderRow('收益基准',baseline,'reminder-baseline-row')}</tbody></table></td>`;
 }
 function weeklyShortCycleCell(modelName,code,start,end,date){return shortCycleConditionCell(weeklyShortCycleEvidence(modelName,code,start,end),modelName,code,date)}
 function shortCycleReminderView(signal={}){
@@ -1002,19 +1005,19 @@ function strictM30ExitReturnCell(modelName,row,evidence=row,date=''){
     const macd=strict.some(item=>item.status==='已触发')?'是':!strict.length||strict.some(item=>item.status==='30分钟行情缺失')?'无法检测':'否';
     const top=tops.some(item=>item.daily_top_exit?.confirmed_at)?'是':!tops.length||tops.some(item=>!Object.prototype.hasOwnProperty.call(item,'daily_top_exit'))?'无法检测':'否';
     const triggered=macd==='是',unknown=!triggered&&macd==='无法检测';
-    const mark=value=>value==='是'?'✅':value==='无法检测'?'❔':'❌';
     const strictExit=strict.filter(item=>item.status==='已触发').sort((a,b)=>String(a.confirmed_at||a.date).localeCompare(String(b.confirmed_at||b.date)))[0];
     const topExit=tops.map(item=>item.daily_top_exit).filter(item=>item?.confirmed_at).sort((a,b)=>String(a.confirmed_at).localeCompare(String(b.confirmed_at)))[0];
     const detail=(item,reference)=>{
         if(!item)return '';
         const value=Number(item.return_pct),settled=item.return_pct!=null&&Number.isFinite(value);
         const execution=item.execution_bar_time||item.execution_date||'';
-        return `<small class="sell-condition-detail" title="以买入提醒日收盘为基准的参考收益；不含费用、滑点，不代表实际成交">确认 ${safe(formatDateTime(item.confirmed_at||item.date))} · ${reference}${execution?` ${safe(formatDateTime(execution))}`:''} · 参考收益${settled?` ${returnPct(value)}`:'待结算'}</small>`;
+        return `${shortCycleCompactTime(item.confirmed_at||item.date)}<small class="reminder-detail" title="以买入提醒日收盘为基准的参考收益；不含费用、滑点，不代表实际成交">${reference}${execution?` ${shortCycleCompactTime(execution)}`:''} · 参考收益 ${settled?returnPct(value):'待结算'}</small>`;
     };
-    const topHint=top==='是'?`<small class="fractal-hint">⚠️ 日线顶分型提示 · 不参与卖出触发</small>${detail(topExit,'次交易日开盘')}`:'';
-    if(!event)return `<span class="sell-condition-list">${topHint}<small class="pending-return">不适用：尚无短周期买入提醒</small></span>`;
-    const summary=triggered?`<small class="sell-trigger-summary">卖出触发 ${safe(formatDateTime(strictExit?.confirmed_at||strictExit?.date))} · 参考收益 ${strictExit?.return_pct==null?'待结算':returnPct(strictExit.return_pct)}</small>`:'';
-    return `<span class="sell-condition-list"><small>${mark(macd)} 严格30分钟MACD顶背离${macd==='无法检测'?'：无法检测':''}</small>${detail(strictExit,'次根30分钟开盘')}${topHint}<small><strong>${triggered?'✅ 满足卖出提醒条件':unknown?'❔ 卖出条件无法检测':'❌ 未满足卖出提醒条件'}</strong></small>${summary}</span>`;
+    const renderRow=(label,result,kind='')=>`<tr class="${kind}"><th scope="row">${label}</th><td>${result}</td></tr>`;
+    const macdResult=!event?'— 尚无买入提醒':triggered?`✅ ${detail(strictExit,'参考卖出')}`:unknown?'❔ 无法检测':'❌ 未触发';
+    const topResult=top==='是'?`⚠️ ${detail(topExit,'参考卖出')}<small class="reminder-detail">仅提示，不参与卖出触发</small>`:top==='无法检测'?'— 暂无数据':'— 未出现';
+    const conclusion=!event?'— 尚无买入提醒':triggered?'✅ 已触发':unknown?'❔ 无法检测':'❌ 未触发';
+    return `<table class="reminder-condition-table"><thead><tr><th>卖出条件</th><th>结果／确认时间</th></tr></thead><tbody>${renderRow('严格30分钟MACD顶背离',macdResult)}${renderRow('日线顶分型',topResult,top==='是'?'reminder-hint-row':'')}${renderRow('卖出提醒',conclusion,'reminder-final-row')}</tbody></table>`;
 }
 function shortCycleOutcomePanel(modelName,rows,keyOf,evidenceOf){
     const audited=dailyExtra.shortCycleAlertRates;
@@ -1416,6 +1419,7 @@ style.textContent+='.focus-table th:first-child,.focus-table td:first-child{min-
 style.textContent+='.focus-table th:nth-child(2),.focus-table td:nth-child(2){min-width:160px}.focus-table td:nth-child(2) small{display:block!important;margin-left:0}.focus-table td:nth-child(2) b{white-space:nowrap}.focus-table .focus-reason-head,.focus-table td.focus-reason{width:280px!important;max-width:280px!important}';
 style.textContent+='.wrap table thead th,.wrap table.focus-table thead th,.wrap table.focus-table thead th.focus-reason-head,.wrap table thead th .sort-button{white-space:nowrap!important;word-break:keep-all;overflow-wrap:normal}';
 style.textContent+='.wrap table thead th.sell-condition-head{text-align:left!important}';
+style.textContent+='.short-cycle-condition,.sell-condition-cell{min-width:370px!important;width:370px;max-width:420px;vertical-align:middle!important}.reminder-condition-table{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;background:#fff;text-align:left;font-size:13px;line-height:1.35}.reminder-condition-table th,.reminder-condition-table td,.focus-table .reminder-condition-table th,.focus-table .reminder-condition-table td{box-sizing:border-box;min-width:0!important;width:auto!important;max-width:none!important;padding:6px 8px!important;border:1px solid #dbe3ed;text-align:left!important;vertical-align:middle!important;white-space:normal!important;overflow-wrap:anywhere}.reminder-condition-table th:first-child,.focus-table .reminder-condition-table th:first-child{width:39%!important}.reminder-condition-table thead th,.wrap .reminder-condition-table thead th,.wrap table.focus-table .reminder-condition-table thead th{position:static;z-index:auto;background:#eef2f7;color:#334155;font-size:12px;white-space:normal!important}.reminder-condition-table tbody th{background:#f8fafc;color:#334155;font-weight:700}.reminder-condition-table time{white-space:nowrap;font-variant-numeric:tabular-nums}.reminder-condition-table .reminder-detail{display:block;margin-top:2px;color:#64748b;font-size:11px;font-weight:400;line-height:1.35}.reminder-condition-table .reminder-hint-row td{background:#fffbeb;color:#92400e}.reminder-condition-table .reminder-final-row th,.reminder-condition-table .reminder-final-row td{background:#eff6ff;font-weight:800;color:#1d4ed8}.reminder-condition-table .reminder-baseline-row td{color:#475569;font-size:12px}@media(max-width:640px){.short-cycle-condition,.sell-condition-cell{min-width:320px!important;width:320px}.reminder-condition-table th,.reminder-condition-table td{padding:5px 6px!important;font-size:12px}}';
 function moveReasonColumns(root){
     for(const table of root.querySelectorAll('table')){
         const header=table.tHead?.rows?.[0];
