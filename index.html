@@ -489,6 +489,13 @@ function d2ManualExclusions(){
     return [...merged.values()];
 }
 function d2ManuallyExcluded(code,date){const normalized=String(code||'').padStart(6,'0'),day=String(date||'').slice(0,10);return !!day&&d2ManualExclusions().some(item=>item.code===normalized&&item.date===day)}
+function dailyFractalPanel(modelName){
+    const payload=dailyExtra.dailyFractalAlerts||{},events=(payload.events||[]).filter(item=>item.model===modelName&&(modelName!=='D2第二回调双路径提醒'||!d2ManuallyExcluded(item.code,item.date)));
+    const latest=String(payload.data_through||'').slice(0,10),current=events.filter(item=>item.date===latest),recent=events.slice(-30).reverse();
+    const buying=current.filter(item=>item.fractal?.type==='底'),otherBuys=(payload.existing_buy_sell_watch||[]).filter(item=>item.model===modelName),selling=[...events,...otherBuys].filter(item=>item.daily_top_exit?.confirmed_at?.slice(0,10)===latest);
+    const detail=recent.map(item=>`<tr><td>${safe(formatDate(item.date))}</td><td>${safe(item.name||'')} ${safe(item.code)}</td><td>${safe(formatDate(item.fractal?.fractal_date))} / ${safe(formatDateTime(item.fractal?.confirmed_at))}</td><td>${item.daily_top_exit?`${safe(formatDate(item.daily_top_exit.fractal_date))} / ${safe(formatDateTime(item.daily_top_exit.confirmed_at))}`:'尚未出现'}</td><td>${safe(item.origin)}</td></tr>`).join('');
+    return `<section class="daily-fractal-panel"><h3>独立日线分型提醒 · 最高优先级</h3><p class="daily-note">入池股票出现已由右侧日K收盘确认的日线底分型，即可独立触发买入提醒；不要求与30/60分钟信号有先后顺序。买入提醒后出现日线顶分型，独立触发卖出提醒，不依赖严格30分钟MACD顶背离。两类卖出条件彼此独立；历史记录是规则回放，不代表当时实际推送或成交。</p><p>最新入池底分型买入提醒 <b>${buying.length}</b> 条；最新日线顶分型卖出提醒 <b>${selling.length}</b> 条；已重算历史买入事件 <b>${events.length}</b> 条。</p>${buying.length?`<p class="daily-note">底分型：${buying.map(item=>`${safe(item.name||item.code)} ${safe(item.code)}`).join('、')}</p>`:''}${selling.length?`<p class="daily-note">顶分型：${selling.map(item=>`${safe(item.name||item.code)} ${safe(item.code)}`).join('、')}</p>`:''}<details><summary>查看最近30条分型历史</summary><div class="wrap"><table><thead><tr><th>入池／提醒日</th><th>股票</th><th>日线底分型／确认</th><th>其后首个日线顶分型／确认</th><th>来源</th></tr></thead><tbody>${detail}</tbody></table></div></details></section>`;
+}
 function d2ManualDeleteButton(code,name,date){return `<button type="button" class="d2-manual-delete" data-d2-manual-delete="${safe(String(code||'').padStart(6,'0'))}" data-d2-manual-name="${safe(name||'')}" data-d2-manual-date="${safe(String(date||'').slice(0,10))}">移出当日筛选</button>`}
 function d2ManualExclusionManager(){
     const items=d2ManualExclusions();
@@ -1736,6 +1743,8 @@ draw=function(){
     else if(id==='weekly_first'){content.innerHTML=weeklyFirstBuyPanel(state)}
     else if(id==='weekly_consolidation_first'){content.innerHTML=weeklyConsolidationFirstPanel(state)}
     else{content.innerHTML=patternPanel(id,state)}
+    const fractalModel={d2_alert:'D2第二回调双路径提醒',daily_consolidation_first:'日线盘整背驰一买',two_centers:'日线趋势一买',weekly_first:'周线类二买',weekly_consolidation_first:'周线盘整背驰一买'}[id];
+    if(fractalModel)content.insertAdjacentHTML('afterbegin',dailyFractalPanel(fractalModel));
     moveReasonColumns(content);
     const focus=document.getElementById('focusWatch');if(focus)focus.hidden=!isMA||state.date!=='latest';
     document.getElementById('ruleGate').hidden=id==='d2_alert'||id==='stock_lookup'||id==='two_centers'||id==='m30_first'||id==='daily_consolidation_first'||id==='weekly_first'||id==='weekly_consolidation_first';
