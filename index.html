@@ -1755,7 +1755,7 @@ draw=function(){
     else if(id==='weekly_consolidation_first'){content.innerHTML=weeklyConsolidationFirstPanel(state)}
     else{content.innerHTML=patternPanel(id,state)}
     const fractalModel={d2_alert:'D2第二回调双路径提醒',daily_consolidation_first:'日线盘整背驰一买',two_centers:'日线趋势一买',weekly_first:'周线类二买',weekly_consolidation_first:'周线盘整背驰一买'}[id];
-    if(fractalModel)content.insertAdjacentHTML('afterbegin',dailyFractalPanel(fractalModel));
+    if(fractalModel&&id!=='d2_alert')content.insertAdjacentHTML('afterbegin',dailyFractalPanel(fractalModel));
     moveReasonColumns(content);
     const focus=document.getElementById('focusWatch');if(focus)focus.hidden=!isMA||state.date!=='latest';
     document.getElementById('ruleGate').hidden=id==='d2_alert'||id==='stock_lookup'||id==='two_centers'||id==='m30_first'||id==='daily_consolidation_first'||id==='weekly_first'||id==='weekly_consolidation_first';
