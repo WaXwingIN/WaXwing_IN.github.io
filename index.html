@@ -1398,6 +1398,7 @@ style.textContent+='.daily-consolidation-table{min-width:1900px}.m30-first-retur
 style.textContent+='.focus-table th:first-child,.focus-table td:first-child{min-width:60px;white-space:nowrap!important}.focus-table th:nth-child(2),.focus-table td:nth-child(2){min-width:130px;white-space:nowrap!important}.focus-table td:nth-child(2) b{white-space:nowrap}.focus-table .focus-reason-head,.focus-table td.focus-reason{min-width:260px!important;width:280px!important;max-width:280px!important;white-space:normal!important;text-align:left!important;overflow-wrap:anywhere}';
 style.textContent+='.focus-table th:nth-child(2),.focus-table td:nth-child(2){min-width:160px}.focus-table td:nth-child(2) small{display:block!important;margin-left:0}.focus-table td:nth-child(2) b{white-space:nowrap}.focus-table .focus-reason-head,.focus-table td.focus-reason{width:280px!important;max-width:280px!important}';
 style.textContent+='.wrap table thead th,.wrap table.focus-table thead th,.wrap table.focus-table thead th.focus-reason-head,.wrap table thead th .sort-button{white-space:nowrap!important;word-break:keep-all;overflow-wrap:normal}';
+style.textContent+='.wrap table thead th.sell-condition-head{text-align:left!important}';
 function moveReasonColumns(root){
     for(const table of root.querySelectorAll('table')){
         const header=table.tHead?.rows?.[0];
@@ -1420,6 +1421,7 @@ function moveReasonColumns(root){
         }
         const cells=[...header.cells],buyIndex=cells.findIndex(cell=>cell.textContent.trim()==='买入提醒条件');
         const sellIndex=cells.findIndex(cell=>cell.textContent.trim()==='卖出提醒条件');
+        if(sellIndex>=0)cells[sellIndex].classList.add('sell-condition-head');
         if(buyIndex<0||sellIndex<0||sellIndex===buyIndex+1)continue;
         const count=cells.length;
         header.insertBefore(header.cells[sellIndex],header.cells[buyIndex].nextElementSibling);
