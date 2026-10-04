@@ -470,7 +470,7 @@ function secondCenterEligible(row){const similarity=Number(row?.center_similarit
 function d2Eligible(row){return secondCenterEligible(row)&&Number(row?.structure?.D2?.price)>0&&Number(row?.structure?.D2?.price)<Number(row?.structure?.G2?.price)}
 function d2KdjEligible(row){return row?.d2_kdj_alert_eligible===true&&Number(row?.daily_kdj?.d)>=49&&Number(row?.daily_kdj?.j)<=20}
 const D2_IDEAL_M30_RULE='adjacent-double-bottom-divergence-then-m30-fractal-v8';
-function d2IdealM30Eligible(row){const signal=row?.d2_ideal_m30_divergence||{};return signal.status==='active'&&signal.rule_version===D2_IDEAL_M30_RULE&&signal.triggered_on_scan_date===true&&!!signal.confirmed_at}
+function d2IdealM30Eligible(row){const signal=row?.d2_ideal_m30_divergence||{},low=signal.low2||{},fractal=signal.bottom_fractal||{};return signal.status==='active'&&signal.rule_version===D2_IDEAL_M30_RULE&&signal.triggered_on_scan_date===true&&!!signal.confirmed_at&&!!low.confirm_time&&!!fractal['发生时间']&&!!fractal['确认时间']&&String(low.confirm_time)<String(fractal['发生时间'])&&String(fractal['发生时间'])<String(fractal['确认时间'])}
 function d2AlertGateEligible(row){return d2KdjEligible(row)||d2IdealM30Eligible(row)}
 function d2EffectiveConfirmedAt(row,signal){if(!signal?.confirmed_at||!d2AlertGateEligible(row))return '';const candidates=d2KdjEligible(row)?[signal.confirmed_at]:[];if(d2IdealM30Eligible(row))candidates.push([signal.confirmed_at,row.d2_ideal_m30_divergence.confirmed_at].sort().reverse()[0]);return candidates.sort().reverse()[0]||''}
 function d2CombinedSignalFresh(row,signal,scanAt){return d2SignalFresh({confirmed_at:d2EffectiveConfirmedAt(row,signal)},scanAt)}
@@ -894,18 +894,28 @@ function shortCycleConditionState(evidence){
         return !item['状态']||item['状态']==='无法检测'?'无法检测':'否';
     };
     const m30=divergence(one),m60=divergence(two),signalFractal=signal['30分钟底分型']||null;
-    const pathFractal=(item,period)=>item['30分钟底分型']||
-        (signal['周期']===(item['周期']||period)?signalFractal:null)||{};
+    const pathFractal=(item,period)=>
+        (signal['周期']===(item['周期']||period)?signalFractal:null)||item['30分钟底分型']||{};
     const afterDivergence=(item,period)=>{const fractal=pathFractal(item,period);
         const itemValid=item['提醒条件满足']===true&&supportedRule(item);
         const selectedValid=signal['周期']===(item['周期']||period)&&signal['提醒条件满足']===true&&
             supportedRule(signal);
-        return item['低点2']&&fractal['发生时间']&&fractal['确认时间']&&(itemValid||selectedValid)};
+        const divergenceConfirmed=item['低点2']?.confirm_time;
+        return divergenceConfirmed&&fractal['发生时间']&&fractal['确认时间']&&
+            String(divergenceConfirmed)<String(fractal['发生时间'])&&
+            String(fractal['发生时间'])<String(fractal['确认时间'])&&
+            (itemValid||selectedValid)};
     const m30Ready=m30==='是'&&afterDivergence(one,'30分钟'),m60Ready=m60==='是'&&afterDivergence(two,'60分钟');
     const ordered=m30Ready||m60Ready;
-    const fractal=signalFractal||(m30Ready?pathFractal(one,'30分钟'):m60Ready?pathFractal(two,'60分钟'):{});
-    const bottom=ordered?'是':m30==='无法检测'||m60==='无法检测'?'无法检测':'否';
-    const appeared=ordered&&signal['提醒条件满足']===true&&supportedRule(signal)&&
+    const fractal=m30Ready?pathFractal(one,'30分钟'):m60Ready?pathFractal(two,'60分钟'):signalFractal||{};
+    const bottom=ordered?'是':m30==='是'||m60==='是'?'否':
+        m30==='无法检测'||m60==='无法检测'?'无法检测':'否';
+    const selectedLow=signal['低点2']?.confirm_time||
+        (signal['周期']==='30分钟'?one['低点2']?.confirm_time:signal['周期']==='60分钟'?two['低点2']?.confirm_time:'');
+    const selectedOrdered=selectedLow&&signalFractal?.['发生时间']&&signalFractal?.['确认时间']&&
+        String(selectedLow)<String(signalFractal['发生时间'])&&
+        String(signalFractal['发生时间'])<String(signalFractal['确认时间']);
+    const appeared=ordered&&selectedOrdered&&signal['提醒条件满足']===true&&supportedRule(signal)&&
         ['有效','历史形态，非实时提醒','历史回放，非实时推送'].includes(signal['提醒状态']);
     return {m30,m60,bottom,appeared,signal,one,two,fractal,legacyEvidence};
 }
@@ -930,7 +940,7 @@ function shortCycleDailyBottomState(modelName,code,date){
 function shortCycleConditionCell(evidence,modelName,code,date){
     const flags=shortCycleConditionState(evidence),daily=shortCycleDailyBottomState(modelName,code,date);
     const minuteReady=flags.appeared,alert=minuteReady;
-    const unknown=!alert&&(flags.m30==='无法检测'||flags.m60==='无法检测'||flags.bottom==='无法检测');
+    const unknown=!alert&&flags.bottom==='无法检测';
     const dailyEvent=daily==='是'?dailyFractalEvent(modelName,code,shortCycleDate(date)):null;
     const dailyTime=dailyEvent?.trigger_at||dailyEvent?.fractal?.confirmed_at||'';
     const minuteEvent=minuteReady?shortCycleAlertEvent(modelName,{code},evidence):null;
@@ -941,20 +951,28 @@ function shortCycleConditionCell(evidence,modelName,code,date){
     const status=(value,time)=>value==='是'?`✅ ${shortCycleCompactTime(time)}`:value==='无法检测'?'❔ 无法检测':value==='已失效'?'❌ 已失效':'❌ 未出现';
     const renderRow=(label,result,kind='')=>`<tr class="${kind}"><th scope="row">${label}</th><td>${result}</td></tr>`;
     const dailyHint=daily==='是'?renderRow('日线底分型',`⚠️ ${shortCycleCompactTime(dailyTime)} · 仅提示${dailyEvent?.origin==='历史规则回放'?'（历史回放）':''}`,'reminder-hint-row'):'';
-    const readyTime=comboTime||minuteTime;
+    const readyTime=minuteTime||comboTime;
     const reminder=alert?`✅ 条件于 ${shortCycleCompactTime(readyTime)} 齐备`:unknown?'❔ 无法检测':'❌ 未触发';
     const baseline=alert?`${safe(formatDate(minuteTime||minuteEvent?.baseline_date))} 收盘${laterCombo?'（历史回算）':''}`:'— 不适用';
-    return `<td class="short-cycle-condition"><table class="reminder-condition-table"><thead><tr><th>买入条件</th><th>结果／确认时间</th></tr></thead><tbody>${renderRow('30分钟底分型',status(flags.bottom,flags.fractal?.['确认时间']))}${renderRow('30分钟底背离',status(flags.m30,divergenceTime(flags.one)))}${renderRow('60分钟底背离',status(flags.m60,divergenceTime(flags.two)))}${dailyHint}${renderRow('买入提醒',reminder,'reminder-final-row')}${renderRow('收益基准',baseline,'reminder-baseline-row')}</tbody></table></td>`;
+    const selectedLow=flags.signal?.['低点2']?.confirm_time||
+        (flags.signal?.['周期']==='30分钟'?flags.one?.['低点2']?.confirm_time:
+         flags.signal?.['周期']==='60分钟'?flags.two?.['低点2']?.confirm_time:'');
+    const earlyFractal=selectedLow&&flags.fractal?.['发生时间']&&
+        String(flags.fractal['发生时间'])<=String(selectedLow);
+    const bottomResult=earlyFractal?`❌ ${shortCycleCompactTime(flags.fractal['确认时间'])} · 早于底背离确认，不计入`:
+        status(flags.bottom,flags.fractal?.['确认时间']);
+    return `<td class="short-cycle-condition"><table class="reminder-condition-table"><thead><tr><th>买入条件</th><th>结果／确认时间</th></tr></thead><tbody>${renderRow('30分钟底背离',status(flags.m30,divergenceTime(flags.one)))}${renderRow('60分钟底背离',status(flags.m60,divergenceTime(flags.two)))}${renderRow('背离后30分钟底分型',bottomResult)}${dailyHint}${renderRow('买入提醒',reminder,'reminder-final-row')}${renderRow('收益基准',baseline,'reminder-baseline-row')}</tbody></table></td>`;
 }
 function weeklyShortCycleCell(modelName,code,start,end,date){return shortCycleConditionCell(weeklyShortCycleEvidence(modelName,code,start,end),modelName,code,date)}
 function shortCycleReminderView(signal={}){
     const low=signal['低点2']||{},fractal=signal['30分钟底分型']||{};
     const validRule=['adjacent-double-bottom-divergence-then-m30-fractal-v8','trend-repeat-price-dif-area-then-m30-fractal-v1'].includes(signal['规则版本'])&&
-        signal['提醒条件满足']===true&&low.time&&fractal['发生时间']&&fractal['确认时间'];
+        signal['提醒条件满足']===true&&low.time&&low.confirm_time&&fractal['发生时间']&&fractal['确认时间']&&
+        String(low.confirm_time)<String(fractal['发生时间'])&&String(fractal['发生时间'])<String(fractal['确认时间']);
     const status=signal['提醒状态']||signal['状态']||'未检测',period=signal['周期']||'短周期';
     if(validRule&&status==='有效')return {live:true,title:'实时提醒已触发',detail:`${period}底背离＋30分钟底分型均已成立`};
     if(validRule&&['历史形态，非实时提醒','历史回放，非实时推送'].includes(status))return {live:false,title:'已出现',detail:'历史回放，非当时推送'};
-    if(status==='已失效')return {live:false,title:'曾触发，现已失效',detail:`${period}组合提醒已被后续走势破坏`};
+    if(status==='已失效'&&validRule)return {live:false,title:'曾触发，现已失效',detail:`${period}组合提醒已被后续走势破坏`};
     if(status==='待30分钟底分型')return {live:false,title:'尚未触发',detail:'底背离已出现，仍等待30分钟底分型确认'};
     if(status==='无法检测')return {live:false,title:'无法检测',detail:signal['原因']||'短周期行情不足'};
     if(status==='未出现')return {live:false,title:'未触发',detail:'30分钟、60分钟两条独立路径均尚未完成'};
