@@ -1485,18 +1485,17 @@ function dailyConsolidationSignalDate(row,fallbackDate){
     // but never turn that day into a new market/signal date in this filter.
     return observed&&marketDate&&observed>marketDate?'':observed||marketDate;
 }
-function dailyConsolidationPanel(state){
-    const embedded=data.models?.['日线盘整背驰一买']||{},live=dailyExtra.dailyConsolidationFirst||{};
+function dailyConsolidationDateRecords(primary=data,extra=dailyExtra){
+    const embedded=primary.models?.['日线盘整背驰一买']||{},live=extra.dailyConsolidationFirst||{};
     const currentModel=(String(live.generated_at||'')>String(embedded.generated_at||'')?live.model:embedded)||{};
-    const currentDate=String(String(live.generated_at||'')>String(embedded.generated_at||'')?live.daily_date||data.daily_date:data.daily_date||data.date).replace(/\D/g,'');
-    const history=dailyExtra.dailyConsolidationSessions?.sessions||[];
+    const currentDate=String(String(live.generated_at||'')>String(embedded.generated_at||'')?live.daily_date||primary.daily_date:primary.daily_date||primary.date).replace(/\D/g,'');
+    const history=extra.dailyConsolidationSessions?.sessions||[];
     const current={date:currentDate,selection_date:currentDate,generated_at:currentModel.generated_at,
         is_intraday_preview:Boolean(currentModel.is_intraday_preview),kind:currentModel.is_intraday_preview?'盘中预览':'收盘快照',model:currentModel};
     const sessions=[current,...history.filter(item=>String(item.date||'').replace(/\D/g,'')!==currentDate).map(item=>({
         ...item,date:String(item.date||'').replace(/\D/g,''),selection_date:String(item.date||'').replace(/\D/g,''),
         kind:item.is_intraday_preview?'盘中预览':'收盘快照'}))].filter(item=>item.date&&item.model).sort((a,b)=>b.date.localeCompare(a.date));
     const session=sessions[0],model=session?.model||{};
-    if(model.ranking_version!=='daily-bi-consolidation-divergence-v1')return '<section class="two-center-hero"><h2>日线盘整背驰一买</h2><p>等待首次日线笔级结构扫描；30分钟提醒只使用已完成K线。</p></section>';
     const archived=new Map();
     // Freeze the row at first archive; later snapshots may contain a revised
     // D3 or minute evidence that was not known on the selected date.
@@ -1561,6 +1560,11 @@ function dailyConsolidationPanel(state){
     const dates=[...new Set([...records.map(item=>dailyConsolidationSignalDate(item.row,item.snapshot.date)),
         ...visibleReplayRecords.map(item=>item.date),...actualTriggerRecords.map(item=>item.date)].filter(Boolean))]
         .filter(date=>recordsOnDate(date).length>0).sort().reverse();
+    return {session,model,recordsOnDate,dates};
+}
+function dailyConsolidationPanel(state){
+    const {session,model,recordsOnDate,dates}=dailyConsolidationDateRecords();
+    if(model.ranking_version!=='daily-bi-consolidation-divergence-v1')return '<section class="two-center-hero"><h2>日线盘整背驰一买</h2><p>等待首次日线笔级结构扫描；30分钟提醒只使用已完成K线。</p></section>';
     const selectedDate=dates.includes(state.date)?state.date:(dates[0]||'');
     const allRows=recordsOnDate(selectedDate).map(item=>item.row),evidenceOf=row=>row,rows=shortCycleFilteredRows(state,allRows,evidenceOf);
     const lateRescan=(model.rows||[]).filter(row=>row['状态']!=='转折确认'&&dateKey(row['首次记录时间'])>dateKey(session.date)).length;
@@ -1700,34 +1704,32 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
         for(const row of snapshot.rows||[])add('D2第二回调双路径提醒',row,snapshot.session?.date,
             snapshot.offline?'当前回算候选':'当前扫描候选',snapshot.offline?'缓存回算':'当前扫描');
     }
-    const consolidationSessions=extra.dailyConsolidationSessions?.sessions||[];
-    for(const session of consolidationSessions){
-        for(const row of session.model?.rows||[]){
-            const cycle=row['短周期提醒']?.['提醒状态'];
-            add('日线盘整背驰一买',row,session.date,
-                row['状态']+(cycle&&cycle!=='未出现'?` · ${cycle}`:''),'日期快照',
-                `D3 ${row['D3日期']||'--'} / ${row['D3价格']??'--'}`);
-        }
-        for(const event of session.model?.replay_events||[])
-            add('日线盘整背驰一买',event.row,event.date,event.event,'历史回放（非当时推送）',
-                event.row?.['预测确认时间']||`D3 ${event.row?.['D3日期']||'--'}`);
-    }
-    const consolidation=extra.dailyConsolidationFirst;
-    for(const row of consolidation?.model?.rows||[])
-        add('日线盘整背驰一买',row,consolidation.daily_date,row['状态'],'日期快照',
+    // Use exactly the date-to-row projection shown by the model tab. Session
+    // snapshots and return archives may repeat an opportunity on later dates.
+    const consolidationView=dailyConsolidationDateRecords(primary,extra);
+    for(const day of consolidationView.dates)for(const item of consolidationView.recordsOnDate(day)){
+        const row=item.row||{},cycle=row['短周期提醒']?.['提醒状态'];
+        add('日线盘整背驰一买',row,day,
+            item.event||`${row['状态']||'候选'}${cycle&&cycle!=='未出现'?` · ${cycle}`:''}`,
+            item.event&&item.event!=='短周期提醒新触发'?'历史回放（非当时推送）':'模型当日展示',
             `D3 ${row['D3日期']||'--'} / ${row['D3价格']??'--'}`);
+    }
     for(const model of ['日线趋势一买','30分钟一买'])for(const row of primary?.models?.[model]?.rows||[])
         add(model,row,primary.daily_date||primary.date,row['状态']||'当前候选','当前快照',
             `B ${row['Price_B日期']||row['B日期']||'--'}`);
     for(const [model,payload] of [['周线类二买',extra.weeklyFirst],['周线盘整背驰一买',extra.weeklyConsolidationFirst]])
         for(const row of payload?.rows||[])add(model,row,payload.daily_date,row.status||'当前候选','当前快照');
-    for(const event of extra.shortCycleAlertRates?.events||[])
+    for(const event of extra.shortCycleAlertRates?.events||[]){
+        if(event.model==='日线盘整背驰一买')continue;
         add(event.model,event,event.triggered_at,
             String(event.origin||'').includes('回放')?'回放推定提醒':'提醒触发',
             event.origin||'提醒归档',event.event_id||'');
-    for(const event of extra.firstBuyReturns?.events||[])
+    }
+    for(const event of extra.firstBuyReturns?.events||[]){
+        if(event.model==='日线盘整背驰一买')continue;
         add(event.model,event,event.signal_date,event.status||'入选／跟踪记录',
             event.origin||'收益归档',event.key||'');
+    }
     for(const snapshot of extra.momentumV6History?.snapshots||[])
         for(const row of snapshot.candidates||[])add('V6 动量',row,snapshot.signal_date,
             `候选排名 ${row.rank??'--'}`,'历史选股快照');
