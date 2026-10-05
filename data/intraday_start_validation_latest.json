@@ -6,7 +6,7 @@
   "live_entry_enabled": false,
   "live_entry_block_reason": "首次有效启动的可执行历史收益尚未形成稳定正优势",
   "entry_rule": "class-ii-first-valid-snapshot-v1",
-  "generated_at": "2026-10-03 14:07:44",
+  "generated_at": "2026-10-05 12:02:05",
   "signal_date": "2026-09-29",
   "observation_date": "2026-09-30",
   "is_intraday_preview": false,
@@ -78,7 +78,7 @@
           "status": "待结算"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -262,7 +262,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -457,7 +457,7 @@
           "status": "待结算"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -642,7 +642,7 @@
           "status": "待结算"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -831,7 +831,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1027,7 +1027,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1223,7 +1223,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1419,7 +1419,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1609,7 +1609,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1806,7 +1806,7 @@
           "status": "待结算"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -1991,7 +1991,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -2187,7 +2187,7 @@
           "status": "待结算"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -2376,7 +2376,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -2564,7 +2564,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
@@ -2760,7 +2760,7 @@
           "status": "未触发介入"
         }
       },
-      "data_source": "本地缓存",
+      "data_source": "腾讯直连",
       "snapshots": [
         {
           "cutoff": "10:30",
