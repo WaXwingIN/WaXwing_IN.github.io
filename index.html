@@ -602,7 +602,7 @@ function d2IdealM30Eligible(row){const signal=row?.d2_ideal_m30_divergence||{},l
 function d2AlertGateEligible(row){return d2KdjEligible(row)||d2IdealM30Eligible(row)}
 function d2AutoBuyEligible(row){return d2IdealM30Eligible(row)}
 function d2ManualReviewEligible(row,date){return d2KdjEligible(row)&&!d2AutoBuyEligible(row)&&!d2ManuallyApproved(row?.code,date)}
-function d2PoolAvailableAt(row){if(row?.d2_near_d1_trigger_precision==='second'&&row?.d2_near_d1_triggered_at)return row.d2_near_d1_triggered_at;const day=String(row?.episode_start_date||row?.structure?.D2?.date||'').slice(0,10);return day?`${day} 15:00:00`:''}
+function d2PoolAvailableAt(row){const trigger=String(row?.d2_near_d1_triggered_at||'');if(row?.d2_near_d1_trigger_precision==='second'&&trigger)return trigger;if(row?.d2_near_d1_trigger_precision==='date'&&trigger.length===10)return `${trigger} 15:00:00`;const day=String(row?.episode_start_date||row?.structure?.D2?.date||'').slice(0,10);return day?`${day} 15:00:00`:''}
 function d2EffectiveConfirmedAt(row){const pool=d2PoolAvailableAt(row);if(!pool||!d2AlertGateEligible(row))return '';const candidates=[];if(d2KdjEligible(row)){const day=String(row?.daily_kdj?.date||'').slice(0,10),kdjAt=row?.d2_kdj_first_eligible_at||(day?`${day} 15:00:00`:'');if(kdjAt)candidates.push([pool,kdjAt].sort().reverse()[0])}if(d2IdealM30Eligible(row))candidates.push([pool,row.d2_ideal_m30_divergence.confirmed_at].sort().reverse()[0]);return candidates.sort()[0]||''}
 function d2CombinedSignalFresh(row,_signal,scanAt){return d2SignalFresh({confirmed_at:d2EffectiveConfirmedAt(row)},scanAt)}
 function d2SignalFresh(signal,scanAt){const confirmed=Date.parse(String(signal?.confirmed_at||'').replace(' ','T')),scan=Date.parse(String(scanAt||'').replace(' ','T'));return Number.isFinite(confirmed)&&Number.isFinite(scan)&&scan>=confirmed&&scan-confirmed<=45*60000}
@@ -730,10 +730,10 @@ function d2Card(row,scanAt,detailed=false,offline=false,filterDate=''){
     const approvalAction=d2KdjEligible(row)&&!d2AutoBuyEligible(row)?(offline?'<span class="d2-manual-approved">休市回算不可补入自动池</span>':d2ManualApprovalButton(row,routeDate)):'';
     return `<div class="d2-proximity-item">${d2ManualDeleteButton(row.code,row.name,routeDate)}${approvalAction}${routing}${idealText}<b class="d2-stock-title">${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(row.center_similarity)}）</b>${details}${d2ConditionList(currentChecks,gate,row.code,routeDate)}${times}<details><summary>A/B旧观察项（不参与提醒）</summary>${minute}${first}</details><small>${row.d2_above_d1_preferred?'D2高于D1优选 · ':''}${offline?'缓存回算，不代表通知送达；':''}${routingNote}</small></div>`;
 }
-function d2ProximityModal(rows,signature,scanAt,filterDate=''){
-    const title=`D2第二回调双路径提醒：${rows.length}只`;
+function d2ProximityModal(rows,signature,scanAt,filterDate='',newOnly=true){
+    const title=`D2第二回调双路径提醒 · ${newOnly?'本轮新提醒':'当前全部'}：${rows.length}只`;
     const items=rows.map(row=>d2Card(row,scanAt,false,false,filterDate)).join('');
-    return `<div class="d2-proximity-modal" data-d2-proximity-modal data-signature="${safe(signature)}" role="alertdialog" aria-modal="true" aria-labelledby="d2ProximityTitle"><section class="d2-proximity-dialog"><header class="d2-proximity-head"><div><span class="d2-proximity-priority">类二买双路径提醒</span><h3 id="d2ProximityTitle">${title}</h3><p>类二买池入选后，日线KDJ满足D≥49且J≤20，或当日新触发30分钟理想MACD底背离＋底分型，即触发提醒。仅理想30分钟底背离＋底分型分支进入自动池；KDJ-only转“需人工筛选”。</p></div><button type="button" class="second-detail-close" data-d2-proximity-close aria-label="关闭">×</button></header><div class="d2-proximity-list">${items}</div><button type="button" class="d2-proximity-confirm" data-d2-proximity-close>已查看，关闭提醒</button></section></div>`;
+    return `<div class="d2-proximity-modal" data-d2-proximity-modal data-signature="${safe(signature)}" role="alertdialog" aria-modal="true" aria-labelledby="d2ProximityTitle"><section class="d2-proximity-dialog"><header class="d2-proximity-head"><div><span class="d2-proximity-priority">类二买双路径提醒</span><h3 id="d2ProximityTitle">${title}</h3><p>${newOnly?'本次仅展示近45分钟触发且本浏览器尚未查看的股票，不是当日全部筛选结果。':'本次展示最新扫描仍满足条件的全部股票。'}扫描 ${safe(formatDateTime(scanAt))}。</p><p>类二买池入选后，日线KDJ满足D≥49且J≤20，或当日新触发30分钟理想MACD底背离＋底分型，即触发提醒。仅理想30分钟底背离＋底分型分支进入自动池；KDJ-only转“需人工筛选”。</p></div><button type="button" class="second-detail-close" data-d2-proximity-close aria-label="关闭">×</button></header><div class="d2-proximity-list">${items}</div><button type="button" class="d2-proximity-confirm" data-d2-proximity-close>已查看，关闭提醒</button></section></div>`;
 }
 function d2TriggerLabel(row,fallback){
     const value=row.d2_near_d1_triggered_at||fallback;
@@ -883,9 +883,14 @@ function d2AlertPanel(state){
     if(selected!=='latest'){
         const replayDay=replayDays.find(day=>day.date===selected)||{};
         const replays=etfFirstWithinSameDay(replayDay.replay_rows||[],selected),blocked=etfFirstWithinSameDay(replayDay.blocked_rows||[],selected),coverage=replayDay.coverage||{};
+        const archivedCodes=new Set(visible.map(item=>item.row.code));
+        const awaitingArchive=!offline&&selected===session?.date?rows.filter(row=>!archivedCodes.has(row.code)):[];
+        const sourceLabel=typeof location!=='undefined'&&location.hostname?.toLowerCase()==='waxwingin.github.io'?'远端服务扫描':'本机扫描';
+        html+=`<p class="daily-note">数据来源：${sourceLabel} · 最新扫描 ${safe(formatDateTime(payload?.generated_at||''))} · 当前仍满足 ${rows.length} 只${awaitingArchive.length?`，其中 ${awaitingArchive.length} 只尚未写入实际归档`:''}。</p>`;
         html+=`<p class="daily-summary">${formatDate(selected)}：累计归档 ${visible.length} 只股票、${actualCount} 次提醒${replayDay.date?`；历史回放推定候选 ${replays.length} 条；两个分支均未满足 ${blocked.length} 条`:'；该日历史回放尚未生成，不能据此判定实时提醒未触发'}。</p>`;
         if(replayDay.date)html+=`<p class="daily-note">回放核验：当日无2%上限结构候选 ${safe(coverage.eligible_structure??coverage.exact_structure??'--')} 只，30分钟行情覆盖 ${safe(coverage.minute_covered??'--')} 只，分钟行情不足 ${safe(coverage.minute_unavailable??'--')} 只；缺失数据不计作“未出现”。回放价格为本地分钟缓存口径，可能与通达信前复权图不同。</p>`;
         html+=`<p class="daily-note">最新扫描只显示当前仍满足条件的股票；当日归档累计保留已发现的信号，条件变化后仍保留。同股重复入库已去重，多次提醒合并为一张卡片；表格展示归档时条件，不代表桌面通知已送达。</p><h3>实际归档提醒（${visible.length}只／${actualCount}次）</h3><div class="d2-history-minute-list">${visible.map(d2ArchivedCard).join('')||'<div class="d2-alert-empty">该日没有按当前双路径规则归档的提醒。</div>'}</div>`;
+        if(awaitingArchive.length)html+=`<h3>本次扫描已满足，尚未归档（${awaitingArchive.length}只）</h3><p class="daily-note">以下股票已满足当前提醒条件，服务端归档尚未记录。此处保留最新扫描详情，不计入上方归档次数，也不代表通知已送达；仅KDJ分支仍须人工通过后才进入跟踪池。</p><div class="d2-history-minute-list">${awaitingArchive.map(row=>d2Card(row,scanAt,true,false,selected)).join('')}</div>`;
         if(replayDay.date){
         html+=`<h3>按当前规则推定当日会推送（${replays.length}，不等于通知已送达）</h3>${replays.length?`<div class="daily-note"><strong>严格30分钟MACD顶背离卖出触发结算：</strong>${d2ExitOutcomeSummary(replays)}<small>胜率只统计已经确认顶背离且已有下一根30分钟K线开盘参考价的记录；以该参考价相对信号日收盘的收益是否大于0判断盈利。尚未触发的记录不计入胜率，均不含费用和滑点。</small></div>`:''}<div class="d2-history-minute-list">${replays.map(event=>`<div class="d2-history-minute-card">${d2ManualDeleteButton(event.code,event.name,selected)}<b>${safe(event.name)} ${safe(event.code)}（中枢评分 ${d2Value(event.center_similarity)}）</b>${d2ConditionList(event.condition_checks,true,event.code,selected)}<small>提醒确认 ${safe(formatDateTime(event.confirmed_at))} · 来源 ${safe(event.alert_gate_source||'--')}</small>${d2OutcomeResults(event)}</div>`).join('')||'<div class="d2-alert-empty">该日没有“类二买池＋KDJ或理想底背离”提醒。</div>'}</div>`;
         html+=`<h3>类二买池已入选，但两个提醒分支均未满足（${blocked.length}）</h3><div class="d2-history-minute-list">${blocked.map(event=>`<div class="d2-history-minute-card">${d2ManualDeleteButton(event.code,event.name,selected)}<b>${safe(event.name)} ${safe(event.code)}（中枢评分 ${d2Value(event.center_similarity)}）</b>${d2ConditionList(event.condition_checks,false,event.code,selected)}<small><strong>阻断原因：</strong>${safe((event.blocking_reasons||[]).join('；')||'条件数据不足')}</small></div>`).join('')||'<div class="d2-alert-empty">该日没有此类记录。</div>'}</div>`;
@@ -2576,7 +2581,7 @@ draw=function(){
     const d2State=stateFor('d2_alert'),latestD2=d2AlertSnapshot(),pendingD2Rows=d2EventRows(latestD2),modalD2Rows=d2State.d2AlertForceOpen?latestD2.rows:pendingD2Rows,modalD2Signature=d2RowsSignature(modalD2Rows,latestD2.session?.date||'');
     content.querySelector('[data-d2-notification-toggle]')?.addEventListener('click',toggleD2DesktopNotification);
     content.querySelector('[data-d2-notification-test]')?.addEventListener('click',testD2DesktopNotification);
-    if(id==='d2_alert'&&(!d2State.alertDate||d2State.alertDate==='latest')&&modalD2Rows.length)content.insertAdjacentHTML('beforeend',d2ProximityModal(modalD2Rows,modalD2Signature,latestD2.scanAt,latestD2.session?.date||''));
+    if(id==='d2_alert'&&(!d2State.alertDate||d2State.alertDate==='latest')&&modalD2Rows.length)content.insertAdjacentHTML('beforeend',d2ProximityModal(modalD2Rows,modalD2Signature,latestD2.scanAt,latestD2.session?.date||'',!d2State.d2AlertForceOpen));
     content.querySelectorAll('[data-d2-manual-delete]').forEach(button=>button.addEventListener('click',()=>{
         const code=button.dataset.d2ManualDelete,name=button.dataset.d2ManualName||code,date=button.dataset.d2ManualDate;
         if(!window.confirm(`确定将 ${name} ${code} 移出 ${formatDate(date)} 的筛选结果？\n\n只影响这个交易日；以后交易日重新满足条件时仍会正常出现。`))return;
