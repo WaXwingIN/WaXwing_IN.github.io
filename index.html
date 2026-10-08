@@ -2190,7 +2190,31 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
     return entries;
 }
 function stockLookupTargetId(model){
-    return ({'周线盘整背驰一买':'weekly_consolidation_first','日线趋势一买':'two_centers','D2第二回调双路径提醒':'holding_pool','日线盘整背驰一买':'holding_pool','30分钟一买':'holding_pool'})[model]||'';
+    return ({'周线盘整背驰一买':'weekly_consolidation_first','日线趋势一买':'two_centers','D2第二回调双路径提醒':'d2_alert','日线盘整背驰一买':'daily_consolidation_first','30分钟一买':'m30_first','周线类二买':'weekly_first','V6 动量':'momentum_v6'})[model]||'';
+}
+function configureStockLookupTarget(target,code,date){
+    const state=stateFor(target),day=dateKey(date),iso=day.length===8?`${day.slice(0,4)}-${day.slice(4,6)}-${day.slice(6,8)}`:'';
+    Object.assign(state,{focusCode:String(code).padStart(6,'0'),focusDate:day,date:day,shortCycleFilter:'all',detailCode:null});
+    if(target==='two_centers')state.signalDate=day===dateKey(data.daily_date)?'latest':iso;
+    if(target==='d2_alert'){
+        state.d2Section='alerts';state.alertDate=iso;state.manualDate=iso;state.d2AlertForceOpen=false;
+    }
+    return state;
+}
+function applyStockLookupFocus(content,state,id){
+    if(!state.focusCode||id==='holding_pool'||id==='stock_lookup')return;
+    const code=String(state.focusCode).padStart(6,'0'),pattern=new RegExp(`(^|[^0-9])${code}([^0-9]|$)`);
+    const selection=content.querySelector('#dailyDate')?.value;
+    const snapshotDay=id==='m30_first'?data.models?.['30分钟一买']?.daily_date||data.daily_date:id==='weekly_first'?dailyExtra.weeklyFirst?.daily_date:null;
+    const wrongDate=(selection&&dateKey(selection)!==dateKey(state.focusDate))||(snapshotDay&&dateKey(snapshotDay)!==dateKey(state.focusDate));
+    const matches=wrongDate?[]:[...content.querySelectorAll('tbody tr,.d2-proximity-item,.d2-history-minute-card')].filter(element=>pattern.test(element.textContent));
+    for(const element of matches){element.dataset.stockLookupFocusRow='';element.style.outline='2px solid #2563eb';element.style.outlineOffset='-2px'}
+    if(!matches.length){
+        const position=(dailyExtra.holdingPool?.positions||[]).find(item=>item.code===code&&stockLookupTargetId(item.source_model)===id&&dateKey(item.buy_date)===dateKey(state.focusDate));
+        const record=stockLookupEntries().find(item=>item.code===code&&stockLookupTargetId(item.model)===id&&dateKey(item.date)===dateKey(state.focusDate));
+        content.insertAdjacentHTML('afterbegin',`<section class="stock-lookup-focus" data-stock-lookup-focus-row><strong>检索定位：${safe(record?.name||position?.name||code)} ${safe(code)} · ${safe(formatDate(state.focusDate))}</strong><p>${safe(record?.model||position?.source_model||'')} · ${safe(record?.status||'信号归档')}。该记录未出现在当前模型列表中，当前筛选条件变化不会撤销已归档信号。</p>${position?`<p>买入提醒 ${safe(formatDateTime(position.buy_at))} · 触发价 ${safe(position.buy_trigger_price??position.buy_price??'--')}；卖出${position.sell_signal_triggered?`已触发 ${safe(formatDateTime(position.sell_at))}`:'尚无已触发归档'}。</p>`:''}<p>完整结构明细未在该日期列表中保留，不能用当前结构替代历史依据。</p></section>`);
+    }
+    requestAnimationFrame(()=>content.querySelector('[data-stock-lookup-focus-row]')?.scrollIntoView({block:'center'}));
 }
 function stockLookupPanel(state){
     const query=String(state.stockQuery||'').trim(),form=`<form class="stock-lookup-form" data-stock-lookup-form><input type="search" name="stock" aria-label="股票代码或名称" placeholder="输入股票代码或名称，例如 000513、丽珠集团" value="${safe(query)}" autocomplete="off"><button type="submit">搜索</button></form>`;
@@ -2263,7 +2287,7 @@ function holdingPoolPanel(state){
     const payload=dailyExtra.holdingPool||{},all=Array.isArray(payload.positions)?payload.positions:[],summary=payload.summary||{};
     const status=state.holdingStatus??'已持有',model=state.holdingModel||'all';
     const models=[...new Set(all.map(item=>item.source_model).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
-    const rows=etfFirstWithinSameDay(all.filter(item=>(state.focusCode||status==='all'||item.status===status)&&(model==='all'||item.source_model===model)&&(!state.focusCode||item.code===state.focusCode)),'',item=>item.buy_at||item.buy_date);
+    const rows=etfFirstWithinSameDay(all.filter(item=>(status==='all'||item.status===status)&&(model==='all'||item.source_model===model)),'',item=>item.buy_at||item.buy_date);
     const todaySales=all.filter(item=>item.sell_signal_triggered&&item.sell_date===payload.data_through&&item.status!=='已卖出');
     const todaySaleKeys=new Set(todaySales.map(item=>item.key));
     const aggregate=value=>value==null?'<span class="pending-return">--</span>':returnPct(value);
@@ -2386,6 +2410,7 @@ draw=function(){
     else if(id==='weekly_first'){content.innerHTML=weeklyFirstBuyPanel(state)}
     else if(id==='weekly_consolidation_first'){content.innerHTML=weeklyConsolidationFirstPanel(state)}
     else{content.innerHTML=patternPanel(id,state)}
+    applyStockLookupFocus(content,state,id);
     moveReasonColumns(content);
     const focus=document.getElementById('focusWatch');if(focus)focus.hidden=!isMA||state.date!=='latest';
     document.getElementById('ruleGate').hidden=id==='d2_alert'||id==='holding_pool'||id==='stock_lookup'||id==='two_centers'||id==='m30_first'||id==='m30_two_centers'||id==='daily_consolidation_first'||id==='weekly_first'||id==='weekly_consolidation_first';
@@ -2406,8 +2431,8 @@ draw=function(){
     }).join('');
     content.setAttribute('role','tabpanel');content.setAttribute('tabindex','0');
     if(dailyModels.some(x=>x[0]===id))content.setAttribute('aria-labelledby','daily-'+id);else content.removeAttribute('aria-labelledby');
-    const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=()=>{state.date=date.value;state.secondDetailCode=null;draw()}};
-    const trendDate=document.getElementById('twoCenterSignalDate');if(trendDate){stickyControls.append(trendDate.closest('.daily-filters'));trendDate.onchange=()=>{const trendState=stateFor('two_centers');trendState.signalDate=trendDate.value;trendState.detailCode=null;draw()}};
+    const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;draw()}};
+    const trendDate=document.getElementById('twoCenterSignalDate');if(trendDate){stickyControls.append(trendDate.closest('.daily-filters'));trendDate.onchange=()=>{const trendState=stateFor('two_centers');trendState.signalDate=trendDate.value;trendState.focusCode=null;trendState.focusDate=null;trendState.detailCode=null;draw()}};
     syncDailyStickyOffset();
     const d2InnerTabBar=content.querySelector('.d2-inner-tabs');
     document.documentElement.style.setProperty('--d2-inner-tabs-sticky-height',d2InnerTabBar?`${Math.ceil(d2InnerTabBar.getBoundingClientRect().height)}px`:'0px');
@@ -2416,20 +2441,15 @@ draw=function(){
         event.preventDefault();state.stockQuery=event.currentTarget.elements.stock.value.trim();draw();
     });
     content.querySelectorAll('[data-stock-lookup-target]').forEach(button=>button.addEventListener('click',()=>{
-        const target=button.dataset.stockLookupTarget,targetState=stateFor(target);
-        targetState.focusCode=button.dataset.stockLookupCode;
-        targetState.focusDate=button.dataset.stockLookupDate;
-        targetState.signalDate=target==='two_centers'&&dateKey(button.dataset.stockLookupDate)===dateKey(data.daily_date)?'latest':'';
-        targetState.shortCycleFilter='all';
-        activeDaily=target;
-        draw();
-        requestAnimationFrame(()=>content.querySelector('[data-stock-lookup-focus-row]')?.scrollIntoView({block:'center'}));
+        const target=button.dataset.stockLookupTarget;
+        configureStockLookupTarget(target,button.dataset.stockLookupCode,button.dataset.stockLookupDate);
+        selectDaily(target);
     }));
     content.querySelectorAll('[data-holding-status]').forEach(button=>button.addEventListener('click',event=>{state.holdingStatus=event.currentTarget.dataset.holdingStatus;draw()}));
     content.querySelector('[data-holding-model]')?.addEventListener('change',event=>{state.holdingModel=event.target.value;draw()});
     content.querySelector('[data-holding-simulation-form]')?.addEventListener('submit',event=>{event.preventDefault();const form=event.currentTarget,targetState=stateFor('holding_pool');targetState.simPrincipal=Number(form.elements.principal.value);targetState.simPerTrade=Number(form.elements.perTrade.value);targetState.simStartDate=form.elements.startDate.value;draw()});
-    content.querySelector('[data-d2-alert-date]')?.addEventListener('change',event=>{state.alertDate=event.target.value;draw()});
-    content.querySelector('[data-d2-manual-date]')?.addEventListener('change',event=>{state.manualDate=event.target.value;draw()});
+    content.querySelector('[data-d2-alert-date]')?.addEventListener('change',event=>{state.alertDate=event.target.value;state.focusCode=null;state.focusDate=null;draw()});
+    content.querySelector('[data-d2-manual-date]')?.addEventListener('change',event=>{state.manualDate=event.target.value;state.focusCode=null;state.focusDate=null;draw()});
     content.querySelectorAll('[data-d2-section]').forEach(button=>button.addEventListener('click',()=>{state.d2Section=button.dataset.d2Section;draw()}));
     content.querySelectorAll('[data-pattern-sort]').forEach(button=>button.onclick=()=>{
         const key=button.dataset.patternSort;
