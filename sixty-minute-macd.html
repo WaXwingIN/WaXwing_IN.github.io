@@ -94,7 +94,7 @@ async function m60Refresh(manual=false){
         if(!response.ok)throw new Error(`HTTP ${response.status}`);
         const incoming=await response.json();
         if(incoming.version!==m60Data.version||!Array.isArray(incoming.matches))throw new Error('数据格式不匹配');
-        if(String(incoming.asof)>String(m60Data.asof)||(incoming.asof===m60Data.asof&&String(incoming.generated_at)>=String(m60Data.generated_at))){m60Data=incoming;m60Draw()}
+        if(String(incoming.asof)>String(m60Data.asof)||(incoming.asof===m60Data.asof&&String(incoming.generated_at)>String(m60Data.generated_at))){m60Data=incoming;m60Draw()}
         status.textContent=`已核对最新扫描快照 · 行情截止 ${m60Date(m60Data.asof)}`;
     }catch(error){status.textContent=`数据刷新失败，保留已显示的扫描快照（${error.message}）。`}
     finally{button.disabled=false}
