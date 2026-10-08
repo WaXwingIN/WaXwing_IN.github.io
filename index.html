@@ -201,7 +201,7 @@ async function initializeD2Data(){
     if(!initialD2DataPromise)initialD2DataPromise=(async()=>{
         restoreD2DisplayCache();
         await Promise.all([refreshD2MonitorData(),refreshD2HistoryData(),refreshD2ReplayData(),refreshD2ManualExclusions(),refreshD2ManualApprovals()]);
-        await Promise.all([loadDailyBundle('daily_extra_models'),loadDailyCoreSnapshot()]);
+        await Promise.allSettled([loadDailyBundle('daily_extra_models'),loadDailyCoreSnapshot()]);
         await Promise.all([refreshShortCycleData(),refreshThirtyMinuteFirstData(),refreshDailyConsolidationData()]);
         d2DataInitialized=true;
         updatePageMeta();
