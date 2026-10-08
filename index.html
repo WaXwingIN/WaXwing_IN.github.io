@@ -2227,7 +2227,7 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
     }
     for(const day of extra.d2History?.days||[])for(const row of day.rows||[]){
         if(!(row.d2_alert_events||[]).length)
-            add('D2第二回调双路径提醒',row,day.date,'历史扫描候选（未触发提醒）','扫描归档');
+            add('D2第二回调双路径提醒',row,day.date,'历史扫描候选（买入提醒未留档）','扫描归档');
         for(const event of row.d2_alert_events||[]){
             if(!event.event_key||dateKey(event.first_observed_at)!==dateKey(day.date))continue;
             add('D2第二回调双路径提醒',row,event.first_observed_at,'实际归档提醒','扫描归档（不保证通知送达）',event.event_key);
@@ -2296,7 +2296,8 @@ function applyStockLookupFocus(content,state,id){
     if(!matches.length){
         const position=(dailyExtra.holdingPool?.positions||[]).find(item=>item.code===code&&stockLookupTargetId(item.source_model)===id&&dateKey(item.buy_date)===dateKey(state.focusDate));
         const record=stockLookupEntries().find(item=>item.code===code&&stockLookupTargetId(item.model)===id&&dateKey(item.date)===dateKey(state.focusDate));
-        content.insertAdjacentHTML('afterbegin',`<section class="stock-lookup-focus" data-stock-lookup-focus-row><strong>检索定位：${safe(record?.name||position?.name||code)} ${safe(code)} · ${safe(formatDate(state.focusDate))}</strong><p>${safe(record?.model||position?.source_model||'')} · ${safe(record?.status||'信号归档')}。该记录未出现在当前模型列表中，当前筛选条件变化不会撤销已归档信号。</p>${position?`<p>买入提醒 ${safe(formatDateTime(position.buy_at))} · 触发价 ${safe(position.buy_trigger_price??position.buy_price??'--')}；卖出${position.sell_signal_triggered?`已触发 ${safe(formatDateTime(position.sell_at))}`:'尚无已触发归档'}。</p>`:''}<p>完整结构明细未在该日期列表中保留，不能用当前结构替代历史依据。</p></section>`);
+        const archiveNote=record?.status==='历史扫描候选（买入提醒未留档）'&&!position?'该日期仅保留扫描候选记录，缺少买入提醒归档；不能据此判定当时未触发，也不能确认通知已送达。':'该记录未出现在当前模型列表中，当前筛选条件变化不会撤销已归档信号。';
+        content.insertAdjacentHTML('afterbegin',`<section class="stock-lookup-focus" data-stock-lookup-focus-row><strong>检索定位：${safe(record?.name||position?.name||code)} ${safe(code)} · ${safe(formatDate(state.focusDate))}</strong><p>${safe(record?.model||position?.source_model||'')} · ${safe(record?.status||'信号归档')}。${archiveNote}</p>${position?`<p>买入提醒 ${safe(formatDateTime(position.buy_at))} · 触发价 ${safe(position.buy_trigger_price??position.buy_price??'--')}；卖出${position.sell_signal_triggered?`已触发 ${safe(formatDateTime(position.sell_at))}`:'尚无已触发归档'}。</p>`:''}<p>完整结构明细未在该日期列表中保留，不能用当前结构替代历史依据。</p></section>`);
     }
     requestAnimationFrame(()=>content.querySelector('[data-stock-lookup-focus-row]')?.scrollIntoView({block:'center'}));
 }
