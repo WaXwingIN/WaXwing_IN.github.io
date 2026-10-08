@@ -218,22 +218,22 @@ function mergeDailyBundle(payload){
     dailyExtra.holdingPool=normalizeD2HoldingPool(dailyExtra.holdingPool);
 }
 let initialD2DataPromise=null,d2DataInitialized=location.protocol==='file:',d2LiveLoadFailed=false;
-function saveD2DisplayCache(){try{localStorage.setItem('waxwing_d2_display_cache_v1',JSON.stringify({d2Proximity:dailyExtra.d2Proximity,d2History:dailyExtra.d2History}))}catch(_error){}}
-function restoreD2DisplayCache(){try{const cached=JSON.parse(localStorage.getItem('waxwing_d2_display_cache_v1')||'null');if(cached)mergeDailyBundle(cached)}catch(_error){}}
+function saveD2DisplayCache(){try{localStorage.setItem('waxwing_d2_display_cache_v2',JSON.stringify({d2Proximity:dailyExtra.d2Proximity}))}catch(_error){}}
+function restoreD2DisplayCache(){try{const cached=JSON.parse(localStorage.getItem('waxwing_d2_display_cache_v2')||'null');if(cached)mergeDailyBundle(cached)}catch(_error){}}
 async function initializeD2Data(){
     if(d2DataInitialized)return;
     if(!initialD2DataPromise)initialD2DataPromise=(async()=>{
         restoreD2DisplayCache();
-        await Promise.all([refreshD2MonitorData(),refreshD2HistoryData(),refreshD2ReplayData(),refreshD2ManualExclusions(),refreshD2ManualApprovals()]);
-        await Promise.allSettled([loadDailyBundle('daily_extra_models'),loadDailyCoreSnapshot()]);
-        await Promise.all([refreshShortCycleData(),refreshThirtyMinuteFirstData(),refreshDailyConsolidationData()]);
+        await Promise.all([refreshD2MonitorData(),refreshD2ManualExclusions(),refreshD2ManualApprovals()]);
         d2DataInitialized=true;
         updatePageMeta();
         saveD2DisplayCache();
+        if(activeDaily==='d2_alert')draw();
     })();
     return initialD2DataPromise;
 }
 async function fetchLiveJson(name,{live=true}={}){
+    if(['d2_proximity_history.json','d2_30m_replay.json','short_cycle_outcomes_latest.json','short_cycle_alert_win_rates.json','holding_tracking_pool.json'].includes(name))name=`page_live/${name}`;
     const remote=location.hostname.toLowerCase()==='waxwingin.github.io';
     const stamp=Date.now(),local=`data/${name}?v=${stamp}`;
     const urls=remote&&live?[
@@ -258,28 +258,53 @@ async function loadDailyBundle(name){
     })().catch(error=>{dailyBundlePromises.delete(name);throw error}));
     return dailyBundlePromises.get(name);
 }
-let coreSnapshotPromise=null;
-async function loadDailyCoreSnapshot(){
-    if(data?.models&&Object.keys(data.models).length)return;
-    if(!coreSnapshotPromise)coreSnapshotPromise=(location.protocol==='file:'?loadLocalDataScript('new_models_latest'):fetch('data/new_models_latest.json',{cache:'no-store'}).then(response=>{if(!response.ok)throw new Error('无法加载模型快照');return response.json()})).then(snapshot=>{data={...data,...snapshot};return snapshot}).catch(error=>{coreSnapshotPromise=null;throw error});
-    return coreSnapshotPromise;
+const coreSnapshotPromises=new Map();
+async function loadDailyCoreSnapshot(id){
+    if(!['m30_first','two_centers','daily_consolidation_first'].includes(id))return;
+    if(!coreSnapshotPromises.has(id))coreSnapshotPromises.set(id,(location.protocol==='file:'?loadLocalDataScript(`page/core_${id}`):fetch(`data/page/core_${id}.json`,{cache:'no-store'}).then(response=>{if(!response.ok)throw new Error('无法加载模型快照');return response.json()})).then(snapshot=>{data={...data,...snapshot,models:{...data.models,...snapshot.models}};return snapshot}).catch(error=>{coreSnapshotPromises.delete(id);throw error}));
+    return coreSnapshotPromises.get(id);
+}
+const dailyEnsurePromises=new Map();
+function showDailyLoading(id){
+    document.body.classList.remove('daily-ui-booting');
+    dailyNav.innerHTML=dailyModels.map(([key,label])=>`<button type="button" id="daily-${key}" role="tab" data-daily="${key}" aria-selected="${key===id}">${label}</button>`).join('');
+    dailyNav.querySelectorAll('[data-daily]').forEach(button=>button.onclick=()=>selectDaily(button.dataset.daily));
+    document.getElementById('content').innerHTML='<p class="daily-note" role="status">正在加载当前结果…</p>';
 }
 async function ensureDailyData(id){
+    if(dailyEnsurePromises.has(id))return dailyEnsurePromises.get(id);
+    const promise=loadDailyData(id).finally(()=>dailyEnsurePromises.delete(id));
+    dailyEnsurePromises.set(id,promise);return promise;
+}
+async function loadDailyData(id){
     const content=document.getElementById('content');
     try{
-        if(!dailyBundlesReady.has('daily_extra_d2'))await loadDailyBundle('daily_extra_d2');
-        await initializeD2Data();
-        if(id==='m30_two_centers'){
+        if(id==='stock_lookup'){
+            await loadDailyBundle('page/stock_lookup');
+        }else if(id==='m30_two_centers'){
             await loadDailyBundle('m30_two_centers_research');
-        }else if(id!=='d2_alert'){
-            await Promise.all([loadDailyBundle('daily_extra_models'),loadDailyCoreSnapshot()]);
-            if(id==='daily_consolidation_first'||id==='stock_lookup')await loadDailyConsolidationSessions();
-            if(['momentum_v6','daily_consolidation_first','stock_lookup'].includes(id))await refreshDailyConsolidationData();
-            if(id==='m30_first'||id==='stock_lookup')await refreshThirtyMinuteFirstData();
-            if(['holding_pool','m30_first','two_centers','weekly_first','weekly_consolidation_first','daily_consolidation_first'].includes(id))await refreshShortCycleData();
+        }else{
+            await Promise.all([loadDailyBundle(`page/tab_${id}`),loadDailyCoreSnapshot(id)]);
+            if(id==='daily_consolidation_first'){
+                await loadDailyConsolidationSessions();
+                const view=dailyConsolidationDateRecords(),requested=stateFor(id).date;
+                await loadDailyConsolidationDate(view.dates.includes(requested)?requested:view.dates[0]);
+            }
+        }
+        if(id==='d2_alert'){
+            d2DataInitialized=true;
+            initializeD2DataInBackground();
+            loadDailyBundle('page/tab_d2_archive').then(()=>{if(activeDaily==='d2_alert')draw()}).catch(()=>{});
         }
         if(activeDaily===id)draw();
+        if(['holding_pool','m30_first','two_centers','weekly_first','weekly_consolidation_first','daily_consolidation_first','stock_lookup'].includes(id))refreshShortCycleData();
+        if(id==='m30_first')refreshThirtyMinuteFirstData();
+        if(id==='daily_consolidation_first')refreshDailyConsolidationData();
     }catch(error){if(activeDaily===id)content.innerHTML=`<p class="daily-error">数据加载失败：${safe(error.message)}。请刷新页面重试。</p>`}
+}
+function initializeD2DataInBackground(){
+    if(initialD2DataPromise)return;
+    d2DataInitialized=false;initializeD2Data();d2DataInitialized=true;
 }
 let dailySecondIntraday=null; // Retired model: keep archived render helpers inert.
 try{localStorage.removeItem('waxwing_trade_manager_v1')}catch(_error){}
@@ -374,7 +399,7 @@ style.textContent+='.d2-routing-badge{display:inline-flex;margin:0 0 8px;padding
 style.textContent+='.d2-manual-review-page .d2-proximity-list,.d2-manual-review-page .d2-history-minute-list{grid-template-columns:repeat(2,minmax(0,1fr))}.d2-manual-review-page .d2-proximity-item,.d2-manual-review-page .d2-history-minute-card{box-sizing:border-box;width:100%;min-width:0}.d2-manual-review-page .d2-condition-table{width:100%}@media(max-width:900px){.d2-manual-review-page .d2-proximity-list,.d2-manual-review-page .d2-history-minute-list{grid-template-columns:minmax(0,1fr)}}';
 style.textContent+='.d2-proximity-modal .d2-proximity-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.d2-proximity-modal .d2-proximity-item{box-sizing:border-box;min-width:0}@media(max-width:900px){.d2-proximity-modal .d2-proximity-list{grid-template-columns:minmax(0,1fr)}}';
 style.textContent+='.d2-inner-tabs{flex-wrap:wrap}.d2-ideal-branch-page .d2-proximity-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}@media(max-width:900px){.d2-ideal-branch-page .d2-proximity-list{grid-template-columns:minmax(0,1fr)}}';
-style.textContent+='.daily-tabs .standalone-model-link{display:inline-flex;align-items:center;padding:6px 12px;min-height:34px;border:1px solid #b8d7d4;border-radius:8px;background:#f0f9f8;color:#08746c;font-size:14px;text-decoration:none}';
+style.textContent+='.daily-tabs .standalone-model-link{display:inline-flex;align-items:center;padding:6px 12px;min-height:34px;white-space:nowrap;font-weight:600;border:1px solid #b8d7d4;border-radius:8px;background:#f0f9f8;color:#08746c;font-size:14px;text-decoration:none}';
 style.textContent+='.d2-inner-tabs{position:sticky;top:var(--daily-sticky-controls-height,0px);z-index:19;display:flex;gap:6px;box-sizing:border-box;width:100%;margin:0;padding:5px;border-bottom:1px solid #cbd5e1;background:#f1f5f9}.d2-inner-tabs button{padding:8px 14px;border:0;border-radius:7px;background:transparent;color:#475569;font:inherit;font-weight:900;cursor:pointer}.d2-inner-tabs button[aria-selected=true]{background:#2563eb;color:#fff}.d2-manual-approve{float:right;margin:0 0 8px 9px;padding:7px 11px;border:0;border-radius:7px;background:#16a34a;color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer}.d2-manual-approve:hover{background:#15803d}.d2-manual-approved{float:right;margin:0 0 8px 9px;padding:5px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:900}@media(max-width:640px){.d2-inner-tabs button{flex:1}.d2-manual-approve,.d2-manual-approved{float:none;display:inline-flex;margin:0 7px 8px 0}}';
 style.textContent+='.weekly-near-banner{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0;padding:13px 16px;border:2px solid #f59e0b;border-radius:10px;background:#fffbeb;color:#92400e}.weekly-near-banner button,.weekly-near-close{padding:8px 13px;border:0;border-radius:7px;background:#d97706;color:#fff;font:inherit;font-weight:800;cursor:pointer}.weekly-near-modal{position:fixed;inset:0;z-index:1120;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.65)}.weekly-near-dialog{width:min(780px,95vw);max-height:88vh;overflow:auto;padding:22px;border:3px solid #f59e0b;border-radius:12px;background:#fff}.weekly-near-dialog h3{margin:0 0 8px}.weekly-near-dialog p{color:#64748b}.weekly-near-list{display:grid;gap:8px;margin:15px 0}.weekly-near-list div{padding:9px 11px;border:1px solid #fcd34d;border-radius:7px;background:#fffbeb}.weekly-near-close{width:100%}@media(max-width:700px){.weekly-near-banner{align-items:stretch;flex-direction:column}}';
 style.textContent+='.second-overview-help{margin:10px 0 12px;border:1px solid #dbe3ed;border-radius:9px;background:#fff}.second-overview-help>summary{display:flex;align-items:center;gap:9px;padding:9px 12px;color:#334155;font-weight:700;cursor:pointer;list-style:none}.second-overview-help>summary::-webkit-details-marker{display:none}.second-overview-help>summary:before{content:"＋";color:#2563eb;font-size:17px;line-height:1}.second-overview-help[open]>summary:before{content:"－"}.second-overview-help>summary small{color:#64748b;font-size:12px;font-weight:400}.second-overview-help[open]>summary{border-bottom:1px solid #e2e8f0}.second-overview-body{padding:4px 12px 12px}.second-overview-body>.daily-note{margin:8px 0}.second-overview-body .second-overlap-help{margin-top:10px}';
@@ -1989,7 +2014,7 @@ function dailyConsolidationDateRecords(primary=data,extra=dailyExtra){
     };
     const dates=[...new Set([...records.map(archivedDate),
         ...visibleReplayRecords.map(item=>item.date),...actualTriggerRecords.map(item=>item.date)].filter(Boolean))]
-        .filter(date=>recordsOnDate(date).length>0).sort().reverse();
+        .filter(date=>recordsOnDate(date).length>0&&(!extra.historyWindow?.from||date>=dateKey(extra.historyWindow.from))).sort().reverse();
     return {session,model,recordsOnDate,dates};
 }
 function dailyConsolidationPanel(state){
@@ -2207,6 +2232,10 @@ function syncChartTimeAxes(container){
     },{passive:true}));
 }
 function stockLookupEntries(primary=data,extra=dailyExtra){
+    if(extra===dailyExtra&&extra.stockLookupIndex){
+        const index=extra.stockLookupIndex;
+        return [...stockLookupEntries(index.primary,index.extra),...stockLookupEntries(primary,{...extra,stockLookupIndex:null})];
+    }
     const entries=[],seen=new Set(),names=extra.stockNames||{};
     const add=(model,row,when,status,source,detail='')=>{
         const raw=row?.['代码']??row?.code;
@@ -2253,7 +2282,7 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
             `D3 ${row['D3日期']||'--'} / ${row['D3价格']??'--'}`);
     }
     for(const model of ['30分钟一买'])for(const row of primary?.models?.[model]?.rows||[])
-        add(model,row,primary.daily_date||primary.date,row['状态']||'当前候选','当前快照',
+        add(model,row,primary.models[model].daily_date||primary.daily_date||primary.date,row['状态']||'当前候选','当前快照',
             `B ${row['Price_B日期']||row['B日期']||'--'}`);
     for(const [model,payload] of [['周线类二买',extra.weeklyFirst],['周线盘整背驰一买',extra.weeklyConsolidationFirst]])
         for(const row of payload?.rows||[])add(model,row,payload.daily_date,row.status||'当前候选','当前快照');
@@ -2272,7 +2301,8 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
         for(const row of snapshot.candidates||[])add('V6 动量',row,snapshot.signal_date,
             `候选排名 ${row.rank??'--'}`,'历史选股快照');
     for(const position of extra.holdingPool?.positions||[])add(position.source_model,position,position.buy_at||position.buy_date,position.status,'跟踪池信号归档',position.key||'');
-    return entries;
+    const cutoff=dateKey(extra.historyWindow?.from||dailyExtra.historyWindow?.from);
+    return cutoff?entries.filter(item=>['周线类二买','周线盘整背驰一买'].includes(item.model)||item.date>=cutoff):entries;
 }
 function stockLookupTargetId(model){
     return ({'周线盘整背驰一买':'weekly_consolidation_first','日线趋势一买':'two_centers','D2第二回调双路径提醒':'d2_alert','日线盘整背驰一买':'daily_consolidation_first','30分钟一买':'m30_first','周线类二买':'weekly_first','V6 动量':'momentum_v6'})[model]||'';
@@ -2406,8 +2436,8 @@ function extraArchivePending(){return Boolean(dailyExtra.dailyConsolidationSessi
     !(dailyExtra.dailyConsolidationSessions?.sessions||[]).length)}
 draw=function(){
     if(!data)return;
-    if(!dailyBundlesReady.has('daily_extra_d2')){ensureDailyData(activeDaily);return}
-    if(!d2DataInitialized){ensureDailyData(activeDaily);return}
+    const required=activeDaily==='stock_lookup'?'page/stock_lookup':activeDaily==='m30_two_centers'?'m30_two_centers_research':`page/tab_${activeDaily}`;
+    if(!dailyBundlesReady.has(required)){showDailyLoading(activeDaily);ensureDailyData(activeDaily);return}
     if(!initialD2RouteChecked){
         initialD2RouteChecked=true;
         const latestD2=d2AlertSnapshot(),pendingRows=d2EventRows(latestD2);
@@ -2417,9 +2447,6 @@ draw=function(){
         else if(location.hash==='#d2-history'||location.hash==='#d2-alert'||pendingRows.length)activeDaily='d2_alert';
     }
     if(activeDaily==='m30_two_centers'&&!dailyBundlesReady.has('m30_two_centers_research')){
-        ensureDailyData(activeDaily);return;
-    }
-    if(!['d2_alert','m30_two_centers'].includes(activeDaily)&&(!dailyBundlesReady.has('daily_extra_models')||!data.models||!Object.keys(data.models).length)){
         ensureDailyData(activeDaily);return;
     }
     const content=document.getElementById('content');
@@ -2517,7 +2544,7 @@ draw=function(){
     }).join('')+'<a class="standalone-model-link" href="sixty-minute-macd.html">60分钟MACD底背离 ↗</a>';
     content.setAttribute('role','tabpanel');content.setAttribute('tabindex','0');
     if(dailyModels.some(x=>x[0]===id))content.setAttribute('aria-labelledby','daily-'+id);else content.removeAttribute('aria-labelledby');
-    const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;draw()}};
+    const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=async()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;try{if(id==='daily_consolidation_first')await loadDailyConsolidationDate(state.date);draw()}catch(error){content.innerHTML=`<p class="daily-error">详情加载失败：${safe(error.message)}</p>`}}};
     const trendDate=document.getElementById('twoCenterSignalDate');if(trendDate){stickyControls.append(trendDate.closest('.daily-filters'));trendDate.onchange=()=>{const trendState=stateFor('two_centers');trendState.signalDate=trendDate.value;trendState.focusCode=null;trendState.focusDate=null;trendState.detailCode=null;draw()}};
     syncDailyStickyOffset();
     const d2InnerTabBar=content.querySelector('.d2-inner-tabs');
@@ -2765,25 +2792,24 @@ async function refreshDailyConsolidationData(){
     }catch(_error){}
 }
 async function loadDailyConsolidationSessions(){
-    try{
-        let payload;
-        if(location.protocol==='file:'){
-            const encoded=await loadLocalDataScript('daily_consolidation_first_sessions_gzip');
-            if(!encoded||typeof DecompressionStream!=='function')return;
-            const binary=atob(encoded),bytes=new Uint8Array(binary.length);
-            for(let index=0;index<binary.length;index++)bytes[index]=binary.charCodeAt(index);
-            const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-            payload=JSON.parse(await new Response(stream).text());
-        }else{
-            const response=await fetch(`data/daily_consolidation_first_sessions.json?v=${Date.now()}`,{cache:'no-store'});
-            if(!response.ok)return;
-            payload=await response.json();
+    await loadDailyBundle('page/consolidation_index');
+}
+const consolidationDatePromises=new Map();
+async function loadDailyConsolidationDate(selected){
+    if(!selected)return;
+    const view=dailyConsolidationDateRecords();
+    const snapshotDates=[...new Set(view.recordsOnDate(dateKey(selected)).map(item=>dateKey(item.snapshot.date)))];
+    await Promise.all(snapshotDates.map(async stamp=>{
+        const sessions=dailyExtra.dailyConsolidationSessions?.sessions||[];
+        const index=sessions.findIndex(item=>dateKey(item.date)===stamp);
+        if(index<0)return; // Current rows already have their complete evidence.
+        if(!consolidationDatePromises.has(stamp)){
+            const iso=`${stamp.slice(0,4)}-${stamp.slice(4,6)}-${stamp.slice(6,8)}`,name=`page/consolidation_${iso}`;
+            const promise=(location.protocol==='file:'?loadLocalDataScript(name):fetch(`data/${name}.json`,{cache:'no-store'}).then(response=>{if(!response.ok)throw new Error(`无法加载 ${iso} 的详情`);return response.json()})).then(payload=>{sessions[index]=payload.session}).catch(error=>{consolidationDatePromises.delete(stamp);throw error});
+            consolidationDatePromises.set(stamp,promise);
         }
-        if(!payload||!Array.isArray(payload.sessions))return;
-        dailyExtra.dailyConsolidationSessions=payload;
-        delete dailyExtra.dailyConsolidationSessionsGzip;
-        if(activeDaily==='daily_consolidation_first'||activeDaily==='stock_lookup')draw();
-    }catch(_error){}
+        await consolidationDatePromises.get(stamp);
+    }));
 }
 let shortCycleRefreshPromise=null,lastShortCycleFetchAt=0;
 async function refreshShortCycleData(){
@@ -2807,7 +2833,7 @@ async function refreshShortCycleData(){
         if(['holding-tracking-pool-v1','holding-tracking-pool-v2','holding-tracking-pool-v3','holding-tracking-pool-v4','holding-tracking-pool-v5','holding-tracking-pool-v6','holding-tracking-pool-v7','holding-tracking-pool-v8','holding-tracking-pool-v9','holding-tracking-pool-v10'].includes(holdingPool?.version)&&String(holdingPool.generated_at||'')>String(lastHoldingPoolRefresh||'')){
             dailyExtra.holdingPool=normalizeD2HoldingPool(holdingPool);lastHoldingPoolRefresh=holdingPool.generated_at;changed=true;
         }
-        if(changed&&['holding_pool','m30_first','daily_consolidation_first','two_centers','weekly_first','weekly_consolidation_first'].includes(activeDaily))draw();
+        if(changed&&['holding_pool','m30_first','daily_consolidation_first','two_centers','weekly_first','weekly_consolidation_first','stock_lookup'].includes(activeDaily))draw();
     }catch(_error){}finally{shortCycleRefreshPromise=null}})();
     return shortCycleRefreshPromise;
 }
