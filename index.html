@@ -163,8 +163,49 @@ function drawPerformance(perf){
 }
 function draw(){const groups={focus:['首踩10日线'],strict:['T+1','T1-T5'],long:['中线']};const preferred='首踩10日线',names=(groups[tab]||[]).filter(n=>data.models&&data.models[n]);document.getElementById('content').innerHTML=names.length?names.map(n=>{let m=data.models[n],obs=m.observation_rows||[],rules=rulesUnlocked?esc(m.rules):'条件已隐藏，输入口令后查看。',locked=rulesUnlocked?'':' locked';let simple=n==='首踩10日线',featured=n===preferred;return `<section class="model${featured?' featured':''}"><div class="model-title"><h2>${n}</h2><div class="counts">${featured?'<span class="badge key">重点</span>':''}<span class="badge">${simple?'推荐':'已确认'} ${m.rows.length}</span>${simple?'':`<span class="badge obs">观察 ${obs.length}</span>`}</div></div><p class="meta">${simple?esc(data.market_context?.reason||'日线二买观察'):''}</p><div class="rules${locked}">${rules}</div>${rulesUnlocked&&m.implementation?`<details class="implementation"><summary>当前计算口径（与原文分开）</summary><p>${esc(m.implementation)}</p></details>`:""}<div class="subhead"><div class="sub-title"><h3>${simple?'次日观察':'已确认'}</h3></div><span class="count-pill">${m.rows.length} 只</span></div>${table(m.rows,'暂无严格符合条件的股票。',n)}${simple?'':`<div class="subhead"><div class="sub-title"><h3>观察池</h3><span class="hint">含结构待确认</span></div><span class="count-pill">${obs.length} 只</span></div>${table(obs,'暂无观察池股票。')}`}</section>`}).join(''):'<p class="note">当前标签暂无对应模型数据。</p>';document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));syncGate()}
 document.getElementById('content').addEventListener('click',e=>{let button=e.target.closest('button[data-sort-key]');if(button)toggleTableSort(button.dataset.sortTable,button.dataset.sortKey)});
-const performanceModal=document.getElementById('performanceModal');function closePerformance(){performanceModal.classList.add('hide');document.body.classList.remove('modal-open')}document.getElementById('openPerformance').onclick=async()=>{if(!performanceData){try{if(location.protocol==='file:')performanceData=await loadLocalDataScript('model_performance_latest');else{const response=await fetch('data/model_performance_latest.json',{cache:'no-store'});performanceData=response.ok?await response.json():null}drawPerformance(performanceData)}catch(_error){}}performanceModal.classList.remove('hide');document.body.classList.add('modal-open')};document.getElementById('closePerformance').onclick=closePerformance;performanceModal.onclick=e=>{if(e.target===performanceModal)closePerformance()};document.addEventListener('keydown',e=>{if(e.key==='Escape')closePerformance()});document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;draw()});document.getElementById('unlockRules').onclick=async()=>{let ok=await sha256(document.getElementById('rulePass').value)===RULE_HASH;rulesUnlocked=ok;if(ok){sessionStorage.setItem('rulesUnlocked','1');document.getElementById('rulePass').value='';drawFocus(data);draw()}else{document.getElementById('ruleMsg').textContent='口令不正确'}};document.getElementById('rulePass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('unlockRules').click()});{const x={"daily_date":"20260930","date":"20260930","generated_at":"2026-10-05 11:37:10","market_context":{"date":"20260930","state":"偏弱","preferred_model":"首踩10日线","indices":[{"名称":"上证指数","收盘":3842.19,"MA10":3890.226,"MA20":3905.6369999999997},{"名称":"深证成指","收盘":12887.62,"MA10":13356.064000000002,"MA20":13463.8595},{"名称":"创业板指","收盘":3135.28,"MA10":3286.8200000000006,"MA20":3304.343}],"missing":[],"reason":"指数状态：偏弱；仅供市场环境观察。","rules":"三指数中至少两个收盘在MA20上方1%以内或下方视为偏弱；否则至少两个同时站上MA10和MA20视为偏强；其余震荡。仅提供市场环境说明，不再切换独立模型。"}};data={...x,models:{}};document.getElementById('meta').textContent=`行情数据日：${pageDate(x.daily_date||x.date)}　生成时间：${pageDateTime(x.generated_at)}`;drawPerformance(null);setTimeout(()=>draw(),0)}</script></main><script>const dailyExtra={};
+const performanceModal=document.getElementById('performanceModal');function closePerformance(){performanceModal.classList.add('hide');document.body.classList.remove('modal-open')}document.getElementById('openPerformance').onclick=async()=>{if(!performanceData){try{if(location.protocol==='file:')performanceData=await loadLocalDataScript('model_performance_latest');else{const response=await fetch('data/model_performance_latest.json',{cache:'no-store'});performanceData=response.ok?await response.json():null}drawPerformance(performanceData)}catch(_error){}}performanceModal.classList.remove('hide');document.body.classList.add('modal-open')};document.getElementById('closePerformance').onclick=closePerformance;performanceModal.onclick=e=>{if(e.target===performanceModal)closePerformance()};document.addEventListener('keydown',e=>{if(e.key==='Escape')closePerformance()});document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;draw()});document.getElementById('unlockRules').onclick=async()=>{let ok=await sha256(document.getElementById('rulePass').value)===RULE_HASH;rulesUnlocked=ok;if(ok){sessionStorage.setItem('rulesUnlocked','1');document.getElementById('rulePass').value='';drawFocus(data);draw()}else{document.getElementById('ruleMsg').textContent='口令不正确'}};document.getElementById('rulePass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('unlockRules').click()});{const x={"daily_date":"20260930","date":"20260930","generated_at":"2026-10-05 11:37:10","market_context":{"date":"20260930","state":"偏弱","preferred_model":"首踩10日线","indices":[{"名称":"上证指数","收盘":3842.19,"MA10":3890.226,"MA20":3905.6369999999997},{"名称":"深证成指","收盘":12887.62,"MA10":13356.064000000002,"MA20":13463.8595},{"名称":"创业板指","收盘":3135.28,"MA10":3286.8200000000006,"MA20":3304.343}],"missing":[],"reason":"指数状态：偏弱；仅供市场环境观察。","rules":"三指数中至少两个收盘在MA20上方1%以内或下方视为偏弱；否则至少两个同时站上MA10和MA20视为偏强；其余震荡。仅提供市场环境说明，不再切换独立模型。"}};data={...x,models:{}};document.getElementById('meta').textContent=`完整报告行情日：${pageDate(x.daily_date||x.date)}　完整报告生成：${pageDateTime(x.generated_at)}`;drawPerformance(null);setTimeout(()=>draw(),0)}</script></main><script>const dailyExtra={};
 const dailyBundlePromises=new Map(),dailyBundlesReady=new Set();
+function d2SnapshotNewer(incoming,current){
+    if(!incoming)return false;
+    if(!current)return true;
+    const incomingDay=String(incoming.daily_date||'').slice(0,10),currentDay=String(current.daily_date||'').slice(0,10);
+    return incomingDay!==currentDay?incomingDay>currentDay:String(incoming.generated_at||'')>=String(current.generated_at||'');
+}
+function mergeD2History(current,incoming){
+    if(!current)return incoming;
+    if(!incoming)return current;
+    const days=new Map((current.days||[]).map(day=>[day.date,day]));
+    for(const day of incoming.days||[]){
+        const previous=days.get(day.date),rows=new Map((previous?.rows||[]).map(row=>[row.code,row]));
+        for(const row of day.rows||[]){
+            const prior=rows.get(row.code),events=new Map((prior?.d2_alert_events||[]).map(event=>[event.event_key,event]));
+            for(const event of row.d2_alert_events||[])events.set(event.event_key,{...events.get(event.event_key),...event});
+            rows.set(row.code,{...prior,...row,d2_alert_events:[...events.values()]});
+        }
+        days.set(day.date,{...previous,...day,rows:[...rows.values()]});
+    }
+    return {...current,...incoming,days:[...days.values()].sort((a,b)=>b.date.localeCompare(a.date))};
+}
+function mergeDailyBundle(payload){
+    const previous={...dailyExtra};
+    Object.assign(dailyExtra,payload||{});
+    if(previous.d2Proximity&&!d2SnapshotNewer(dailyExtra.d2Proximity,previous.d2Proximity))dailyExtra.d2Proximity=previous.d2Proximity;
+    dailyExtra.d2History=mergeD2History(payload?.d2History,previous.d2History);
+}
+let initialD2DataPromise=null,d2DataInitialized=location.protocol==='file:',d2LiveLoadFailed=false;
+function saveD2DisplayCache(){try{localStorage.setItem('waxwing_d2_display_cache_v1',JSON.stringify({d2Proximity:dailyExtra.d2Proximity,d2History:dailyExtra.d2History}))}catch(_error){}}
+function restoreD2DisplayCache(){try{const cached=JSON.parse(localStorage.getItem('waxwing_d2_display_cache_v1')||'null');if(cached)mergeDailyBundle(cached)}catch(_error){}}
+async function initializeD2Data(){
+    if(d2DataInitialized)return;
+    if(!initialD2DataPromise)initialD2DataPromise=(async()=>{
+        restoreD2DisplayCache();
+        await Promise.all([refreshD2MonitorData(),refreshD2HistoryData(),refreshD2ReplayData(),refreshD2ManualExclusions(),refreshD2ManualApprovals()]);
+        d2DataInitialized=true;
+        updatePageMeta();
+        saveD2DisplayCache();
+    })();
+    return initialD2DataPromise;
+}
 function loadLocalDataScript(name){
     if(window.__waxwingData&&Object.prototype.hasOwnProperty.call(window.__waxwingData,name))return Promise.resolve(window.__waxwingData[name]);
     return new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=`data/${name}.js`;script.onload=()=>resolve(window.__waxwingData?.[name]);script.onerror=()=>reject(new Error(`无法加载本地数据 ${name}`));document.head.append(script)});
@@ -175,7 +216,8 @@ async function loadDailyBundle(name){
         let payload;
         if(location.protocol==='file:')payload=await loadLocalDataScript(name);
         else{const response=await fetch(`data/${name}.json`,{cache:'no-store'});if(!response.ok)throw new Error(`无法加载 ${name}`);payload=await response.json()}
-        Object.assign(dailyExtra,payload||{});dailyBundlesReady.add(name);
+        mergeDailyBundle(payload);
+        dailyBundlesReady.add(name);
     })().catch(error=>{dailyBundlePromises.delete(name);throw error}));
     return dailyBundlePromises.get(name);
 }
@@ -189,6 +231,7 @@ async function ensureDailyData(id){
     const content=document.getElementById('content');
     try{
         if(!dailyBundlesReady.has('daily_extra_d2'))await loadDailyBundle('daily_extra_d2');
+        await initializeD2Data();
         if(id==='m30_two_centers'){
             await loadDailyBundle('m30_two_centers_research');
         }else if(id!=='d2_alert'){
@@ -632,13 +675,13 @@ function d2Card(row,scanAt,detailed=false,offline=false,filterDate=''){
     const details=`<div class="d2-card-grid"><small>D1：<b>${d2Value(s.D1?.price)}</b></small><small>D2：<b>${d2Value(s.D2?.price)}</b></small><small>D2 距 D1：<b>${d2Signed(d2Gap(row))}</b></small><small>D2 日期：<b>${safe(s.D2?.date||'--')}</b></small><small>当前价：<b>${d2Value(row.close)}</b></small><small>日线 KDJ：<b>D ${d2Value(row.daily_kdj?.d,2)} / J ${d2Value(row.daily_kdj?.j,2)}</b></small></div>`;
     const times=detailed?`<small>首次进入D2候选 ${d2TriggerLabel(row,scanAt)} · ${offline?'维护回算':'最近扫描'} ${formatDateTime(offline?scanAt:lastSeen)}</small>`:'';
     const signal=row.d2_30m_divergence||{},strength=row.d2_first_strengthening||{},ideal=row.d2_ideal_m30_divergence||{};
-    const aActive=signal.status==='active'&&signal.rule_version==='d2-g2-m30-price-dif-v4',bActive=strength.status==='active'&&strength.rule_version==='d2-g2-m30-pivot-m5-break-volume-v1',kdjGate=d2KdjEligible(row),idealGate=d2IdealM30Eligible(row),gate=kdjGate||idealGate,fresh=d2CombinedSignalFresh(row,null,scanAt);
+    const aActive=signal.status==='active'&&signal.rule_version==='d2-g2-m30-price-dif-v4',bActive=strength.status==='active'&&strength.rule_version==='d2-g2-m30-pivot-m5-break-volume-v1',kdjGate=d2KdjEligible(row),idealGate=d2IdealM30Eligible(row),gate=kdjGate||idealGate;
     const currentChecks=[
         {condition:'类二买结构候选且中枢评分≥73',passed:secondCenterEligible(row),actual:row.center_similarity},
         {condition:'过滤条件①：日线KDJ同时满足D≥49、J≤20',passed:kdjGate,actual:`D ${d2Value(row.daily_kdj?.d,2)} / J ${d2Value(row.daily_kdj?.j,2)}`},
         {condition:'过滤条件②：推送当日触发30分钟理想MACD底背离及底分型确认',passed:idealGate,actual:idealGate?(ideal.confirmed_at||'当日已确认'):(ideal.reason||ideal.confirmed_at||'未出现')},
         {condition:'过滤条件①或②至少一个成立',passed:gate,actual:kdjGate&&idealGate?'两项均成立':kdjGate?'日线KDJ':idealGate?'30分钟理想底背离':'均未成立'},
-        {condition:'提醒条件确认后不超过45分钟',passed:fresh,actual:d2EffectiveConfirmedAt(row)},
+
     ];
     const minute=signal.status==='active'?`<div class="d2-m30-alert"><b>路径A · 30分钟价格/DIF底背离</b><small>低点① ${safe(formatBarTime(signal.low1?.time))} / ${safe(signal.low1?.price)}（确认 ${safe(formatDateTime(signal.low1?.confirm_time))}）→ 低点② ${safe(formatBarTime(signal.low2?.time))} / ${safe(signal.low2?.price)}（确认 ${safe(formatDateTime(signal.low2?.confirm_time))}）；DIF ${d2Value(signal.low1?.dif,4)} → ${d2Value(signal.low2?.dif,4)}</small><small>DEA抬高 ${signal['DEA抬高']?'是':'否'} · 负柱高度降低 ${signal['负柱高度降低']?'是':'否'} · 面积缩小 ${signal['负柱面积缩小']?'是':'否'} · 扫描发现 ${safe(formatDateTime(signal.scan_discovered_at))}</small></div>`:`<small>路径A：${safe(signal['状态']||'未检测')}${signal.status==='unavailable'?`（${safe(signal['原因'])}）`:''}</small>`;
     const first=strength.status==='active'?`<div class="d2-m30-alert"><b>路径B · 二次回调首次转强</b><small>30分钟反弹高点 ${d2Value(strength.pivot?.price)}（发生 ${safe(formatDateTime(strength.pivot?.time))}、确认 ${safe(formatDateTime(strength.pivot?.confirmed_at))}）→ 5分钟收盘突破 ${d2Value(strength.breakout_price)}（${safe(formatDateTime(strength.confirmed_at))}）· 量比 ${d2Value(strength.volume_ratio,2)} · 扫描发现 ${safe(formatDateTime(strength.scan_discovered_at))}</small></div>`:`<small>路径B：${safe(strength['状态']||'未检测')}${strength.status==='unavailable'?`（${safe(strength['原因'])}）`:''}</small>`;
@@ -646,7 +689,7 @@ function d2Card(row,scanAt,detailed=false,offline=false,filterDate=''){
     const routing=manuallyApproved?'<span class="d2-routing-badge auto">自动池：人工筛选已通过</span>':d2AutoBuyEligible(row)?'<span class="d2-routing-badge auto">自动池：理想30分钟底背离＋底分型</span>':'<span class="d2-routing-badge manual">需人工筛选：仅KDJ分支</span>';
     const routingNote=manuallyApproved?'已人工确认，将按通过时间同步至SuperMind；买入提醒已进入持有跟踪池。':autoPool?'满足自动池硬门槛，可进入SuperMind；买入提醒同时进入持有跟踪池。':'未满足30分钟理想底背离＋底分型，须人工通过后才进入SuperMind；但买入提醒本身会进入持有跟踪池。';
     const approvalAction=d2KdjEligible(row)&&!d2AutoBuyEligible(row)?(offline?'<span class="d2-manual-approved">休市回算不可补入自动池</span>':d2ManualApprovalButton(row,routeDate)):'';
-    return `<div class="d2-proximity-item">${d2ManualDeleteButton(row.code,row.name,routeDate)}${approvalAction}${routing}${idealText}<b class="d2-stock-title">${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(row.center_similarity)}）</b>${details}${d2ConditionList(currentChecks,gate&&fresh,row.code,routeDate)}${times}<details><summary>A/B旧观察项（不参与提醒）</summary>${minute}${first}</details><small>${row.d2_above_d1_preferred?'D2高于D1优选 · ':''}${offline?'缓存回算，不代表通知送达；':''}${routingNote}</small></div>`;
+    return `<div class="d2-proximity-item">${d2ManualDeleteButton(row.code,row.name,routeDate)}${approvalAction}${routing}${idealText}<b class="d2-stock-title">${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(row.center_similarity)}）</b>${details}${d2ConditionList(currentChecks,gate,row.code,routeDate)}${times}<details><summary>A/B旧观察项（不参与提醒）</summary>${minute}${first}</details><small>${row.d2_above_d1_preferred?'D2高于D1优选 · ':''}${offline?'缓存回算，不代表通知送达；':''}${routingNote}</small></div>`;
 }
 function d2ProximityModal(rows,signature,scanAt,filterDate=''){
     const title=`D2第二回调双路径提醒：${rows.length}只`;
@@ -664,7 +707,7 @@ function d2AlertSnapshot(){
     const sourceCandidates=group?.research_rows?.length?group.research_rows:(group?.rows||[]);
     const candidates=sourceCandidates.filter(row=>!d2ManuallyExcluded(row.code,session?.date));
     const nearRows=candidates.filter(d2Eligible).sort(compareD2Rows);
-    const rows=nearRows.filter(row=>d2AlertGateEligible(row)&&d2CombinedSignalFresh(row,null,payload?.generated_at)).sort(compareD2Rows);
+    const rows=nearRows.filter(row=>d2AlertGateEligible(row)&&(String(payload?.kind||'').includes('回算')?d2CombinedSignalFresh(row,null,payload?.generated_at):String(d2EffectiveConfirmedAt(row)).slice(0,10)===String(session?.date))).sort(compareD2Rows);
     const criticalCount=rows.filter(row=>d2Gap(row)<=.5).length;
     const signature=session?`${session.date}|${rows.map(row=>`${row.code}:${d2EffectiveConfirmedAt(row)}`).join(',')}`:'';
     const scanAt=rows.find(row=>row.d2_near_d1_last_seen_at)?.d2_near_d1_last_seen_at||payload?.generated_at||'';
@@ -753,10 +796,10 @@ function d2AlertPanel(state){
     const tradingDates=new Set(Array.isArray(dailyExtra.tradingDates)?dailyExtra.tradingDates:[]);
     const visibleReplayDays=replayDays.filter(day=>(day.replay_rows||[]).length||(day.blocked_rows||[]).length||(day.actual_rows||[]).length);
     const dates=[...new Set([...archived.map(item=>item.date),...visibleReplayDays.map(day=>day.date)].filter(date=>date&&(!tradingDates.size||tradingDates.has(date))))].sort().reverse();
-    const selected=state.alertDate===undefined?dates[0]||'latest':state.alertDate==='latest'?'latest':dates.includes(state.alertDate)?state.alertDate:dates[0]||'latest';
-    if(state.alertDate===undefined&&selected!=='latest')state.alertDate=selected;
+    const defaultDate=String(payload?.daily_date||'')>String(dates[0]||'')?'latest':dates[0]||'latest';
+    const selected=state.alertDate===undefined?defaultDate:state.alertDate==='latest'?'latest':dates.includes(state.alertDate)?state.alertDate:defaultDate;
     const visible=selected==='latest'?rows:etfFirstWithinSameDay(archived.filter(item=>item.date===selected),selected);
-    const options=`<option value="latest"${selected==='latest'?' selected':''}>最新扫描交集（${rows.length}只）</option>`+dates.map(date=>{const actual=archived.filter(item=>item.date===date).length,replay=replayDays.find(day=>day.date===date);return `<option value="${safe(date)}"${selected===date?' selected':''}>${formatDate(date)} · 实际${actual}／推定会推送${replay?.replay_rows?.length||0}／被阻断${replay?.blocked_rows?.length||0}</option>`}).join('');
+    const options=`<option value="latest"${selected==='latest'?' selected':''}>最新扫描交集（${rows.length}只 · 扫描${formatDateTime(payload?.generated_at||'')}）</option>`+dates.map(date=>{const actual=archived.filter(item=>item.date===date).length,replay=replayDays.find(day=>day.date===date);return `<option value="${safe(date)}"${selected===date?' selected':''}>${formatDate(date)} · 实际${actual}／推定会推送${replay?.replay_rows?.length||0}／被阻断${replay?.blocked_rows?.length||0}</option>`}).join('');
     let html=`<section class="d2-alert-page">${d2InnerTabs(state)}<h2>D2第二回调双路径提醒</h2><div class="d2-alert-rule"><strong>类二买池子 → 日线KDJ，或30分钟理想底背离＋底分型。</strong>两条分支都可触发D2提醒、发送 Windows 通知并进入持有跟踪池。仅满足日线KDJ的先进入 D2 内的“需人工筛选”，点击通过后按通过时间进入SuperMind；推送当天新触发30分钟理想MACD底背离并由后续底分型确认的直接进入自动池。旧A/B路径只保留为研究诊断。生产组保留中枢相似度 ≥73；D2高于D1仅为优选。</div>${d2ManualExclusionManager()}<label class="d2-history-filter d2-sticky-history-filter">提醒／历史日期 <select data-d2-alert-date>${options}</select></label>`;
     html+=`<div class="d2-push-tools"><strong>浏览器桌面通知</strong>${d2NotificationButton()}<button type="button" class="d2-notification-test" data-d2-notification-test>测试 Windows 推送</button><span class="d2-push-status" data-d2-push-status aria-live="polite">测试按钮在任何日期都可用，只检查当前浏览器的通知权限，不会补发历史提醒；定时任务的 Windows 通知独立发送。</span></div>`;
     if(!payload&&selected==='latest')return html+'<p class="daily-error">D2交集提醒数据尚未生成。</p></section>';
@@ -2085,6 +2128,8 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
             add('类二买',row,session.date,'提醒扩展候选','日期快照');
     }
     for(const day of extra.d2History?.days||[])for(const row of day.rows||[]){
+        if(!(row.d2_alert_events||[]).length)
+            add('D2第二回调双路径提醒',row,day.date,'历史扫描候选（未触发提醒）','扫描归档');
         for(const event of row.d2_alert_events||[]){
             if(!event.event_key||dateKey(event.first_observed_at)!==dateKey(day.date))continue;
             add('D2第二回调双路径提醒',row,event.first_observed_at,'实际归档提醒','扫描归档（不保证通知送达）',event.event_key);
@@ -2141,8 +2186,8 @@ function stockLookupPanel(state){
             item.name.toLocaleLowerCase().includes(needle));
     matches.sort((a,b)=>b.date.localeCompare(a.date)||reminderEtfPriority(a,b)||a.model.localeCompare(b.model,'zh-CN')||a.code.localeCompare(b.code)||a.status.localeCompare(b.status,'zh-CN'));
     const unique=[...new Map(matches.map(item=>[[item.code,item.model,item.date].join('|'),item])).values()];
-    const body=unique.slice(0,400).map(item=>{const target=stockLookupTargetId(item.model);return `<tr><td><b>${safe(item.name||'名称未归档')}</b><br>${safe(item.code)}</td><td>${safe(item.model)}</td><td>${safe(formatDate(item.date))}</td><td>${target?`<button type="button" class="stock-lookup-open" data-stock-lookup-target="${safe(target)}" data-stock-lookup-code="${safe(item.code)}" data-stock-lookup-date="${safe(item.date)}">查看模型与依据</button>`:'<span class="pending-return">暂无详情入口</span>'}</td></tr>`}).join('');
-    return `<section class="stock-lookup"><h2>股票检索</h2>${form}${extraArchivePending()?'<p class="daily-note">历史记录正在加载…</p>':''}${unique.length?`<div class="wrap"><table class="stock-lookup-table"><thead><tr><th>股票</th><th>模型</th><th>选中日期</th><th>详情</th></tr></thead><tbody>${body}</tbody></table></div>${unique.length>400?'<p class="daily-note">仅显示最近400条，请输入完整代码。</p>':''}`:'<p class="daily-note">未找到记录。</p>'}</section>`;
+    const body=unique.slice(0,400).map(item=>{const target=stockLookupTargetId(item.model);return `<tr><td><b>${safe(item.name||'名称未归档')}</b><br>${safe(item.code)}</td><td>${safe(item.model)}</td><td>${safe(formatDate(item.date))}</td><td>${safe(item.status)}</td><td>${target?`<button type="button" class="stock-lookup-open" data-stock-lookup-target="${safe(target)}" data-stock-lookup-code="${safe(item.code)}" data-stock-lookup-date="${safe(item.date)}">查看模型与依据</button>`:'<span class="pending-return">暂无详情入口</span>'}</td></tr>`}).join('');
+    return `<section class="stock-lookup"><h2>股票检索</h2>${form}${extraArchivePending()?'<p class="daily-note">历史记录正在加载…</p>':''}${unique.length?`<div class="wrap"><table class="stock-lookup-table"><thead><tr><th>股票</th><th>模型</th><th>选中日期</th><th>记录类型</th><th>详情</th></tr></thead><tbody>${body}</tbody></table></div>${unique.length>400?'<p class="daily-note">仅显示最近400条，请输入完整代码。</p>':''}`:'<p class="daily-note">未找到记录。</p>'}</section>`;
 }
 function holdingSimulation(positions,options={}){
     const principal=Number(options.principal),perTrade=Number(options.perTrade),startDate=String(options.startDate||'').slice(0,10),through=String(options.through||'').slice(0,10);
@@ -2237,6 +2282,7 @@ function extraArchivePending(){return Boolean(dailyExtra.dailyConsolidationSessi
 draw=function(){
     if(!data)return;
     if(!dailyBundlesReady.has('daily_extra_d2')){ensureDailyData(activeDaily);return}
+    if(!d2DataInitialized){ensureDailyData(activeDaily);return}
     if(!initialD2RouteChecked){
         initialD2RouteChecked=true;
         const latestD2=d2AlertSnapshot(),pendingRows=d2EventRows(latestD2);
@@ -2489,14 +2535,15 @@ async function refreshD2HistoryData(){
     try{
         const remoteHost=location.hostname.toLowerCase()==='waxwingin.github.io';
         const liveUrl=remoteHost?`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/d2_proximity_history.json?v=${Date.now()}`:`data/d2_proximity_history.json?v=${Date.now()}`;
-        let response=await fetch(liveUrl,{cache:'no-store'});
-        if(!response.ok&&remoteHost)response=await fetch(`data/d2_proximity_history.json?v=${Date.now()}`,{cache:'no-store'});
+        let response=await fetch(liveUrl,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if(!response.ok&&remoteHost)response=await fetch(`data/d2_proximity_history.json?v=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)});
         if(!response.ok)return;
         const payload=await response.json();
         if(!payload||!Array.isArray(payload.days))return;
         const signature=JSON.stringify(payload);
         if(signature===lastD2HistorySignature)return;
-        dailyExtra.d2History=payload;
+        dailyExtra.d2History=mergeD2History(dailyExtra.d2History,payload);
+        saveD2DisplayCache();
         lastD2HistorySignature=signature;
         if(activeDaily==='d2_alert')draw();
     }catch(_error){}
@@ -2506,8 +2553,8 @@ async function refreshD2ReplayData(){
     try{
         const remoteHost=location.hostname.toLowerCase()==='waxwingin.github.io';
         const liveUrl=remoteHost?`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/d2_30m_replay.json?v=${Date.now()}`:`data/d2_30m_replay.json?v=${Date.now()}`;
-        let response=await fetch(liveUrl,{cache:'no-store'});
-        if(!response.ok&&remoteHost)response=await fetch(`data/d2_30m_replay.json?v=${Date.now()}`,{cache:'no-store'});
+        let response=await fetch(liveUrl,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if(!response.ok&&remoteHost)response=await fetch(`data/d2_30m_replay.json?v=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)});
         if(!response.ok)return;
         const payload=await response.json();
         if(!payload||!Array.isArray(payload.days))return;
@@ -2523,8 +2570,8 @@ async function refreshD2ManualExclusions(){
     try{
         const remoteHost=location.hostname.toLowerCase()==='waxwingin.github.io';
         const liveUrl=remoteHost?`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/d2_manual_exclusions.json?v=${Date.now()}`:`data/d2_manual_exclusions.json?v=${Date.now()}`;
-        let response=await fetch(liveUrl,{cache:'no-store'});
-        if(!response.ok&&remoteHost)response=await fetch(`data/d2_manual_exclusions.json?v=${Date.now()}`,{cache:'no-store'});
+        let response=await fetch(liveUrl,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if(!response.ok&&remoteHost)response=await fetch(`data/d2_manual_exclusions.json?v=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)});
         if(!response.ok)return;
         const payload=await response.json();
         if(!payload||!Array.isArray(payload.items))return;
@@ -2540,8 +2587,8 @@ async function refreshD2ManualApprovals(){
     try{
         const remoteHost=location.hostname.toLowerCase()==='waxwingin.github.io';
         const liveUrl=remoteHost?`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/d2_manual_approvals.json?v=${Date.now()}`:`data/d2_manual_approvals.json?v=${Date.now()}`;
-        let response=await fetch(liveUrl,{cache:'no-store'});
-        if(!response.ok&&remoteHost)response=await fetch(`data/d2_manual_approvals.json?v=${Date.now()}`,{cache:'no-store'});
+        let response=await fetch(liveUrl,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if(!response.ok&&remoteHost)response=await fetch(`data/d2_manual_approvals.json?v=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)});
         if(!response.ok)return;
         const payload=await response.json();
         if(!payload||!Array.isArray(payload.items))return;
@@ -2552,21 +2599,33 @@ async function refreshD2ManualApprovals(){
         if(activeDaily==='d2_alert')draw();
     }catch(_error){}
 }
+function updatePageMeta(){
+    const meta=document.getElementById('meta');
+    if(!meta||!data)return;
+    const live=dailyExtra.d2Proximity;
+    meta.textContent=`完整报告行情日：${formatDate(data.daily_date||data.date)}　完整报告生成：${formatDateTime(data.generated_at)}`+
+        (live?.generated_at?`　D2最近扫描：${formatDateTime(live.generated_at)}`:'')+(d2LiveLoadFailed?'　实时数据读取失败，显示上次结果':'');
+}
 async function refreshD2MonitorData(){
     if(location.protocol==='file:')return;
     try{
         const remoteHost=location.hostname.toLowerCase()==='waxwingin.github.io';
         const liveUrl=remoteHost?`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/d2_proximity_latest.json?v=${Date.now()}`:`data/d2_proximity_latest.json?v=${Date.now()}`;
-        let response=await fetch(liveUrl,{cache:'no-store'});
-        if(!response.ok&&remoteHost)response=await fetch(`data/d2_proximity_latest.json?v=${Date.now()}`,{cache:'no-store'});
-        if(!response.ok)return;
+        let response=await fetch(liveUrl,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        let fallback=false;
+        if(!response.ok&&remoteHost){fallback=true;response=await fetch(`data/d2_proximity_latest.json?v=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)})}
+        if(!response.ok){d2LiveLoadFailed=true;updatePageMeta();return}
         const payload=await response.json();
-        if(!payload||payload.generated_at===lastD2QuickRefresh)return;
+        if(!payload||!Array.isArray(payload.rows)){d2LiveLoadFailed=true;updatePageMeta();return}
+        d2LiveLoadFailed=fallback;
+        if(!d2SnapshotNewer(payload,dailyExtra.d2Proximity)||payload.generated_at===lastD2QuickRefresh)return;
         dailyExtra.d2Proximity=payload;
+        saveD2DisplayCache();
         lastD2QuickRefresh=payload.generated_at||'';
+        updatePageMeta();
         if(activeDaily==='d2_alert')draw();
         else {sendD2M30DesktopNotification()}
-    }catch(_error){}
+    }catch(_error){d2LiveLoadFailed=true;updatePageMeta()}
 }
 async function refreshWeeklyFirstData(){
     if(location.protocol==='file:')return;
@@ -2677,11 +2736,6 @@ async function refreshShortCycleData(){
     return shortCycleRefreshPromise;
 }
 if(location.protocol!=='file:'){
-    refreshD2MonitorData();
-    refreshD2HistoryData();
-    refreshD2ReplayData();
-    refreshD2ManualExclusions();
-    refreshD2ManualApprovals();
     setInterval(refreshD2MonitorData,60000);
     setInterval(refreshD2HistoryData,60000);
     setInterval(refreshD2ReplayData,300000);
