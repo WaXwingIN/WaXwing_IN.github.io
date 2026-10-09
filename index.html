@@ -261,9 +261,22 @@ function unpackPageIndex(payload){
 async function readPageAsset(name){
     const asset=dailyExtra.pageManifest?.assets?.[name]||name;
     if(location.protocol==='file:')return loadLocalDataScript(asset);
-    const response=await fetch(`data/${asset}.json`,{cache:'no-store',signal:AbortSignal.timeout(12000)});
-    if(!response.ok)throw new Error('结果暂时无法读取');
-    return response.json();
+    const remote=location.hostname.toLowerCase()==='waxwingin.github.io';
+    const urls=[`data/${asset}.json`,...(remote?[
+        `https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/main/data/${asset}.json`,
+        `https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@main/data/${asset}.json`
+    ]:[])];
+    const controllers=urls.map(()=>new AbortController());
+    try{
+        return await Promise.any(urls.map(async(url,index)=>{
+            const timer=setTimeout(()=>controllers[index].abort(),30000);
+            try{
+                const response=await fetch(url,{cache:'no-store',signal:controllers[index].signal});
+                if(!response.ok)throw new Error(`数据请求失败：${response.status}`);
+                return await response.json();
+            }finally{clearTimeout(timer)}
+        }));
+    }finally{controllers.forEach(controller=>controller.abort())}
 }
 async function loadDailyBundle(name){
     if(dailyBundlesReady.has(name))return;
@@ -330,7 +343,7 @@ async function loadDailyData(id){
         }
         if(activeDaily===id)draw();
 
-    }catch(error){if(activeDaily===id)content.innerHTML=`<p class="daily-error">此结果暂时无法加载。请点击上方“刷新页面”重试。</p>`}
+    }catch(error){console.error("Daily dataset load failed",id,error);if(activeDaily===id)content.innerHTML=`<p class="daily-error">此结果暂时无法加载。请点击上方“刷新页面”重试。</p>`}
 }
 function initializeD2DataInBackground(){
     if(initialD2DataPromise)return;
