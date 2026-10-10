@@ -1,11 +1,105 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WaXwing · 最近30个交易日</title><style>
 :root{color-scheme:dark}body{margin:0;background:#101620;color:#e7edf6;font:16px/1.6 system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:28px 18px}a{color:#78c5ff}h1{font-size:25px;margin:18px 0 4px}.muted{color:#98a7ba}select{background:#182331;color:inherit;border:1px solid #3a4c60;border-radius:8px;padding:10px;max-width:100%;margin:12px 14px 12px 0}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:11px 8px;border-bottom:1px solid #2a384a}tr[data-detail]{cursor:pointer}tr[data-detail]:hover{background:#1c2b3e}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#182331;padding:16px;border-radius:8px}#status{padding:12px 0;color:#9ec7e7}#detail{margin-top:20px}.scroll{overflow-x:auto}
-</style><main><a href="index.html">← 返回 WaXwing</a><h1>最近 30 个交易日历史</h1><p class="muted">已有归档保留原始记录；补齐数据按现行规则逐日回放，仅用于历史展示，不补发通知或交易指令。</p>
+</style></head><body><script>/* Shared ES5 controls for model, holding and history pages. */
+(function () {
+    if (window.__waxwingStockCodeCopy) return;
+    window.__waxwingStockCodeCopy = true;
+    function closest(node, selector) {
+        while (node && node.nodeType === 1) {
+            var matches = node.matches || node.msMatchesSelector || node.webkitMatchesSelector;
+            if (matches && matches.call(node, selector)) return node;
+            if (!matches) {
+                var candidates = document.querySelectorAll(selector);
+                for (var i = 0; i < candidates.length; i++) if (candidates[i] === node) return node;
+            }
+            node = node.parentElement;
+        }
+        return null;
+    }
+    function enhance(root) {
+        var walker = document.createTreeWalker(root, 4, null, false), nodes = [], node, parent, i;
+        while ((node = walker.nextNode())) {
+            parent = node.parentElement;
+            if (!parent || closest(parent, '[data-copy-stock-code],[data-no-stock-code-copy],script,style,svg,pre,textarea,input,select,option,#privateScanStatus,#privateModelStatus')) continue;
+            if (/(^|[^\w.\/-])[012345689]\d{5}(?![\w.\/-])/.test(node.nodeValue)) nodes.push(node);
+        }
+        for (i = 0; i < nodes.length; i++) {
+            node = nodes[i];
+            var text = node.nodeValue, pattern = /(^|[^\w.\/-])([012345689]\d{5})(?![\w.\/-])/g;
+            var fragment = document.createDocumentFragment(), cursor = 0, match;
+            while ((match = pattern.exec(text))) {
+                var start = match.index + match[1].length, code = match[2];
+                fragment.appendChild(document.createTextNode(text.slice(cursor, start)));
+                var nested = closest(node.parentElement, 'button,a,summary,label');
+                var control = document.createElement(nested ? 'span' : 'button');
+                if (nested) { control.setAttribute('role', 'button'); control.tabIndex = 0; }
+                else control.type = 'button';
+                control.className = 'stock-code-copy';
+                control.setAttribute('data-copy-stock-code', code);
+                control.setAttribute('aria-label', '复制股票代码 ' + code);
+                control.title = '点击复制股票代码 ' + code;
+                control.textContent = code;
+                fragment.appendChild(control);
+                cursor = start + code.length;
+            }
+            fragment.appendChild(document.createTextNode(text.slice(cursor)));
+            node.parentNode.replaceChild(fragment, node);
+        }
+    }
+    function copy(control) {
+        var code = control.getAttribute('data-copy-stock-code');
+        if (!/^\d{6}$/.test(code)) return;
+        function feedback(ok) {
+            var original = control.getAttribute('data-stock-copy-original-title') || control.title;
+            control.setAttribute('data-stock-copy-original-title', original);
+            var label = control.querySelector('[data-stock-copy-feedback]') || control;
+            if (!label.__waxwingCopyOriginal) label.__waxwingCopyOriginal = label.innerHTML;
+            control.title = ok ? '已复制 ' + code : '复制失败，请手动复制 ' + code;
+            label.textContent = ok ? (label === control ? '已复制' : '已复制代码 ' + code) : '复制失败';
+            control.className = control.className.replace(/\s*\bcopied\b/g, '') + (ok ? ' copied' : '');
+            window.setTimeout(function () { control.title = original; label.innerHTML = label.__waxwingCopyOriginal; control.className = control.className.replace(/\s*\bcopied\b/g, ''); }, 1200);
+        }
+        function fallback() {
+            var field = document.createElement('textarea'), ok = false;
+            field.value = code; field.setAttribute('readonly', '');
+            field.style.cssText = 'position:fixed;left:-9999px;top:0';
+            document.body.appendChild(field); field.select();
+            try { ok = document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(field); feedback(ok);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try { navigator.clipboard.writeText(code).then(function () { feedback(true); }, fallback); } catch (e) { fallback(); }
+        } else fallback();
+    }
+    function handle(event) {
+        var control = closest(event.target, '[data-copy-stock-code]');
+        if (!control || (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault(); event.stopImmediatePropagation(); copy(control);
+    }
+    document.addEventListener('click', handle, true);
+    document.addEventListener('keydown', handle, true);
+    var style = document.createElement('style');
+    style.textContent = '.stock-code-copy{cursor:copy;color:inherit;font:inherit;background:transparent;border:0;padding:0}.stock-code-copy:hover,.stock-code-copy:focus{color:#1d4ed8;text-decoration:underline}.stock-code-copy.copied{color:#15803d}';
+    document.head.appendChild(style);
+    if (document.body) enhance(document.body);
+    document.addEventListener('DOMContentLoaded', function () { enhance(document.body); });
+    if (window.MutationObserver) {
+        var pending = false;
+        new MutationObserver(function () {
+            // Chart/table rendering can add thousands of descendants in one
+            // batch. Walk once per batch instead of once per inserted node.
+            if (pending) return;
+            pending = true;
+            window.setTimeout(function () { pending = false; enhance(document.body); }, 0);
+        }).observe(document.body, {childList:true, subtree:true, characterData:true});
+    } else window.setInterval(function () { if (document.body) enhance(document.body); }, 1000);
+}());
+</script><main><a href="index.html">← 返回 WaXwing</a><h1>最近 30 个交易日历史</h1><p class="muted">已有归档保留原始记录；补齐数据按现行规则逐日回放，仅用于历史展示，不补发通知或交易指令。</p>
 <label>模型 <select id="model"></select></label><label>交易日 <select id="day"></select></label><div id="status">正在读取历史核验结果…</div><div class="scroll"><table><thead><tr><th>排名</th><th>代码</th><th>名称</th><th>状态</th><th>确认时间</th></tr></thead><tbody id="rows"></tbody></table></div><p class="muted" id="coverage"></p><div id="detail"></div>
 <script>
 const selectModel=document.querySelector('#model'),selectDay=document.querySelector('#day'),statusBox=document.querySelector('#status'),rowsBox=document.querySelector('#rows'),detail=document.querySelector('#detail');let request=0,coverageReport=null;
 function option(select,value){const o=document.createElement('option');o.value=value;o.textContent=value;select.append(o)}
 async function load(){const id=++request;rowsBox.replaceChildren();detail.replaceChildren();statusBox.textContent='正在读取所选交易日…';try{const date=selectDay.value;const c=coverageReport?.coverage?.[date];if(c)document.querySelector("#coverage").textContent="有效行情覆盖：日线 "+c.daily_valid+"/"+coverageReport.universe.daily+"；分钟线 "+c.minute_valid+"/"+coverageReport.universe.minute+"；周线 "+c.weekly_valid+"/"+coverageReport.universe.daily+"。停牌、新上市或价格口径无法校验的品种保留缺口，不虚构行情。";if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw Error('日期无效');const response=await fetch('data/history_30/'+date+'.json',{cache:'no-store'});if(!response.ok)throw Error('该日历史文件不可用');const payload=await response.json();if(id!==request)return;const model=payload.models[selectModel.value];if(!model)throw Error('该模型历史尚未核验');const rows=model.rows||[];statusBox.textContent=date+' · '+rows.length+' 条候选 · '+(model.provenance==='original_archive'?'原始归档':'历史规则回放')+'；点击记录查看证据。';for(const [index,row]of rows.entries()){const tr=document.createElement('tr');tr.dataset.detail='1';const reminder=row['短周期提醒']||row['买入提醒']||{};const values=[row.rank||row['排名']||index+1,row.code||row['代码']||'',row.name||row['名称']||'',row.status||row['状态']||row.current_status||'候选',reminder['确认时间']||reminder['提醒确认时间']||row.confirmed_at||''];for(const value of values){const cell=document.createElement('td');cell.textContent=String(value);tr.append(cell)}tr.onclick=()=>{const pre=document.createElement('pre');pre.textContent=JSON.stringify(row,null,2);detail.replaceChildren(pre)};rowsBox.append(tr)}}catch(error){if(id===request)statusBox.textContent=error.message}}
 async function initialize(){try{const response=await fetch('data/history_coverage_30_sessions.json',{cache:'no-store'});if(!response.ok)throw Error('历史核验结果尚未生成');const report=await response.json();coverageReport=report;for(const name of report.models||[])option(selectModel,name);for(const date of [...(report.dates||[])].reverse())option(selectDay,date);selectModel.onchange=selectDay.onchange=load;if(!report.complete){statusBox.textContent='历史补齐仍在核验，请稍后查看。';return}await load()}catch(error){statusBox.textContent=error.message}}initialize();
-</script></main></html>
+</script></main></body></html>
