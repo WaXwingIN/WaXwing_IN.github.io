@@ -1,0 +1,1210 @@
+{
+  "version": "close-next-session-buy-plan-v1",
+  "signal_date": "2026-10-09",
+  "trade_date": "2026-10-12",
+  "account_source": "calculator_simulation",
+  "candidates": [
+    {
+      "key": "周线类二买|300093|2026-10-09 11:30:00|2026-10-09 13:30:00",
+      "code": "300093",
+      "name": "300093",
+      "source_model": "周线类二买",
+      "signal_at": "2026-10-09 15:00:00",
+      "reference_price": 19.51,
+      "signal_price": 19.51,
+      "reference_date": "2026-10-09",
+      "origin": "实时归档",
+      "rule_version": null,
+      "structure_snapshot": {},
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "周线类二买|002422|2026-10-09 10:30:00|2026-10-09 11:30:00",
+      "code": "002422",
+      "name": "002422",
+      "source_model": "周线类二买",
+      "signal_at": "2026-10-09 15:00:00",
+      "reference_price": 39.72,
+      "signal_price": 39.72,
+      "reference_date": "2026-10-09",
+      "origin": "实时归档",
+      "rule_version": null,
+      "structure_snapshot": {},
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|520650|2026-09-17 10:30:00|2026-09-23 15:00:00",
+      "code": "520650",
+      "name": "港股通互联网ETF南方",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 10:30:00",
+      "reference_price": 0.552,
+      "signal_price": 0.552,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "520650",
+        "name": "港股通互联网ETF南方",
+        "board": "ETF",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 113,
+            "raw_index": 138,
+            "price": 0.708,
+            "date": "2026-08-05",
+            "confirmed_at": "2026-08-06 15:00:00"
+          },
+          "low_price": 0.534,
+          "low_date": "2026-10-08",
+          "top_age_sessions": 41,
+          "down_sessions": 41,
+          "merged_pivot_distance": 34,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 0.543,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-17 10:30:00",
+            "end_at": "2026-09-17 15:00:00",
+            "low_at": "2026-09-17 10:30:00",
+            "price_low": 0.546,
+            "dif_min": -0.006669039224947437,
+            "dea_min": -0.006154144160629308,
+            "dif_at_low": -0.006146925460790209,
+            "dea_at_low": -0.005804659694248948,
+            "bar_count": 4
+          },
+          "second": {
+            "start_at": "2026-09-23 15:00:00",
+            "end_at": "2026-10-09 10:30:00",
+            "low_at": "2026-10-08 15:00:00",
+            "price_low": 0.534,
+            "dif_min": -0.005982116977148788,
+            "dea_min": -0.00447050471050861,
+            "dif_at_low": -0.005982116977148788,
+            "dea_at_low": -0.004148799899035888,
+            "bar_count": 22
+          },
+          "red_bar_count": 15,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": true,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-08 15:00:00",
+            "price": 0.534,
+            "confirmed_at": "2026-10-09 10:30:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 10:30:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|002048|2026-09-08 11:30:00|2026-09-23 11:30:00",
+      "code": "002048",
+      "name": "宁波华翔",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 11:30:00",
+      "reference_price": 17.52,
+      "signal_price": 17.52,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "002048",
+        "name": "宁波华翔",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 115,
+            "raw_index": 146,
+            "price": 20.58,
+            "date": "2026-08-17",
+            "confirmed_at": "2026-08-19 15:00:00"
+          },
+          "low_price": 16.45,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 33,
+          "down_sessions": 33,
+          "merged_pivot_distance": 29,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 17.06,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-08 11:30:00",
+            "end_at": "2026-09-16 11:30:00",
+            "low_at": "2026-09-16 10:30:00",
+            "price_low": 17.01,
+            "dif_min": -0.44252564701964303,
+            "dea_min": -0.4194224603460388,
+            "dif_at_low": -0.44252564701964303,
+            "dea_at_low": -0.4174200025733064,
+            "bar_count": 25
+          },
+          "second": {
+            "start_at": "2026-09-23 11:30:00",
+            "end_at": "2026-10-09 11:30:00",
+            "low_at": "2026-10-09 10:30:00",
+            "price_low": 16.45,
+            "dif_min": -0.34428343680987794,
+            "dea_min": -0.25088339921347647,
+            "dif_at_low": -0.34428343680987794,
+            "dea_at_low": -0.22806940771806564,
+            "bar_count": 25
+          },
+          "red_bar_count": 19,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": true,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 10:30:00",
+            "price": 16.45,
+            "confirmed_at": "2026-10-09 11:30:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 11:30:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|600222|2026-09-04 15:00:00|2026-09-24 15:00:00",
+      "code": "600222",
+      "name": "太龙药业",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 11:30:00",
+      "reference_price": 7.78,
+      "signal_price": 7.78,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "600222",
+        "name": "太龙药业",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 102,
+            "raw_index": 146,
+            "price": 8.95,
+            "date": "2026-08-17",
+            "confirmed_at": "2026-08-20 15:00:00"
+          },
+          "low_price": 7.37,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 33,
+          "down_sessions": 33,
+          "merged_pivot_distance": 23,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 7.57,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-04 15:00:00",
+            "end_at": "2026-09-14 15:00:00",
+            "low_at": "2026-09-14 10:30:00",
+            "price_low": 7.38,
+            "dif_min": -0.23109190279076852,
+            "dea_min": -0.19136438666457056,
+            "dif_at_low": -0.22635211584073378,
+            "dea_at_low": -0.15511688191251105,
+            "bar_count": 25
+          },
+          "second": {
+            "start_at": "2026-09-24 15:00:00",
+            "end_at": "2026-10-09 11:30:00",
+            "low_at": "2026-10-09 10:30:00",
+            "price_low": 7.37,
+            "dif_min": -0.09881781304713577,
+            "dea_min": -0.04918642015638769,
+            "dif_at_low": -0.0909849529286646,
+            "dea_at_low": -0.03677857193370067,
+            "bar_count": 19
+          },
+          "red_bar_count": 31,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": true,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 10:30:00",
+            "price": 7.37,
+            "confirmed_at": "2026-10-09 11:30:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 11:30:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|603379|2026-09-28 10:30:00|2026-10-08 14:00:00",
+      "code": "603379",
+      "name": "三美股份",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 11:30:00",
+      "reference_price": 48.32,
+      "signal_price": 48.32,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "603379",
+        "name": "三美股份",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 103,
+            "raw_index": 141,
+            "price": 68.16,
+            "date": "2026-08-10",
+            "confirmed_at": "2026-08-12 15:00:00"
+          },
+          "low_price": 47.08,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 38,
+          "down_sessions": 38,
+          "merged_pivot_distance": 31,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 47.9,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-28 10:30:00",
+            "end_at": "2026-09-30 10:30:00",
+            "low_at": "2026-09-29 11:30:00",
+            "price_low": 48.16,
+            "dif_min": -0.9496422202908619,
+            "dea_min": -0.8633206002563691,
+            "dif_at_low": -0.9254718345131963,
+            "dea_at_low": -0.8128734264246464,
+            "bar_count": 9
+          },
+          "second": {
+            "start_at": "2026-10-08 14:00:00",
+            "end_at": "2026-10-09 11:30:00",
+            "low_at": "2026-10-09 10:30:00",
+            "price_low": 47.08,
+            "dif_min": -0.8920035294598847,
+            "dea_min": -0.8471527463822781,
+            "dif_at_low": -0.8920035294598847,
+            "dea_at_low": -0.8395816287360737,
+            "bar_count": 4
+          },
+          "red_bar_count": 5,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": true,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 10:30:00",
+            "price": 47.08,
+            "confirmed_at": "2026-10-09 11:30:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 11:30:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|000533|2026-09-23 10:30:00|2026-10-09 10:30:00",
+      "code": "000533",
+      "name": "顺钠股份",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 14:00:00",
+      "reference_price": 9.86,
+      "signal_price": 9.86,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "000533",
+        "name": "顺钠股份",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 109,
+            "raw_index": 142,
+            "price": 13.5,
+            "date": "2026-08-11",
+            "confirmed_at": "2026-08-14 15:00:00"
+          },
+          "low_price": 9.43,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 37,
+          "down_sessions": 37,
+          "merged_pivot_distance": 23,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 9.69,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-23 10:30:00",
+            "end_at": "2026-09-29 15:00:00",
+            "low_at": "2026-09-28 14:00:00",
+            "price_low": 9.97,
+            "dif_min": -0.3007135384567565,
+            "dea_min": -0.27162266282185493,
+            "dif_at_low": -0.29831655689534564,
+            "dea_at_low": -0.2515935288585851,
+            "bar_count": 16
+          },
+          "second": {
+            "start_at": "2026-10-09 10:30:00",
+            "end_at": "2026-10-09 14:00:00",
+            "low_at": "2026-10-09 11:30:00",
+            "price_low": 9.43,
+            "dif_min": -0.2615004582006648,
+            "dea_min": -0.2506798026873753,
+            "dif_at_low": -0.2615004582006648,
+            "dea_at_low": -0.2496007377586826,
+            "bar_count": 3
+          },
+          "red_bar_count": 8,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": true,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 11:30:00",
+            "price": 9.43,
+            "confirmed_at": "2026-10-09 14:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 14:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|603988|2026-09-23 11:30:00|2026-10-09 10:30:00",
+      "code": "603988",
+      "name": "中电电机",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 14:00:00",
+      "reference_price": 17.11,
+      "signal_price": 17.11,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "603988",
+        "name": "中电电机",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 114,
+            "raw_index": 142,
+            "price": 24.8,
+            "date": "2026-08-11",
+            "confirmed_at": "2026-08-13 15:00:00"
+          },
+          "low_price": 16.17,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 37,
+          "down_sessions": 37,
+          "merged_pivot_distance": 29,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 16.78,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-23 11:30:00",
+            "end_at": "2026-09-30 14:00:00",
+            "low_at": "2026-09-29 10:30:00",
+            "price_low": 16.87,
+            "dif_min": -0.3459481849994823,
+            "dea_min": -0.31329639226765305,
+            "dif_at_low": -0.34559425643735864,
+            "dea_at_low": -0.26850015935678484,
+            "bar_count": 18
+          },
+          "second": {
+            "start_at": "2026-10-09 10:30:00",
+            "end_at": "2026-10-09 14:00:00",
+            "low_at": "2026-10-09 11:30:00",
+            "price_low": 16.17,
+            "dif_min": -0.3197027839098503,
+            "dea_min": -0.2922690132518012,
+            "dif_at_low": -0.3197027839098503,
+            "dea_at_low": -0.2885260085981097,
+            "bar_count": 3
+          },
+          "red_bar_count": 5,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": true,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 11:30:00",
+            "price": 16.17,
+            "confirmed_at": "2026-10-09 14:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 14:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|603990|2026-09-23 10:30:00|2026-10-09 11:30:00",
+      "code": "603990",
+      "name": "麦迪科技",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 14:00:00",
+      "reference_price": 19.4,
+      "signal_price": 19.4,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "603990",
+        "name": "麦迪科技",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 104,
+            "raw_index": 143,
+            "price": 25.03,
+            "date": "2026-08-12",
+            "confirmed_at": "2026-08-13 15:00:00"
+          },
+          "low_price": 18.42,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 36,
+          "down_sessions": 36,
+          "merged_pivot_distance": 25,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 19.24,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-23 10:30:00",
+            "end_at": "2026-09-30 10:30:00",
+            "low_at": "2026-09-28 10:30:00",
+            "price_low": 18.55,
+            "dif_min": -0.29904861628401846,
+            "dea_min": -0.2501953936137295,
+            "dif_at_low": -0.2333899113282918,
+            "dea_at_low": -0.13914178213181896,
+            "bar_count": 17
+          },
+          "second": {
+            "start_at": "2026-10-09 11:30:00",
+            "end_at": "2026-10-09 11:30:00",
+            "low_at": "2026-10-09 11:30:00",
+            "price_low": 18.42,
+            "dif_min": -0.19811716228069187,
+            "dea_min": -0.19054667422737798,
+            "dif_at_low": -0.19811716228069187,
+            "dea_at_low": -0.19054667422737798,
+            "bar_count": 1
+          },
+          "red_bar_count": 8,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": false,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 11:30:00",
+            "price": 18.42,
+            "confirmed_at": "2026-10-09 14:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 14:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|002248|2026-09-09 10:30:00|2026-09-23 10:30:00",
+      "code": "002248",
+      "name": "华东数控",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 15:00:00",
+      "reference_price": 9.09,
+      "signal_price": 9.09,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "002248",
+        "name": "华东数控",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 110,
+            "raw_index": 144,
+            "price": 12.85,
+            "date": "2026-08-13",
+            "confirmed_at": "2026-08-17 15:00:00"
+          },
+          "low_price": 8.65,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 35,
+          "down_sessions": 35,
+          "merged_pivot_distance": 25,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 9.09,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-09 10:30:00",
+            "end_at": "2026-09-16 10:30:00",
+            "low_at": "2026-09-16 10:30:00",
+            "price_low": 8.99,
+            "dif_min": -0.18878388937543633,
+            "dea_min": -0.17310912166959733,
+            "dif_at_low": -0.18574696519367606,
+            "dea_at_low": -0.17310912166959733,
+            "bar_count": 21
+          },
+          "second": {
+            "start_at": "2026-09-23 10:30:00",
+            "end_at": "2026-10-09 15:00:00",
+            "low_at": "2026-10-09 11:30:00",
+            "price_low": 8.65,
+            "dif_min": -0.14399465720278393,
+            "dea_min": -0.11334328487098008,
+            "dif_at_low": -0.14399465720278393,
+            "dea_at_low": -0.10030723944886359,
+            "bar_count": 28
+          },
+          "red_bar_count": 19,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": true,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 11:30:00",
+            "price": 8.65,
+            "confirmed_at": "2026-10-09 14:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 15:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|002370|2026-09-23 14:00:00|2026-10-09 10:30:00",
+      "code": "002370",
+      "name": "亚太药业",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 15:00:00",
+      "reference_price": 5.21,
+      "signal_price": 5.21,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "002370",
+        "name": "亚太药业",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 117,
+            "raw_index": 146,
+            "price": 6.63,
+            "date": "2026-08-17",
+            "confirmed_at": "2026-08-20 15:00:00"
+          },
+          "low_price": 4.93,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 33,
+          "down_sessions": 33,
+          "merged_pivot_distance": 22,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 5.21,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-23 14:00:00",
+            "end_at": "2026-09-29 15:00:00",
+            "low_at": "2026-09-29 10:30:00",
+            "price_low": 5.05,
+            "dif_min": -0.05656852498952336,
+            "dea_min": -0.042784218993458786,
+            "dif_at_low": -0.05278071112540861,
+            "dea_at_low": -0.036648450334313895,
+            "bar_count": 14
+          },
+          "second": {
+            "start_at": "2026-10-09 10:30:00",
+            "end_at": "2026-10-09 14:00:00",
+            "low_at": "2026-10-09 10:30:00",
+            "price_low": 4.96,
+            "dif_min": -0.039276411756851815,
+            "dea_min": -0.03453543847015385,
+            "dif_at_low": -0.0352791048091845,
+            "dea_at_low": -0.03327341862852561,
+            "bar_count": 3
+          },
+          "red_bar_count": 8,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": false,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 10:30:00",
+            "price": 4.96,
+            "confirmed_at": "2026-10-09 14:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 15:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|002682|2026-09-22 15:00:00|2026-10-09 10:30:00",
+      "code": "002682",
+      "name": "龙洲股份",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 15:00:00",
+      "reference_price": 4.96,
+      "signal_price": 4.96,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "002682",
+        "name": "龙洲股份",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 116,
+            "raw_index": 144,
+            "price": 5.53,
+            "date": "2026-08-13",
+            "confirmed_at": "2026-08-18 15:00:00"
+          },
+          "low_price": 4.41,
+          "low_date": "2026-08-21",
+          "top_age_sessions": 35,
+          "down_sessions": 35,
+          "merged_pivot_distance": 24,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 4.96,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-22 15:00:00",
+            "end_at": "2026-09-28 11:30:00",
+            "low_at": "2026-09-24 10:30:00",
+            "price_low": 4.8,
+            "dif_min": -0.06929873590205649,
+            "dea_min": -0.05062009147670687,
+            "dif_at_low": -0.06377061451042465,
+            "dea_at_low": -0.03692485086446991,
+            "bar_count": 11
+          },
+          "second": {
+            "start_at": "2026-10-09 10:30:00",
+            "end_at": "2026-10-09 14:00:00",
+            "low_at": "2026-10-09 11:30:00",
+            "price_low": 4.72,
+            "dif_min": -0.051038709626616274,
+            "dea_min": -0.04088075534608303,
+            "dif_at_low": -0.051038709626616274,
+            "dea_at_low": -0.03946479503443642,
+            "bar_count": 3
+          },
+          "red_bar_count": 14,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": false,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 11:30:00",
+            "price": 4.72,
+            "confirmed_at": "2026-10-09 14:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 15:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|002970|2026-09-24 11:30:00|2026-10-08 14:00:00",
+      "code": "002970",
+      "name": "锐明技术",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 15:00:00",
+      "reference_price": 41.7,
+      "signal_price": 41.7,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "002970",
+        "name": "锐明技术",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 107,
+            "raw_index": 144,
+            "price": 57.28,
+            "date": "2026-08-13",
+            "confirmed_at": "2026-08-14 15:00:00"
+          },
+          "low_price": 38.58,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 35,
+          "down_sessions": 35,
+          "merged_pivot_distance": 26,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 41.7,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-24 11:30:00",
+            "end_at": "2026-09-30 10:30:00",
+            "low_at": "2026-09-28 14:00:00",
+            "price_low": 39.75,
+            "dif_min": -1.0956422889973112,
+            "dea_min": -0.9165329578274617,
+            "dif_at_low": -0.9794843652232004,
+            "dea_at_low": -0.5828350395986586,
+            "bar_count": 12
+          },
+          "second": {
+            "start_at": "2026-10-08 14:00:00",
+            "end_at": "2026-10-09 14:00:00",
+            "low_at": "2026-10-09 10:30:00",
+            "price_low": 38.65,
+            "dif_min": -0.9313556697906265,
+            "dea_min": -0.8517521428987073,
+            "dif_at_low": -0.905746503319584,
+            "dea_at_low": -0.8316928423371966,
+            "bar_count": 5
+          },
+          "red_bar_count": 5,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": false,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 10:30:00",
+            "price": 38.65,
+            "confirmed_at": "2026-10-09 14:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 15:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|600829|2026-09-09 11:30:00|2026-09-23 14:00:00",
+      "code": "600829",
+      "name": "人民同泰",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 15:00:00",
+      "reference_price": 9.52,
+      "signal_price": 9.52,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "600829",
+        "name": "人民同泰",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 116,
+            "raw_index": 146,
+            "price": 12.79,
+            "date": "2026-08-17",
+            "confirmed_at": "2026-08-19 15:00:00"
+          },
+          "low_price": 8.98,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 33,
+          "down_sessions": 33,
+          "merged_pivot_distance": 24,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 9.52,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-09 11:30:00",
+            "end_at": "2026-09-16 11:30:00",
+            "low_at": "2026-09-16 10:30:00",
+            "price_low": 9.17,
+            "dif_min": -0.1908058561241024,
+            "dea_min": -0.17365690763436936,
+            "dif_at_low": -0.18333324080330193,
+            "dea_at_low": -0.1735942912596491,
+            "bar_count": 21
+          },
+          "second": {
+            "start_at": "2026-09-23 14:00:00",
+            "end_at": "2026-10-09 14:00:00",
+            "low_at": "2026-10-09 10:30:00",
+            "price_low": 8.99,
+            "dif_min": -0.13016107894192608,
+            "dea_min": -0.10213753096078153,
+            "dif_at_low": -0.1165146663376877,
+            "dea_at_low": -0.09047674324275769,
+            "bar_count": 25
+          },
+          "red_bar_count": 20,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": false,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 10:30:00",
+            "price": 8.99,
+            "confirmed_at": "2026-10-09 14:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 15:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    },
+    {
+      "key": "60分钟MACD底背离选股法|daily-strict-down-bi-m60-dif-dea-bottom-v4|603698|2026-09-22 15:00:00|2026-10-09 11:30:00",
+      "code": "603698",
+      "name": "航天工程",
+      "source_model": "60分钟MACD底背离选股法",
+      "signal_at": "2026-10-09 15:00:00",
+      "reference_price": 19.76,
+      "signal_price": 19.76,
+      "reference_date": "2026-10-09",
+      "origin": "历史回放",
+      "rule_version": "daily-strict-down-bi-m60-dif-dea-bottom-v4",
+      "structure_snapshot": {
+        "code": "603698",
+        "name": "航天工程",
+        "board": "主板",
+        "status": "passed",
+        "daily_stroke": {
+          "top": {
+            "kind": "top",
+            "index": 123,
+            "raw_index": 144,
+            "price": 24.6,
+            "date": "2026-08-13",
+            "confirmed_at": "2026-08-14 15:00:00"
+          },
+          "low_price": 19.16,
+          "low_date": "2026-10-09",
+          "top_age_sessions": 35,
+          "down_sessions": 35,
+          "merged_pivot_distance": 23,
+          "bottom_confirmed": false,
+          "bottom_confirmed_at": null,
+          "end_date": "2026-10-09",
+          "latest_daily_date": "2026-10-09",
+          "latest_close": 19.76,
+          "status": "passed",
+          "reason": "向下一笔进行中；日线底分型尚未确认"
+        },
+        "m60": {
+          "status": "passed",
+          "first": {
+            "start_at": "2026-09-22 15:00:00",
+            "end_at": "2026-09-30 15:00:00",
+            "low_at": "2026-09-30 14:00:00",
+            "price_low": 19.79,
+            "dif_min": -0.4172512956213055,
+            "dea_min": -0.374930211292933,
+            "dif_at_low": -0.41510636245617505,
+            "dea_at_low": -0.3643499402108399,
+            "bar_count": 21
+          },
+          "second": {
+            "start_at": "2026-10-09 11:30:00",
+            "end_at": "2026-10-09 15:00:00",
+            "low_at": "2026-10-09 11:30:00",
+            "price_low": 19.16,
+            "dif_min": -0.3823068920919219,
+            "dea_min": -0.3494264765747713,
+            "dif_at_low": -0.3695877269683798,
+            "dea_at_low": -0.3356601042774577,
+            "bar_count": 3
+          },
+          "red_bar_count": 5,
+          "checks": {
+            "below_zero": true,
+            "green_red_green": true,
+            "price_new_low": true,
+            "dif_no_new_low": true,
+            "dea_no_new_low": true,
+            "bottom_fractal_confirmed": true
+          },
+          "second_wave_open": true,
+          "reason": "60分钟底背离后，60分钟底分型已收盘确认",
+          "divergence_status": "passed",
+          "bottom_confirmed": true,
+          "bottom": {
+            "at": "2026-10-09 11:30:00",
+            "price": 19.16,
+            "confirmed_at": "2026-10-09 15:00:00"
+          }
+        },
+        "latest_bar_at": "2026-10-09 15:00:00"
+      },
+      "selection_basis": "本轮较强筛选；仅用信号日及之前数据，未触发该模型的排除条件"
+    }
+  ],
+  "current_date": "2026-10-12",
+  "required_signal_date": "2026-10-12",
+  "expected_trade_date": "2026-10-13",
+  "market_calendar": [
+    "2026-10-12",
+    "2026-10-13",
+    "2026-10-14",
+    "2026-10-15",
+    "2026-10-16",
+    "2026-10-19",
+    "2026-10-20",
+    "2026-10-21",
+    "2026-10-22",
+    "2026-10-23",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29",
+    "2026-10-30",
+    "2026-11-02",
+    "2026-11-03",
+    "2026-11-04",
+    "2026-11-05",
+    "2026-11-06",
+    "2026-11-09",
+    "2026-11-10",
+    "2026-11-11",
+    "2026-11-12",
+    "2026-11-13",
+    "2026-11-16",
+    "2026-11-17",
+    "2026-11-18",
+    "2026-11-19",
+    "2026-11-20",
+    "2026-11-23",
+    "2026-11-24",
+    "2026-11-25",
+    "2026-11-26",
+    "2026-11-27",
+    "2026-11-30",
+    "2026-12-01",
+    "2026-12-02",
+    "2026-12-03",
+    "2026-12-04",
+    "2026-12-07",
+    "2026-12-08",
+    "2026-12-09",
+    "2026-12-10",
+    "2026-12-11",
+    "2026-12-14",
+    "2026-12-15",
+    "2026-12-16",
+    "2026-12-17",
+    "2026-12-18",
+    "2026-12-21",
+    "2026-12-22",
+    "2026-12-23",
+    "2026-12-24",
+    "2026-12-25",
+    "2026-12-28",
+    "2026-12-29",
+    "2026-12-30",
+    "2026-12-31"
+  ],
+  "definition": "Only signal-date frozen evidence and current selected rules. D2 excluded. Shares and available cash calculated by the simulator; no orders or uploads.",
+  "excluded": {
+    "missing_rule_features": 5
+  },
+  "policy_scenario": "retain_at_least_quarter"
+}
