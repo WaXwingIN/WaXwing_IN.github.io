@@ -647,7 +647,7 @@ async function initializeD2Data(){
     if(d2DataInitialized)return;
     if(!initialD2DataPromise)initialD2DataPromise=(async()=>{
         restoreD2DisplayCache();
-        await Promise.all([refreshD2MonitorData(),refreshD2ManualExclusions(),refreshD2ManualApprovals()]);
+        await Promise.all([refreshD2MonitorData(),refreshD2HistoryData(),refreshD2ManualExclusions(),refreshD2ManualApprovals()]);
         d2DataInitialized=true;
         updatePageMeta();
         saveD2DisplayCache();
@@ -835,7 +835,7 @@ async function loadDailyData(id,{checkVersion=true}={}){
         if(id==='d2_alert'){
             updatePageMeta();
             d2DataInitialized=true;
-            if(!privatePage())initializeD2DataInBackground();
+            if(!privatePage())await initializeD2DataInBackground();
             loadDailyBundle('page/navigation').then(()=>draw()).catch(()=>{});
             if(!privatePage())loadDailyBundle('page/tab_d2_archive').then(()=>{if(activeDaily==='d2_alert')draw()}).catch(()=>{});
         }
@@ -853,8 +853,9 @@ async function loadDailyData(id,{checkVersion=true}={}){
     }
 }
 function initializeD2DataInBackground(){
-    if(initialD2DataPromise)return;
-    d2DataInitialized=false;initializeD2Data();d2DataInitialized=true;
+    if(initialD2DataPromise)return initialD2DataPromise;
+    d2DataInitialized=false;
+    return initializeD2Data();
 }
 let dailySecondIntraday=null; // Retired model: keep archived render helpers inert.
 try{localStorage.removeItem('waxwing_trade_manager_v1')}catch(_error){}
