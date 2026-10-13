@@ -3400,7 +3400,7 @@ function holdingPoolPanel(state){
         return `<tr class="${item.status==='已卖出'?'sold-row':''} ${isTodaySale?'latest-sell-row':''}"><td><b>${safe(item.name||'名称未归档')}</b><small>${safe(item.code)}</small></td><td>${safe(formatDateTime(item.buy_at||item.buy_date))}${buyPriceLine}${item.last_available_valuation?`<small>${safe(item.valuation_note)} ${safe(formatDate(item.mark_date))}</small>`:''}</td><td>${item.sell_date?safe(formatDateTime(item.sell_at||item.sell_date)):'—'}${sellPriceLine}${sellRuleLine}${item.sell_signal_triggered?`<small>参考卖出：${safe(formatDateTime(item.sell_execution_at||item.sell_detection?.execution_bar_time||item.sell_execution_date))}</small>`:''}</td><td><span class="holding-status ${statusClass}">${safe(item.status)}</span>${statusNote?`<small class="holding-status-note">${safe(statusNote)}</small>`:''}${item.holding_trading_days!=null?`<small class="holding-days">持有 ${safe(item.holding_trading_days)} 个交易日</small>`:''}${item.sell_execution_pending?'<small class="pending-return">次交易日开盘参考价待归档</small>':''}</td><td><span class="holding-return-main">${returnLabel?`${returnLabel} `:''}${total}</span></td><td class="holding-source"><b>${safe(item.source_model)}</b><small class="${replay?'holding-origin-replay':''}">${safe(origin)}${item.preserved_before_model_rule_change?' · 模型修改前档案':""}</small></td></tr>`;
     }).join('');
     const alert=todaySales.length?`<div class="holding-pool-alert" role="alert"><b>卖出信号提醒 · 信号日 ${safe(formatDate(payload.data_through))}</b>${todaySales.map(item=>`<div>${safe(item.name||item.code)} ${safe(item.code)}（${safe(item.sell_detection?.reason||"严格30分钟MACD顶背离")}）：信号 ${safe(formatDateTime(item.sell_at||item.sell_date))}；参考卖出 ${safe(formatDateTime(item.sell_execution_at||item.sell_detection?.execution_bar_time||item.sell_execution_date))}（${safe(item.sell_detection?.execution_status||'参考执行时间待归档')}）。${item.sell_execution_pending?'参考执行价待归档。':''}统计归类于 ${safe(formatDate(item.sell_effective_date))} 转为“已卖出”。</div>`).join('')}参考卖出时间按各自退出规则确定；“转为已卖出”的日期仅为跟踪池统计归类日期，不是延后卖出的指令。休市日不执行交易。</div>`:'';
-    return `<section class="holding-pool"><div class="holding-pool-hero"><div><h2>${replay?'最近30交易日回放跟踪池':'持有跟踪池'}</h2><p class="daily-note">买入信号当天归入“待买入”，下一交易日转入“已持有”；统计归类：卖出信号当天仍归入“已持有”，下一交易日转入“已卖出”；实际参考卖出时间以退出规则和执行记录为准。</p></div><small class="daily-note">数据截至 ${safe(formatDate(payload.data_through))} · 页面更新时间 ${safe(formatDateTime(payload.generated_at))}</small></div>${recordScope}${replayNotice}${replayLink}${alert}${replay?'':`<div class="holding-pool-tabs" role="tablist" aria-label="跟踪池视图"><button type="button" role="tab" data-holding-section="history" aria-selected="${(state.holdingSection||'history')==='history'}">历史全部</button><button type="button" role="tab" data-holding-section="simulation" aria-selected="${state.holdingSection==='simulation'}">模拟试算</button></div><div ${state.holdingSection==='simulation'?'':'hidden'}>${holdingSimulationPanel(state,{...payload,summary},all)}</div>`}<div ${!replay&&state.holdingSection==='simulation'?'hidden':''}>${durationSummary}${modelPerformance}${filters}<div class="wrap"><table class="holding-pool-table"><colgroup><col class="holding-col-stock"><col class="holding-col-buy"><col class="holding-col-sell"><col class="holding-col-status"><col class="holding-col-return"><col class="holding-col-source"></colgroup><thead><tr><th>股票名称</th><th>买入日／价格</th><th>卖出信号日／价格</th><th>状态</th><th>本次操作收益</th><th>来源模型</th></tr></thead><tbody>${body||'<tr><td colspan="6">当前筛选下暂无记录。</td></tr>'}</tbody></table></div><p class="daily-note">买入、卖出栏展示提醒触发价；卖出参考执行价与触发价不同时会同时列出。${replay?'回放退出行情不足时归入“退出待验证”，不作为已持有或已卖出计收益。':'D2额外采用满5日无有效反弹且连续走弱的时间退出，次交易日开盘参考执行；与原MACD退出取较早者。'}个股只显示本次买入至当前或卖出的收益。当前操作平均收益＝“已持有＋已卖出”全部有效操作的等权平均，待买入不计。历史规则回放会单独标记。${all.some(p=>p.local_strong_net_return)?'当前筛选档案的操作净收益按提醒后次交易日开盘买入，并包含原试算买卖费用；模拟试算的金额收益不含费用。':'以上不含费用与滑点。'}</p></div></section>`;
+    return `<section class="holding-pool"><div class="holding-pool-hero"><h2>${replay?'最近30交易日回放跟踪池':'持有跟踪池'}</h2></div><details class="holding-help"><summary>跟踪池说明与统计口径</summary><p class="daily-note">历史档案生成于 ${safe(formatDateTime(payload.generated_at))}；报告行情日 ${safe(formatDate(data?.daily_date||data?.date))}。生成时刻不代表行情已更新。</p><p class="daily-note">买入信号当天归入“待买入”，下一交易日转入“已持有”；卖出信号当天仍归入“已持有”，下一交易日转入“已卖出”。实际参考卖出时间以退出规则和执行记录为准。</p>${recordScope}${replayNotice}${replayLink}</details>${alert}${replay?'':`<div class="holding-pool-tabs" role="tablist" aria-label="跟踪池视图"><button type="button" role="tab" data-holding-section="history" aria-selected="${(state.holdingSection||'history')==='history'}">历史全部</button><button type="button" role="tab" data-holding-section="simulation" aria-selected="${state.holdingSection==='simulation'}">模拟试算</button></div><div ${state.holdingSection==='simulation'?'':'hidden'}>${holdingSimulationPanel(state,{...payload,summary},all)}</div>`}<div ${!replay&&state.holdingSection==='simulation'?'hidden':''}>${durationSummary}${modelPerformance}${filters}<div class="wrap"><table class="holding-pool-table"><colgroup><col class="holding-col-stock"><col class="holding-col-buy"><col class="holding-col-sell"><col class="holding-col-status"><col class="holding-col-return"><col class="holding-col-source"></colgroup><thead><tr><th>股票名称</th><th>买入日／价格</th><th>卖出信号日／价格</th><th>状态</th><th>本次操作收益</th><th>来源模型</th></tr></thead><tbody>${body||'<tr><td colspan="6">当前筛选下暂无记录。</td></tr>'}</tbody></table></div><p class="daily-note">买入、卖出栏展示提醒触发价；卖出参考执行价与触发价不同时会同时列出。${replay?'回放退出行情不足时归入“退出待验证”，不作为已持有或已卖出计收益。':'D2额外采用满5日无有效反弹且连续走弱的时间退出，次交易日开盘参考执行；与原MACD退出取较早者。'}个股只显示本次买入至当前或卖出的收益。当前操作平均收益＝“已持有＋已卖出”全部有效操作的等权平均，待买入不计。历史规则回放会单独标记。${all.some(p=>p.local_strong_net_return)?'当前筛选档案的操作净收益按提醒后次交易日开盘买入，并包含原试算买卖费用；模拟试算的金额收益不含费用。':'以上不含费用与滑点。'}</p></div></section>`;
 }
 /* Model exploration is independent of the calculator's tightened tracking pool. */
 const GREEN_WAVE_MODELS=['daily_macd','sixty_minute_macd','weekly_consolidation_first'];
@@ -3924,13 +3924,25 @@ async function refreshD2ManualApprovals(){
         if(activeDaily==='d2_alert')draw();
     }catch(_error){}
 }
+function pageDateLabel(){
+    const reportDate=data?.daily_date||data?.date;
+    if(activeDaily==='holding_pool'){
+        const history=dailyExtra.holdingView||dailyExtra.holdingPool||{};
+        const simulation=stateFor('holding_pool').holdingSection==='simulation';
+        const current=simulation?(dailyExtra.holdingSimulationData||history):history;
+        const through=current.data_through;
+        const label=simulation?'模拟试算行情截至':'持有历史统计截至';
+        return `${label} ${through?formatDate(through):'尚未加载'}`+
+            (!simulation&&through&&reportDate&&through<reportDate?' · 历史档案尚未更新到最新报告日':'');
+    }
+    if(activeDaily==='d2_alert'&&dailyExtra.d2Proximity?.daily_date)
+        return `D2行情日 ${formatDate(dailyExtra.d2Proximity.daily_date)}`;
+    return `报告行情日 ${formatDate(reportDate)}`;
+}
 function updatePageMeta(){
     const meta=document.getElementById('meta');
     if(!meta||!data)return;
-    const live=dailyExtra.d2Proximity;
-    if(activeDaily==='d2_alert'&&live?.generated_at){meta.textContent=`D2行情日：${formatDate(live.daily_date)}　页面更新时间：${formatDateTime(dailyExtra.pageUpdatedAt||live.generated_at)}`+(d2LiveLoadFailed?'　实时更新暂不可用，显示已加载快照':'');return}
-    meta.textContent=`完整报告行情日：${formatDate(data.daily_date||data.date)}　页面更新时间：${formatDateTime(dailyExtra.pageUpdatedAt||data.generated_at)}`+
-        (d2LiveLoadFailed?'　实时数据读取失败，显示上次结果':'');
+    meta.textContent=pageDateLabel()+(activeDaily==='d2_alert'&&d2LiveLoadFailed?' · 实时更新暂不可用，显示已加载快照':'');
 }
 async function refreshD2MonitorData(){
     if(location.protocol==='file:')return;
