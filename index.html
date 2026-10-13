@@ -824,6 +824,7 @@ async function loadDailyData(id,{checkVersion=true}={}){
         if(id==='legacy_history'){
             const {payload}=await fetchLiveJson('legacy_model_history.json',{live:false});
             dailyExtra.legacyModelHistory=payload;
+            dailyBundlesReady.add('page/tab_legacy_history');
         }else if(id==='stock_lookup'){
             await loadDailyBundle('page/stock_lookup');
         }else if(id==='m30_two_centers'){
