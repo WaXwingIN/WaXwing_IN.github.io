@@ -633,6 +633,7 @@ function mergeDailyBundle(payload){
         if(previous.dailyCloseReminders)delete payload.dailyCloseReminders;
     }
     Object.assign(dailyExtra,payload||{});
+    if(previous.legacyModelHistory?.rows?.length>(dailyExtra.legacyModelHistory?.rows?.length||0))dailyExtra.legacyModelHistory=previous.legacyModelHistory;
     dailyExtra.macdModelHistory=mergeMacdHistory(payload.macdModelHistory,previous.macdModelHistory);
     if(previous.dailyCloseReminders&&String(previous.dailyCloseReminders.generated_at||'')>String(dailyExtra.dailyCloseReminders?.generated_at||''))dailyExtra.dailyCloseReminders=previous.dailyCloseReminders;
     if(previous.d2Proximity&&!d2SnapshotNewer(dailyExtra.d2Proximity,previous.d2Proximity))dailyExtra.d2Proximity=previous.d2Proximity;
@@ -793,7 +794,7 @@ function renderDailyNavigation(id){
             const row=document.createElement('div');row.className='market-title-row';
             row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';title.style.margin='0';row.style.margin='24px 0 18px';
             title.before(row);row.append(title);
-            const link=document.createElement('a');link.href='#legacy-model-history';link.dataset.legacyHistoryEntry='';link.textContent='已停用模型历史';
+            const link=document.createElement('a');link.href='#legacy-model-history';link.dataset.legacyHistoryEntry='';link.textContent='已停用模型历史';link.className='legacy-history-entry';
             link.className='legacy-history-entry';link.addEventListener('click',()=>{activeDaily='legacy_history';draw()});row.append(link);
         }
     }
@@ -820,7 +821,10 @@ async function loadDailyData(id,{checkVersion=true}={}){
     const content=document.getElementById('content');
     try{
         if(checkVersion&&privatePage())await refreshPageVersion();
-        if(id==='stock_lookup'){
+        if(id==='legacy_history'){
+            const {payload}=await fetchLiveJson('legacy_model_history.json',{live:false});
+            dailyExtra.legacyModelHistory=payload;
+        }else if(id==='stock_lookup'){
             await loadDailyBundle('page/stock_lookup');
         }else if(id==='m30_two_centers'){
             activeDaily='d2_alert';await loadDailyBundle('page/tab_d2_alert');
@@ -831,6 +835,10 @@ async function loadDailyData(id,{checkVersion=true}={}){
                 const view=dailyConsolidationDateRecords(),requested=stateFor(id).date;
                 await loadDailyConsolidationDate(view.dates.includes(requested)?requested:view.dates[0]);
             }
+        }
+        if(id==='holding_pool'){
+            const results=await Promise.all([fetchLiveJson('holding_simulation_data.json'),fetchLiveJson('next_day_buy_plan.json')]);
+            dailyExtra.holdingSimulationData=results[0].payload;dailyExtra.nextDayBuyPlan=results[1].payload;
         }
         if(id==='d2_alert'){
             updatePageMeta();
@@ -3253,13 +3261,15 @@ function holdingNextDayPlan(candidates,simulation,options={}){
 }
 function holdingCurrentPlanTarget(plan){
     const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-    const future=(plan?.market_calendar||[]).filter(day=>day>today).sort();
+    const clock=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()),closed=clock>='15:05';
+    const future=(plan?.market_calendar||[]).filter(day=>day>today||(!closed&&day===today)).sort();
     return {today,tradeDate:future[0]||(plan?.current_date===today?plan.expected_trade_date:null),signalDate:plan?.current_date===today?plan.required_signal_date:today};
 }
 style.textContent+='.holding-next-day-plan{margin-top:24px;padding-top:18px;border-top:1px solid #dbeafe}.holding-next-day-plan>h3{margin:0 0 12px}.holding-next-day-plan>p{margin:0 0 16px;line-height:1.8}';
 function holdingNextDayPlanPanel(channels,options){
     const plan=dailyExtra.nextDayBuyPlan;
     const target=holdingCurrentPlanTarget(plan);
+    if(plan?.complete===false)return `<section class="holding-next-day-plan"><h3>${safe(formatDate(plan.trade_date))} · 买入清单数据未齐</h3><p class="daily-note">${safe(formatDate(plan.signal_date))} 收盘扫描尚未覆盖：${(plan.missing_scan_models||[]).map(safe).join('、')}。现有档案无法据此判断当天没有买入信号；补齐扫描后再生成清单。</p></section>`;
     if(plan&&plan.current_date&&plan.signal_date<target.signalDate)return `<section class="holding-next-day-plan"><h3>${target.tradeDate?safe(formatDate(target.tradeDate)):'当前下一交易日'} · 待买清单尚未生成</h3><p class="daily-note">需要 ${safe(formatDate(target.signalDate))} 的完整收盘信号。本地目前仅有 ${safe(formatDate(plan.signal_date))} 收盘信号，对应 ${safe(formatDate(plan.trade_date))} 的历史买入清单，已停止将旧股票列为当前待买。更新收盘数据后才能生成当前清单。</p></section>`;
     if(!plan)return '<p class="daily-note">当前收盘数据尚未生成下一交易日待买清单。</p>';
     if(options.startDate>plan.trade_date)return `<section class="holding-next-day-plan"><h3>${safe(formatDate(options.startDate))} · 开始操作</h3><p class="daily-note">按输入本金、空持仓开始。当前仅有 ${safe(formatDate(plan.signal_date))} 收盘信号，对应 ${safe(formatDate(plan.trade_date))} 买入清单；所选日期的收盘信号尚未更新，暂不列出旧信号股票。更新对应交易日前一个交易日的收盘数据后即可生成。</p></section>`;
@@ -3273,6 +3283,7 @@ function holdingNextDayPlanPanel(channels,options){
     return `<section class="holding-next-day-plan"><h3>${safe(formatDate(plan.trade_date))} · 下一交易日待买清单</h3><p class="daily-note">依据 ${safe(formatDate(plan.signal_date))} 收盘信号，按计算器模拟现金和持仓生成，D2不参与。金额按收盘参考价估算，不含手续费；次日价格变化时须重新核算股数，超出预算允许最高价则不能按该股数买入。已持有、无法买入的股票不展示。</p>${tables}</section>`;
 }
 function holdingSimulationPanel(state,payload,positions){
+    if(dailyExtra.holdingSimulationData){payload={...payload,...dailyExtra.holdingSimulationData};positions=payload.positions||[];}
     const principal=Number(state.simPrincipal??50000),perTrade=Number(state.simPerTrade??10000);
     const earliest=payload.window?.from||holdingSimulationMonthStart();
     const monthStart=holdingSimulationMonthStart(),defaultStart=monthStart&&monthStart>=earliest&&monthStart<=payload.data_through?monthStart:earliest;
@@ -3798,12 +3809,58 @@ draw=function(){
     if(restoreTableScroll(content,tableScroll)&&pageScroll&&
        (window.scrollX!==pageScroll.x||window.scrollY!==pageScroll.y))
         window.scrollTo(pageScroll.x,pageScroll.y);
+    content.querySelectorAll('.daily-filters,.holding-pool-filters').forEach(control=>{if(control.closest('[role=dialog]'))return;control.classList.add('daily-filters');stickyControls.append(control)});
+    syncDailyStickyOffset();
     restoreTabScroll(content,tabScroll);
     content.dataset.renderedDaily=id;
     document.body.classList.remove('daily-ui-booting');
 };
 if(data)draw();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',event=>{if(event.data?.type==='open-d2-alert'){activeDaily='d2_alert';const state=stateFor('d2_alert');state.date='latest';draw()}});
+style.textContent+=`
+.legacy-history-entry{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 14px;border:1px solid #ccd5e1;border-radius:8px;background:#fff;color:#475569;font-size:14px;text-decoration:none;box-sizing:border-box}
+.legacy-history-entry:hover{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}
+.stock-lookup-form{align-items:center;gap:12px}
+.stock-lookup-form .stock-search-input{box-sizing:border-box;height:42px;flex:1 1 280px;max-width:420px;margin:0}
+.stock-lookup-form .stock-search-option{display:inline-flex;align-items:center;gap:7px;min-height:42px;white-space:nowrap;color:#475569;font-size:14px}
+.stock-lookup-form .stock-search-option input{flex:none;width:15px;height:15px;max-width:none;margin:0;padding:0}
+.stock-lookup-form button{height:42px;box-sizing:border-box}
+[data-legacy-search],.model-funnel-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+[data-legacy-search] label,.model-funnel-controls label{display:inline-flex;align-items:center;gap:7px;margin:0}
+[data-legacy-search] select,[data-legacy-search] input,.model-funnel-controls select{box-sizing:border-box;height:38px;padding:0 10px;border:1px solid #ccd5e1;border-radius:7px;background:#fff;color:#172033;font:inherit}
+[data-legacy-search] input{width:200px}
+[data-legacy-search] button{height:38px;padding:0 16px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:inherit;cursor:pointer}
+.daily-sticky-controls .model-funnel-controls{margin:0;padding:5px 0;gap:12px}.model-funnel-controls .green-funnel-check{min-height:38px;color:#475569}
+.model-funnel-controls .green-funnel-check input{width:15px;height:15px;margin:0;flex:none}
+@media(max-width:640px){.market-title-row h1{font-size:28px}.market-title-row{gap:10px!important}.stock-lookup-form .stock-search-input{max-width:none;flex-basis:100%}[data-legacy-search] label{flex-wrap:wrap}.model-funnel-controls .green-funnel-check{white-space:normal}}
+`;
+style.textContent+=`
+.daily-sticky-controls>.daily-filters{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px!important;box-sizing:border-box;min-height:46px;margin:0!important;padding:6px 0!important;line-height:20px;font-size:14px}
+.daily-sticky-controls>.daily-filters label{display:inline-flex;align-items:center;gap:8px;margin:0!important;font-size:14px!important;font-weight:400!important;line-height:20px;color:#334155}
+.daily-sticky-controls>.daily-filters select,.daily-sticky-controls>.daily-filters input:not([type=checkbox]),.daily-sticky-controls>.daily-filters button{box-sizing:border-box;height:34px!important;min-height:34px!important;margin:0!important;padding:0 10px!important;border:1px solid #cbd5e1;border-radius:7px;font-family:inherit;font-size:14px!important;font-weight:400;line-height:20px;background:#fff;color:#172033}
+.daily-sticky-controls>.daily-filters input:not([type=checkbox]){width:196px;max-width:100%}
+.daily-sticky-controls>.daily-filters input[type=checkbox]{width:15px;height:15px;margin:0!important;padding:0!important;flex:none}
+.daily-sticky-controls>.model-funnel-controls .green-funnel-check{min-height:34px}
+@media(max-width:640px){.daily-sticky-controls>.daily-filters{gap:8px 12px!important}.daily-sticky-controls>.daily-filters label{max-width:100%;flex-wrap:wrap}.daily-sticky-controls>.daily-filters select{max-width:100%}}
+`;
+function legacyHistoryChart(bundle,period,signal){
+    const original=bundle?.[period]||{},times=original.times||[],n=times.filter(t=>t<=signal).length,from=Math.max(0,n-200);
+    return Object.fromEntries(Object.entries(original).map(([k,v])=>[k,Array.isArray(v)?v.slice(from,n):v]));
+}
+style.textContent+=`
+.daily-filters{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;padding:10px 0;box-sizing:border-box}
+.daily-filters label{display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:14px}
+.daily-filters select,.daily-filters input:not([type=checkbox]),.daily-filters button{min-height:36px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#172033;font:inherit}
+.daily-filters button{background:#2563eb;color:#fff;border-color:#2563eb;cursor:pointer}
+.market-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.legacy-history-entry{padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;background:white;text-decoration:none;color:#475569;font-size:14px}
+.holding-sim-form fieldset{border:1px solid #dbe3ef;border-radius:10px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px 16px}
+.holding-sim-form fieldset label{display:inline-flex;align-items:center;gap:7px;margin:0;white-space:normal}
+.holding-sim-form input[type=checkbox]{flex:none;width:16px;height:16px;margin:0}
+.holding-sim-form fieldset button{margin:0;padding:8px 14px;min-height:36px}
+@media(max-width:640px){.daily-filters label{max-width:100%;flex-wrap:wrap}.daily-filters select,.daily-filters input{max-width:100%}.holding-sim-form fieldset{gap:10px}.market-title-row{align-items:flex-start}}
+`;
+
 let lastD2QuickRefresh=dailyExtra.d2Proximity?.generated_at||'',lastWeeklyFirstRefresh=dailyExtra.weeklyFirst?.generated_at||'',lastWeeklyConsolidationRefresh=dailyExtra.weeklyConsolidationFirst?.generated_at||'',lastDailyConsolidationRefresh=dailyExtra.dailyConsolidationFirst?.generated_at||'';
 let lastShortCycleRefresh=dailyExtra.weeklyShortCycle?.generated_at||'',lastShortCycleOutcomeRefresh=dailyExtra.shortCycleOutcomes?.source_generated_at||'',lastShortCycleAlertRateRefresh=dailyExtra.shortCycleAlertRates?.generated_at||'';
 let lastHoldingPoolRefresh=dailyExtra.holdingPool?.generated_at||'';
