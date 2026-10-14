@@ -274,7 +274,7 @@ const historicalBuyConditions=(()=>{
         '日线盘整背驰一买':'日线盘整背驰＋日线底分型', '日线趋势一买':'日线趋势背驰＋日线底分型',
         '周线类二买':'周线MACD双回抽零轴＋日线底分型', '周线盘整背驰一买':'周线零轴下绿红绿背驰＋日线底分型'
     };
-    function render(model,event={},snapshot={},signal={}){
+    function render(model,event={},snapshot={},signal={},options={}){
         const saved=event.structure_snapshot||snapshot||{};
         const evidence=event.evidence||signal||{};
         const buy=evidence['提醒']||evidence['短周期提醒']||evidence;
@@ -360,8 +360,7 @@ const historicalBuyConditions=(()=>{
         if(event.baseline_date||event.baseline_close!=null)row('收益基准',`${time(event.baseline_date)} 收盘 ${event.baseline_status?esc(event.baseline_status):number(event.baseline_close)}`);
         if(event.buy_effective_date)row('跟踪池买入生效日',time(event.buy_effective_date));
         row('记录来源',esc(origin||'来源未留档')+(replay?'；历史回放不代表当时实际推送':''));
-        const chartButton=event.event_id&&trigger?`<button type="button" class="m30-detail-open" data-historical-evidence="${esc(event.event_id)}" data-historical-trigger="${esc(trigger)}" data-historical-model="${esc(model)}">▶ 查看当时图表</button>`:'';
-        return `<div class="historical-buy-condition" data-buy-event="${esc(event.event_id||'')}" data-buy-model="${esc(model)}" data-buy-rule="${daily?'model-daily-bottom-close-v1':esc(versions.join('|'))}" data-buy-trigger="${esc(trigger)}"><div class="m30-condition-result ${passed?'is-triggered':'is-pending'}">${passed?'✅ 买入提醒 '+time(trigger):'待日线底分型收盘确认'}</div><small>${esc(daily?brief[model]||'模型入选＋日线底分型':'按原归档规则')} · ${replay?'历史回放':esc(origin||'依据见下方')}</small><details class="m30-condition-detail"><summary>查看买入条件与时间点</summary><table class="reminder-condition-table"><thead><tr><th>买入条件／关键点</th><th>归档依据／时间</th></tr></thead><tbody>${rows.join('')}</tbody></table><small>结构关键K线日期、右侧确认时间、买入提醒触发时间分别列示；提醒时间不是实际成交时间。</small></details>${chartButton}</div>`;
+        return `<div class="historical-buy-condition" data-buy-event="${esc(event.event_id||'')}" data-buy-model="${esc(model)}" data-buy-rule="${daily?'model-daily-bottom-close-v1':esc(versions.join('|'))}" data-buy-trigger="${esc(trigger)}"><div class="m30-condition-result ${passed?'is-triggered':'is-pending'}">${passed?'✅ 买入提醒 '+time(trigger):'待日线底分型收盘确认'}</div><small>${esc(daily?brief[model]||'模型入选＋日线底分型':'按原归档规则')} · ${replay?'历史回放':esc(origin||'依据见下方')}</small><details class="m30-condition-detail"${options.detailsOpen?' open':''}><summary>买入条件与时间点</summary><table class="reminder-condition-table"><thead><tr><th>买入条件／关键点</th><th>归档依据／时间</th></tr></thead><tbody>${rows.join('')}</tbody></table><small>结构关键K线日期、右侧确认时间、买入提醒触发时间分别列示；提醒时间不是实际成交时间。</small></details></div>`;
     }
     return {render};
 })();
@@ -455,7 +454,7 @@ function integratedMacdPanel(tab,state){
     const historicalDates=groups.map(g=>g.date).sort(),range=historicalDates.length?`${formatDate(historicalDates[0])}—${formatDate(historicalDates.at(-1))}`:'尚无归档';
     const settledRows=rows.filter(event=>Object.values(event.outcomes||{}).some(value=>value?.status==='已结算'&&value.return_pct!=null)||event.strict_m30_top_divergence_exit?.status==='已触发'&&event.strict_m30_top_divergence_exit.return_pct!=null);
     const performance=settledRows.length?`<section class="short-cycle-outcomes">${integratedMacdSummary(rows,'当前筛选收益')}</section>`:'';
-    const table=rows.map((event,i)=>`<tr data-macd-event="${safe(event.event_id)}"><td>${i+1}</td><td><b>${safe(event.name)}</b><br>${safe(event.code)}</td><td class="short-cycle-condition">${historicalBuyConditions.render(name,event)}</td><td>模型扫描<br><small>重算／发现 ${safe(formatDateTime(event.discovered_at))}</small></td><td>${operationLatestReturnCell(name,event.code,event,true)}</td>${[1,3,5,10].map(h=>`<td>${shortCycleFixedReturnCell(event,true,h)}</td>`).join('')}<td>${m30FirstSellConditionCell(event)}</td><td><button type="button" class="m30-detail-open" data-integrated-macd-detail="${safe(event.event_id)}">▶ 查看图表</button></td></tr>`).join('');
+    const table=rows.map((event,i)=>`<tr data-macd-event="${safe(event.event_id)}"><td>${i+1}</td><td><b>${safe(event.name)}</b><br>${safe(event.code)}</td><td class="short-cycle-condition integrated-buy-summary"><div class="m30-condition-result is-triggered">✅ 买入提醒 ${safe(formatDateTime(event.triggered_at))}</div><small>${safe(event.origin||'扫描结果归档')}</small><button type="button" class="m30-detail-open integrated-evidence-open" data-integrated-macd-detail="${safe(event.event_id)}">查看买入依据</button></td><td>模型扫描<br><small>重算／发现 ${safe(formatDateTime(event.discovered_at))}</small></td><td>${operationLatestReturnCell(name,event.code,event,true)}</td>${[1,3,5,10].map(h=>`<td>${shortCycleFixedReturnCell(event,true,h)}</td>`).join('')}<td>${m30FirstSellConditionCell(event)}</td></tr>`).join('');
     const detail=rows.find(e=>e.event_id===state.macdDetail),chartRow=detail&&(dailyExtra.macdSnapshots?.[tab]?.matches||[]).find(row=>String(row.code)===detail.code&&String((row[tab==='daily_macd'?'daily':'m60']?.bottom||{}).confirmed_at)===detail.fractal?.confirmed_at);
     const saved=detail?.structure_snapshot||{},rebuilt=detail&&dailyExtra.historicalMacdCharts?.[detail.event_id+'|'+detail.triggered_at];
     const charts={};
@@ -464,7 +463,7 @@ function integratedMacdPanel(tab,state){
             .map(chart=>macdChartAtSignal(chart,detail?.triggered_at)).find(Boolean)||null;
     }
     const chartSource=rebuilt?.daily_chart?.times?.length?'历史归档':saved.daily_chart?.times?.length||saved.minute_chart?.times?.length?'扫描归档':charts.daily_chart||charts.minute_chart?'同次扫描图表':'图表证据缺失';
-    const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-integrated-macd-modal><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-label="MACD买入依据"><header class="second-detail-head"><h3>${safe(detail.name)} ${safe(detail.code)} · 买入依据</h3><button type="button" class="second-detail-close" data-integrated-macd-close aria-label="关闭">×</button></header>${historicalBuyConditions.render(name,detail)}<p class="daily-note">${safe(chartSource)} · 截止 ${safe(formatDateTime(detail.triggered_at))}。周线最后一根为截至该时点的周内汇总。</p>${integratedMacdModalChart(charts,tab,state)}</section></div>`:'';
+    const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-integrated-macd-modal><section class="second-detail-dialog m30-detail-dialog integrated-evidence-dialog" role="dialog" aria-modal="true" aria-label="MACD买入依据"><header class="second-detail-head"><h3>${safe(detail.name)} ${safe(detail.code)} · 买入依据</h3><button type="button" class="second-detail-close" data-integrated-macd-close aria-label="关闭">×</button></header><div class="integrated-evidence-grid"><section class="integrated-evidence-conditions">${historicalBuyConditions.render(name,detail,{}, {},{includeChartButton:false,detailsOpen:true})}</section><section class="integrated-evidence-chart"><p class="daily-note">${safe(chartSource)} · 截止 ${safe(formatDateTime(detail.triggered_at))}</p>${integratedMacdModalChart(charts,tab,state)}</section></div></section></div>`:'';
     const coverage=snapshot.coverage||{},replayCoverage=history.replay_coverage||{};
     const checkTiming=tab==='daily_macd'
         ?'扫描时机：每个交易日下午收盘后检查。'
@@ -472,7 +471,7 @@ function integratedMacdPanel(tab,state){
     const actualLatest=reminderStockCount((history.events||[]).filter(e=>e.model===name&&shortCycleDate(e.triggered_at)===snapshotLatest));
     const recentSummary=events.length?`<details class="model-help macd-history-summary" data-recent-macd-summary open><summary>收益统计 <span>${safe(range)} · ${reminderStockCount(events)}只股票 · ${events.length}次触发</span></summary><div class="model-summary-content">${integratedMacdSummary(events,'收益统计',false)}<div class="model-summary-actions"><button type="button" class="stock-lookup-open" data-integrated-macd-pool>查看该模型跟踪记录</button></div></div></details>`:'';
     const emptyMessage=dateEvents.length?`当前筛选没有匹配结果；所选日期已归档 ${dateEvents.length} 次提醒，可调整模型池漏斗或清空股票检索。`:'所选日期暂无已确认买入提醒。可在提醒日期选择“全部历史”查看已有档案。';
-    return `<section>${controls}<h2>${safe(name)}</h2>${rows.length?`<div class="wrap"><table class="focus-table integrated-macd-table"><thead><tr><th>序号</th><th>股票／ETF</th><th>买入条件与触发时间</th><th>记录来源</th><th>提醒后涨跌</th><th>T+1收益</th><th>T+3收益</th><th>T+5收益</th><th>T+10收益</th><th>卖出提醒条件</th><th>看图核验</th></tr></thead><tbody>${table}</tbody></table></div>`:`<p class="daily-note">${safe(emptyMessage)}</p>`}${performance}${recentSummary}<details class="model-help" open><summary>模型规则与统计说明</summary><p>${rule}</p><p class="daily-note" data-macd-check-timing>${safe(checkTiming)}</p><p class="daily-note">收益按提醒日收盘至第N个交易日收盘计算，未结算样本不计入上涨比例。提醒日期取条件确认日，扫描时间取本次计算时间。</p></details>${modal}</section>`;
+    return `<section>${controls}<h2>${safe(name)}</h2>${rows.length?`<div class="wrap"><table class="focus-table integrated-macd-table"><thead><tr><th>序号</th><th>股票／ETF</th><th>买入提醒</th><th>记录来源</th><th>提醒后涨跌</th><th>T+1收益</th><th>T+3收益</th><th>T+5收益</th><th>T+10收益</th><th>卖出提醒条件</th></tr></thead><tbody>${table}</tbody></table></div>`:`<p class="daily-note">${safe(emptyMessage)}</p>`}${performance}${recentSummary}<details class="model-help" open><summary>模型规则与统计说明</summary><p>${rule}</p><p class="daily-note" data-macd-check-timing>${safe(checkTiming)}</p><p class="daily-note">收益按提醒日收盘至第N个交易日收盘计算，未结算样本不计入上涨比例。提醒日期取条件确认日，扫描时间取本次计算时间。</p></details>${modal}</section>`;
 }
 
 const dailyExtra={};
@@ -848,10 +847,26 @@ async function fetchLiveJson(name,{live=true}={}){
     if(['d2_proximity_history.json','d2_30m_replay.json','short_cycle_outcomes_latest.json','short_cycle_alert_win_rates.json','holding_tracking_pool.json','weekly_short_cycle_latest.json','macd_model_history.json','macd_recent_replay_pool.json'].includes(name))name=`page_live/${name}`;
     if(publicCloudPage&&!publicStaticPage)return {payload:await publicCloudJson(name),fallback:false};
     const remote=location.hostname.toLowerCase()==='waxwingin.github.io';
+    let revision='live-data';
+    if(remote&&live&&publicStaticPage&&typeof window!=='undefined'){
+        const state=window.__waxwingStaticLiveRevision||(window.__waxwingStaticLiveRevision={sha:'',checkedAt:0,promise:null});
+        if(!state.promise&&Date.now()-state.checkedAt>=30000){
+            state.promise=(async()=>{
+                const response=await fetch('https://api.github.com/repos/WaXwingIN/WaXwing_IN.github.io/git/ref/heads/live-data',{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(12000)});
+                if(!response.ok)throw new Error('GitHub 数据版本 HTTP '+response.status);
+                const ref=await response.json(),sha=ref?.object?.sha;
+                if(!/^[0-9a-f]{40}$/.test(sha||''))throw new Error('GitHub 数据版本无效');
+                state.sha=sha;state.checkedAt=Date.now();
+                return sha;
+            })();
+        }
+        try{revision=state.promise?await state.promise:state.sha||revision}catch(_error){revision=state.sha||revision}
+        finally{state.promise=null}
+    }
     const stamp=Date.now(),local=`data/${name}?v=${stamp}`;
     const urls=remote&&live?[
-        `https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/${name}?v=${stamp}`,
-        `https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@live-data/data/${name}?v=${stamp}`,local]:[local];
+        `https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/${revision}/data/${name}?v=${stamp}`,
+        `https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@${revision}/data/${name}?v=${stamp}`,local]:[local];
     let error;
     for(const url of urls){try{const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`${name}: HTTP ${response.status}`);return {payload:await response.json(),fallback:remote&&live&&url===local}}catch(cause){error=cause}}
     throw error;
@@ -992,25 +1007,27 @@ async function loadModelPoolFunnelResults(){
 function renderDailyNavigation(id){
     if(!privatePage()&&!publicCloudPage&&!dailyExtra.d2Proximity&&!initialD2DataPromise)initializeD2DataInBackground().catch(()=>{});
     if(typeof document!=='undefined'){
+        document.querySelector('.market-title-actions')?.remove();
+        document.querySelector('.market-title-row>[data-legacy-history-entry]')?.remove();
         const title=document.querySelector('main>h1,main>.market-title-row>h1');
-        if(title&&!document.querySelector('[data-legacy-history-entry]')){
+        if(title&&!document.querySelector('.market-title-row')){
             const row=document.createElement('div');row.className='market-title-row';
             row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';title.style.margin='0';row.style.margin='24px 0 18px';
             title.before(row);row.append(title);
-            const link=document.createElement('a');link.href='#legacy-model-history';link.dataset.legacyHistoryEntry='';link.textContent='已停用模型历史';
-            link.className='legacy-history-entry';link.addEventListener('click',()=>{activeDaily='legacy_history';draw()});row.append(link);
         }
     }
-    const titleRow=document.querySelector('.market-title-row');
-    if(titleRow&&!titleRow.querySelector('[data-stock-lookup-entry]')){
-        const actions=document.createElement('div');actions.className='market-title-actions';
-        const history=titleRow.querySelector('[data-legacy-history-entry]');
-        if(!publicCloudPage){
-            const holding=document.createElement('button');holding.type='button';holding.id='daily-holding_pool';holding.setAttribute('aria-controls','content');holding.className='legacy-history-entry';holding.dataset.holdingPoolEntry='';holding.textContent='持有跟踪池';
-            holding.addEventListener('click',()=>selectDaily('holding_pool'));actions.append(holding);
+    const titleRow=document.querySelector('.market-title-row'),privateToolbar=document.querySelector('body>.private-toolbar');
+    if(titleRow&&privateToolbar){
+        titleRow.append(privateToolbar);
+        privateToolbar.querySelector('.private-access-state')?.setAttribute('hidden','');
+        const meta=document.getElementById('meta');
+        if(meta){
+            meta.classList.add('market-meta-line');
+            for(const statusId of ['privateScanStatus','privateModelStatus']){
+                const status=document.getElementById(statusId);
+                if(status&&status.parentElement!==meta)meta.append(status);
+            }
         }
-        const search=document.createElement('button');search.type='button';search.id='daily-stock_lookup';search.setAttribute('aria-controls','content');search.className='legacy-history-entry';search.dataset.stockLookupEntry='';search.textContent='股票检索';
-        search.addEventListener('click',()=>selectDaily('stock_lookup'));actions.append(search);if(history)actions.append(history);titleRow.append(actions);
     }
     const known=Boolean(dailyExtra.navigationSignals);
     dailyNav.innerHTML=dailyModels.filter(([key])=>!['holding_pool','legacy_history','stock_lookup'].includes(key)).map(([key,label])=>{
@@ -1019,7 +1036,10 @@ function renderDailyNavigation(id){
         const countTitle=key==='holding_pool'?'当前跟踪池操作笔数':key==='second'?'所选最新日期当前有效的类二买股票数':key==='d2_alert'?'最新数据日期的已确认提醒，同股只计一次':['daily_macd','sixty_minute_macd'].includes(key)?'最新行情日期的提醒股票数；历史记录见提醒日期':'最新数据日期、默认筛选下的提醒股票数，同股只计一次；历史日期和筛选数量见列表';
         return `<button type="button" id="daily-${key}" role="tab" data-daily="${key}" aria-controls="content" aria-selected="${key===id}" tabindex="${key===id?0:-1}">${label}${['stock_lookup','legacy_history'].includes(key)?'':` <span class="d2-nav-count" title="${countTitle}">${count==null?'待加载':Number(count)}</span>`}</button>`;
     }).join('')+(publicCloudPage&&!publicStaticPage?'<button type="button" id="publicCloudNotifyToggle" aria-label="开启所有模型桌面提醒">🔔 开启桌面提醒</button>':'')+
-        (privatePage()?'<a class="standalone-model-link" href="/">业务导航首页 ↗</a>':'<a class="standalone-model-link" href="momentum-v6.html">V6 动量 ↗</a>');
+        (privatePage()?'':'<a class="standalone-model-link" href="momentum-v6.html">V6 动量 ↗</a>');
+    const quickActions=document.createElement('div');quickActions.className='daily-quick-actions';quickActions.setAttribute('aria-label','常用入口');
+    quickActions.innerHTML=`${privatePage()||!publicCloudPage?'<button type="button" data-daily="holding_pool">持有跟踪池</button>':''}<button type="button" data-daily="stock_lookup">股票检索</button><button type="button" data-daily="legacy_history">已停用模型历史</button>`;
+    dailyNav.append(quickActions);
     if(publicCloudPage&&!publicStaticPage){
         const button=document.getElementById('publicCloudNotifyToggle');
         let enabled=false;
@@ -1250,11 +1270,11 @@ style.textContent+='.stock-code-copy{cursor:copy;text-underline-offset:2px}.stoc
 // Use touch capability, not the CSS viewport alone, to select the compact layout.
 // This keeps desktop browsers usable when their local-file zoom makes the viewport narrow.
 const desktopLayoutFix=document.createElement('style');
-desktopLayoutFix.textContent='@media (hover:hover) and (pointer:fine){main{width:min(1500px,90%);max-width:1500px;margin:24px auto;padding-left:36px;padding-right:36px;overflow:visible}.daily-tabs{display:flex;gap:8px}.daily-tabs button{flex:0 1 auto;width:auto;min-width:0}.daily-filters select{width:auto}.gate,.model{max-width:none}.market-trade-page{max-width:none;overflow:visible}}';
+desktopLayoutFix.textContent='@media (hover:hover) and (pointer:fine){main{width:min(1500px,calc(100% - 32px));max-width:1500px;margin:24px auto;padding-left:16px;padding-right:16px;overflow:visible}.daily-tabs{display:flex;gap:8px}.daily-tabs button{flex:0 1 auto;width:auto;min-width:0}.daily-filters select{width:auto}.gate,.model{max-width:none}.market-trade-page{max-width:none;overflow:visible}}';
 document.head.append(desktopLayoutFix);
 if (navigator.maxTouchPoints === 0) {
     document.documentElement.classList.add('desktop-layout');
-    desktopLayoutFix.textContent += '.desktop-layout html,.desktop-layout body{width:100%;min-width:100%;overflow-x:visible}.desktop-layout main{width:calc(100% - 72px)!important;max-width:1500px!important;margin:24px auto!important;padding:0 36px!important;overflow:visible!important}.desktop-layout .daily-tabs{display:flex!important;flex-wrap:wrap!important}.desktop-layout .daily-tabs button{flex:0 1 auto!important;width:auto!important}.desktop-layout .daily-filters select{width:auto!important}';
+    desktopLayoutFix.textContent += '.desktop-layout html,.desktop-layout body{width:100%;min-width:100%;overflow-x:visible}.desktop-layout main{width:calc(100% - 32px)!important;max-width:1500px!important;margin:24px auto!important;padding:0 16px!important;overflow:visible!important}.desktop-layout .daily-tabs{display:flex!important;flex-wrap:wrap!important}.desktop-layout .daily-tabs button{flex:0 1 auto!important;width:auto!important}.desktop-layout .daily-filters select{width:auto!important}';
 }
 style.textContent+='[hidden]{display:none!important}.experimental-models{position:relative}.experimental-models summary{list-style:none;cursor:pointer;padding:6px 12px;border:1px solid #ccd5e1;border-radius:8px;background:#fff;font-size:14px}.experimental-models summary::-webkit-details-marker{display:none}.experimental-options{position:absolute;top:calc(100% + 4px);left:0;right:auto;z-index:30;display:flex;flex-direction:column;align-items:stretch;gap:6px;width:max-content;padding:7px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 24px rgba(15,23,42,.14)}.experimental-options button{white-space:nowrap;width:100%}.daily-sticky-controls{position:sticky;top:0;z-index:20;background:#f6f8fb;border-bottom:0}.daily-tabs{position:static;background:transparent;padding:5px 0;border-bottom:0;margin-bottom:0}.daily-tabs button{min-height:34px;padding:6px 12px;font-size:14px}.daily-more{margin:0;padding:2px 0;font-size:13px}.daily-filters{margin:0;padding:5px 0;border-top:1px solid #e2e8f0}.daily-filters select{padding:5px;font-size:14px}';
 style.textContent+='.daily-sticky-controls>.trend-date-filter{width:100%;box-sizing:border-box;background:#f6f8fb}.daily-sticky-controls>.trend-date-filter label{font-weight:700;color:#334155}@media(max-width:640px){.daily-sticky-controls>.trend-date-filter{align-items:stretch}.daily-sticky-controls>.trend-date-filter label,.daily-sticky-controls>.trend-date-filter select{width:100%;box-sizing:border-box}}';
@@ -1766,8 +1786,7 @@ function d2ArchivedConditionChecks(event,date){
     return checks;
 }
 function d2EvidenceButton(code,confirmedAt){
-    if(!confirmedAt)return '';
-    return `<button type="button" class="m30-detail-open" data-historical-evidence="" data-historical-code="${safe(String(code).padStart(6,'0'))}" data-historical-trigger="${safe(confirmedAt)}" data-historical-model="D2第二回调双路径提醒">▶ 查看当时图表</button>`;
+    return '';
 }
 function d2ArchivedSignalDetail(event,code,name,date,includeBuy=true){
     const replay=(dailyExtra.d2Replay?.days||[]).find(day=>day.date===date)?.replay_rows?.find(item=>String(item.code).padStart(6,'0')===String(code).padStart(6,'0')&&item.confirmed_at===event.confirmed_at);
@@ -2835,7 +2854,7 @@ function twoCenterPanel(){
     const preview=data.is_intraday_preview?'<p class="preclose-warning"><strong>盘中预览：</strong>当日日K尚未收盘，最终形态以收盘扫描为准，不发正式通知。</p>':'';
     const focusRow=rows.find(row=>row._lookupFocus),focusNotice=focusRow?`<p class="stock-lookup-focus"><strong>股票检索定位：</strong>${safe(focusRow['名称'])} ${safe(focusRow['代码'])} · 记录日期 ${safe(formatDate(state.focusDate||data.daily_date))}；已在当前日线趋势一买列表中定位。</p>`:'';
     const dateForRow=row=>selectedDate==='latest'?data.daily_date:selectedDate==='all'?shortCycleDate(row._trendOutcome?.triggered_at||data.daily_date):selectedDate;
-    const body=rows.map((row,index)=>{const outcome=outcomeOf(row),focused=row===focusRow,rowDate=dateForRow(row);return `<tr${focused?' class="stock-lookup-focus-row" data-stock-lookup-focus-row':''}><td>${index+1}${focused?'<br><small>检索定位</small>':''}</td><td><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td>${shortCycleConditionCell(evidenceOf(row),'日线趋势一买',row['代码'],rowDate)}<td class="focus-reason"><b>D5价格低于D3，但DIF、绿柱和下跌力度均弱于D3</b><small>D3 ${safe(formatDate(row['A日期']))} → D5 ${safe(formatDate(row['B日期']))}</small></td><td><span class="two-center-status${row['状态']==='背驰形成中'?' alert':''}">${safe(row['状态'])}</span></td><td><button type="button" class="m30-detail-open" data-daily-first-detail="${safe(row['代码'])}">▶ 查看日线D3/D5</button>${outcome?.event_id?`<br><button type="button" class="m30-detail-open" data-historical-evidence="${safe(outcome.event_id)}" data-historical-trigger="${safe(outcome.triggered_at)}" data-historical-model="日线趋势一买">▶ 查看当时图表</button>`:''}</td><td>${safe(formatDate(row['B日期']))}<br>${safe(row['Price_B'])}<br><small>${selectedDate==='latest'?`距今${safe(row['B距今天数'])}日`:'当时结构快照'}</small></td><td>${outcome?safe(formatDateTime(outcome.triggered_at)):'未触发'}</td><td>${safe(outcome?.origin||'未归档')}</td><td>${operationLatestReturnCell('日线趋势一买',row['代码'],outcome,Boolean(outcome))}</td>${EXIT_RETURN_HORIZONS.map(h=>`<td>${returnCell(outcome,h)}</td>`).join('')}<td class="sell-condition-cell">${strictM30ExitReturnCell('日线趋势一买',row,evidenceOf(row),rowDate)}</td></tr>`}).join('');
+    const body=rows.map((row,index)=>{const outcome=outcomeOf(row),focused=row===focusRow,rowDate=dateForRow(row);return `<tr${focused?' class="stock-lookup-focus-row" data-stock-lookup-focus-row':''}><td>${index+1}${focused?'<br><small>检索定位</small>':''}</td><td><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td>${shortCycleConditionCell(evidenceOf(row),'日线趋势一买',row['代码'],rowDate)}<td class="focus-reason"><b>D5价格低于D3，但DIF、绿柱和下跌力度均弱于D3</b><small>D3 ${safe(formatDate(row['A日期']))} → D5 ${safe(formatDate(row['B日期']))}</small></td><td><span class="two-center-status${row['状态']==='背驰形成中'?' alert':''}">${safe(row['状态'])}</span></td><td><button type="button" class="m30-detail-open" data-daily-first-detail="${safe(row['代码'])}">▶ 查看日线D3/D5</button></td><td>${safe(formatDate(row['B日期']))}<br>${safe(row['Price_B'])}<br><small>${selectedDate==='latest'?`距今${safe(row['B距今天数'])}日`:'当时结构快照'}</small></td><td>${outcome?safe(formatDateTime(outcome.triggered_at)):'未触发'}</td><td>${safe(outcome?.origin||'未归档')}</td><td>${operationLatestReturnCell('日线趋势一买',row['代码'],outcome,Boolean(outcome))}</td>${EXIT_RETURN_HORIZONS.map(h=>`<td>${returnCell(outcome,h)}</td>`).join('')}<td class="sell-condition-cell">${strictM30ExitReturnCell('日线趋势一买',row,evidenceOf(row),rowDate)}</td></tr>`}).join('');
     const selectedDetail=rows.find(row=>String(row['代码'])===String(state.detailCode||'')),currentDetail=currentRows.find(row=>String(row['代码'])===String(state.detailCode||''));
     const detail=selectedDetail||null;
     const chartDates=detail?.['形态图']?.['日期']||[];
@@ -2914,7 +2933,7 @@ function installConditionDialogs(root){
         detail.append(summary,block.cloneNode(true));compact.append(headline,detail);block.replaceWith(compact);
     }
     for(const detail of root.querySelectorAll('details.m30-condition-detail')){
-        if(detail.closest('.d2-proximity-item,.d2-history-minute-card'))continue;
+        if(detail.closest('.d2-proximity-item,.d2-history-minute-card,.integrated-evidence-dialog'))continue;
         const summary=detail.querySelector(':scope>summary');
         if(!summary)continue;
         const selling=summary.textContent.includes('卖出');
@@ -3676,10 +3695,13 @@ function holdingSimulationPanel(state,payload,positions){
     const savedOrders=state.simOrders??[state.simOrder||'model'];
     const validOrders=savedOrders.filter(order=>['model','chronological'].includes(order));
     const orders=savedOrders.length&&!validOrders.length?['model']:validOrders;
-    // Keep D2 in the continuous event queue on every eligible date. The
-    // simulation ranks it after the selected models within the same open,
-    // so it is a real fallback once that day's selected-model queue is used.
-    const d2Fallback=(options.d2FallbackPositions||[]).filter(item=>String(item.buy_effective_date||'').slice(0,10));
+    // D2 is a day-level fallback. Never let it consume cash on a date that
+    // already has an accepted reminder from one of the selected models.
+    const strongBuyDays=new Set(eligible.map(item=>String(item.buy_effective_date||'').slice(0,10)).filter(Boolean));
+    const d2Fallback=(options.d2FallbackPositions||[]).filter(item=>{
+        const day=String(item.buy_effective_date||'').slice(0,10);
+        return day&&!strongBuyDays.has(day);
+    });
     const simulationPositions=[...eligible,...d2Fallback];
     const trials=orders.filter(order=>['model','chronological'].includes(order)).map(order=>({order,label:(order==='chronological'?'提醒时间顺序':'模型优先')+(options.unlimited?' · 不限总资金':' · 限定本金'),channel,result:holdingSimulation(simulationPositions,{...options,order})}));
     const channels=trials.map(t=>[channel,t.result]);
@@ -3999,7 +4021,9 @@ function installHistoricalEvidenceHandlers(content){
                 overlay.querySelector('[data-evidence-period]').onchange=event=>{period=event.target.value;render()};};
             render();overlay.onclick=event=>{if(event.target===overlay)overlay.remove()};content.append(overlay);
         }catch(error){
-            button.insertAdjacentHTML('afterend',`<small class="daily-error">${safe(error.message)}</small>`);
+            const previous=button.parentElement?.querySelector('.chart-evidence-status');
+            if(previous)previous.remove();
+            button.insertAdjacentHTML('afterend',`<span class="chart-evidence-status" role="status">图表暂未同步，扫描完成后可查看</span>`);
         }
     });
 }
@@ -4551,7 +4575,8 @@ function pageDateLabel(){
 function updatePageMeta(){
     const meta=document.getElementById('meta');
     if(!meta||!data)return;
-    meta.textContent=pageDateLabel()+(activeDaily==='d2_alert'&&d2LiveLoadFailed?' · 实时更新暂不可用，显示已加载快照':'');
+    const scanAt=activeDaily==='d2_alert'?dailyExtra.d2Proximity?.generated_at:'';
+    meta.textContent=pageDateLabel()+(scanAt?' · 扫描 '+formatDateTime(scanAt):'')+(activeDaily==='d2_alert'&&d2LiveLoadFailed?' · 实时更新暂不可用，显示已加载快照':'');
 }
 async function refreshD2MonitorData(){
     if(location.protocol==='file:')return;
@@ -4701,6 +4726,7 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape'){const activ
 
 style.textContent+='.wrap table tbody tr.alert-row,.wrap table tbody tr.alert-row>td{background:#fff}.wrap table tbody tr.alert-row>td.short-cycle-condition,.wrap table tbody tr.alert-row>td.sell-condition-cell{background:#fff}';
 style.textContent+='.integrated-macd-filters input{font:inherit;padding:8px;border:1px solid #cbd5e1;border-radius:6px;max-width:100%;background:#fff}.macd-chart-wrap{padding:8px;border:1px solid #dbe3ed;border-radius:8px;background:#fff}.macd-chart-wrap svg{display:block;width:100%;height:auto}.integrated-macd-table .short-cycle-condition{min-width:280px}.integrated-macd-table>thead>tr>th{white-space:nowrap}';
+style.textContent+=`.integrated-macd-table{font-size:14px}.integrated-macd-table th,.integrated-macd-table td{font-size:14px;line-height:1.5}.integrated-buy-summary{min-width:250px!important;width:250px!important;max-width:250px!important}.integrated-buy-summary .m30-condition-result{margin:0;color:#166534;font-size:14px;font-weight:700;line-height:1.5}.integrated-buy-summary small{display:block;margin:3px 0 8px;color:#64748b;font-size:13px;line-height:1.45}.integrated-evidence-open{padding:0;border:0;background:transparent;color:#2563eb;font-size:14px;font-weight:700}.integrated-evidence-dialog{width:min(1380px,96vw)}.integrated-evidence-grid{display:grid;grid-template-columns:minmax(380px,.9fr) minmax(520px,1.45fr);gap:18px;align-items:start}.integrated-evidence-conditions,.integrated-evidence-chart{min-width:0}.integrated-evidence-conditions .historical-buy-condition{min-width:0;max-width:none}.integrated-evidence-conditions .m30-condition-result{font-size:15px;line-height:1.5}.integrated-evidence-conditions .historical-buy-condition>small{font-size:13px}.integrated-evidence-conditions details>summary{margin:10px 0 8px;color:#334155;font-size:15px;font-weight:700}.integrated-evidence-conditions .reminder-condition-table{font-size:13px;line-height:1.55}.integrated-evidence-chart>.daily-note{margin:0 0 10px}.integrated-evidence-chart .macd-chart-wrap{margin-bottom:12px}@media(max-width:980px){.integrated-evidence-grid{grid-template-columns:1fr}.integrated-evidence-dialog{width:min(900px,96vw)}}`;
 style.textContent+='.daily-filters select[data-weekly-signal-date],.daily-filters select[data-integrated-macd-date],.daily-filters select[data-m30-signal-date],.daily-filters select[data-class-ii-date],.daily-filters select[data-d2-alert-date],.daily-filters select[data-d2-manual-date],.daily-filters #twoCenterSignalDate,.daily-filters #dailyDate{min-width:158px}.daily-filters select[data-d2-alert-date],.daily-filters select[data-d2-manual-date]{min-width:190px}@media(max-width:640px){.daily-filters select[data-weekly-signal-date],.daily-filters select[data-integrated-macd-date],.daily-filters select[data-m30-signal-date],.daily-filters select[data-class-ii-date],.daily-filters select[data-d2-alert-date],.daily-filters select[data-d2-manual-date],.daily-filters #twoCenterSignalDate,.daily-filters #dailyDate{width:100%;min-width:0}}';
 
 style.textContent+='.macd-combined-chart{padding:12px;border:1px solid #dbe3ed;border-radius:10px;background:#fff}.macd-combined-legend{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 10px;color:#64748b}.macd-chart-panel.macd-combined-chart svg,.m30-detail-dialog .macd-chart-panel.macd-combined-chart svg{width:100%;min-width:760px;height:440px}.macd-period-select{display:flex;align-items:center;gap:10px;margin:12px 0}.macd-period-select select{font:inherit;padding:6px 12px;border:1px solid #cbd5e1;border-radius:6px;background:white}.holding-pool-table td{padding-top:12px;padding-bottom:12px}.holding-pool-table .holding-col-buy,.holding-pool-table .holding-col-sell{width:16%}.holding-pool-table .holding-col-return{width:18%}.holding-pool-table .holding-col-source{width:20%}';
@@ -4713,12 +4739,13 @@ style.textContent+=`
 .daily-filters select,.daily-filters input:not([type=checkbox]),.daily-filters button{min-height:36px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#172033;font:inherit}
 .daily-filters button{background:#2563eb;color:#fff;border-color:#2563eb;cursor:pointer}
 .market-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.market-title-row>.private-toolbar{flex:1 1 auto;width:auto;min-width:0;margin:0;padding:0;flex-wrap:nowrap}.market-title-row>.private-toolbar .private-tool{min-height:38px;padding:7px 12px}.market-title-row>.private-toolbar #privateNotifyStatus{position:absolute;top:100%;right:0;width:max-content;max-width:420px}.market-meta-line{display:flex;align-items:center;flex-wrap:wrap;gap:4px 16px}.market-meta-line .private-status{display:inline;color:#64748b;font-size:13px;text-align:left}.market-meta-line .private-status:not(:empty)::before{content:'·';margin-right:16px;color:#94a3b8}
 .legacy-history-entry{padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;background:white;text-decoration:none;color:#475569;font-size:14px}
 .holding-sim-form fieldset{border:1px solid #dbe3ef;border-radius:10px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px 16px}
 .holding-sim-form fieldset label{display:inline-flex;align-items:center;gap:7px;margin:0;white-space:normal}
 .holding-sim-form input[type=checkbox]{flex:none;width:16px;height:16px;margin:0}
 .holding-sim-form fieldset button{margin:0;padding:8px 14px;min-height:36px}
-@media(max-width:640px){.daily-filters label{max-width:100%;flex-wrap:wrap}.daily-filters select,.daily-filters input{max-width:100%}.holding-sim-form fieldset{gap:10px}.market-title-row{align-items:flex-start}}
+@media(max-width:760px){.market-title-row{align-items:flex-start;flex-wrap:wrap}.market-title-row>.private-toolbar{flex-basis:100%;justify-content:flex-start;overflow-x:auto}.market-meta-line{gap:4px 10px}.market-meta-line .private-status:not(:empty)::before{margin-right:10px}}@media(max-width:640px){.daily-filters label{max-width:100%;flex-wrap:wrap}.daily-filters select,.daily-filters input{max-width:100%}.holding-sim-form fieldset{gap:10px}.market-title-row{align-items:flex-start}}
 `;
 
 style.textContent+=`
@@ -4749,6 +4776,8 @@ style.textContent+=`
 `;
 
 style.textContent+=`.d2-alert-page>.d2-proximity-list,.d2-proximity-dialog>.d2-proximity-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}@media(max-width:700px){.d2-alert-page>.d2-proximity-list,.d2-proximity-dialog>.d2-proximity-list{grid-template-columns:minmax(0,1fr)!important}}.d2-condition-table th:first-child{width:34%}.d2-condition-table td:last-child{font-weight:400}.d2-inner-tabs{width:100%;margin:0!important;padding:8px 0!important}.daily-sticky-controls>.d2-inner-tabs{border-bottom:0}`;
+style.textContent+=`.daily-quick-actions{display:flex;align-items:center;gap:8px;margin-left:auto}.daily-quick-actions button{box-sizing:border-box;height:36px;min-height:36px;padding:0 12px;border:1px solid #cbd8ec;border-radius:8px;background:#fff;color:#1d4ed8;font:inherit;font-size:14px;white-space:nowrap;cursor:pointer}.daily-quick-actions button:hover{background:#eff6ff;border-color:#93b4ed}@media(max-width:900px){.daily-quick-actions{flex:1 1 100%;margin-left:0}}@media(max-width:640px){.daily-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.daily-quick-actions button{width:100%;height:44px;padding:4px 6px;white-space:normal}}`;
+style.textContent+=`.chart-evidence-status{display:inline-flex;align-items:center;margin-top:6px;padding:4px 8px;border-radius:6px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.4;white-space:normal}`;
 
 style.textContent+=`
 .d2-alert-page>.d2-proximity-list{gap:14px!important}
