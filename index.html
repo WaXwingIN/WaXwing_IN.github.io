@@ -553,7 +553,11 @@ async function refreshPublicCloudNotifications(){
 }
 async function publicCloudVersionInfo(){
     if(publicStaticPage){
-        const response=await fetch('data/page/manifest.json',{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(15000)});
+        const versionUrls=location.hostname.toLowerCase()==='waxwingin.github.io'?
+            [`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/page/manifest.json?v=${Date.now()}`,'data/page/manifest.json']:['data/page/manifest.json'];
+        let response,lastError;
+        for(const url of versionUrls){try{response=await fetch(url,{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error('HTTP '+response.status);break}catch(error){lastError=error;response=null}}
+        if(!response)throw lastError;
         if(!response.ok)throw new Error('页面版本清单 HTTP '+response.status);
         const manifest=await response.json(),metadata=manifest.metadata||{};
         const stamp=String(metadata.date||metadata.daily_date||metadata.data_through||'').replace(/\//g,'-');
@@ -571,11 +575,12 @@ async function publicCloudFetch(path,version=publicCloudVersion){
     if(!publicCloudPage||!version)throw new Error('腾讯云已核验版本尚未加载');
     if(!/^[A-Za-z0-9_./-]+\.json$/.test(path)||path.split('/').includes('..'))throw new Error('无效的腾讯云数据路径');
     if(publicStaticPage){
-        const urls=[`data/${path}?v=${encodeURIComponent(version)}`];
+        const urls=[];
         if(location.hostname.toLowerCase()==='waxwingin.github.io'){
             urls.push(`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/${path}?v=${encodeURIComponent(version)}`);
             urls.push(`https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@live-data/data/${path}?v=${encodeURIComponent(version)}`);
         }
+        urls.push(`data/${path}?v=${encodeURIComponent(version)}`);
         let error;
         for(const url of urls){
             try{
