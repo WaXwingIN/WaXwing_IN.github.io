@@ -499,6 +499,7 @@ function publicCloudStatus(message){
     let status=document.getElementById('publicCloudStatus');
     if(!status){status=document.createElement('p');status.id='publicCloudStatus';status.setAttribute('role','status');status.className='daily-note';document.getElementById('meta').after(status)}
     status.textContent=message;
+    status.hidden=publicStaticPage&&message.startsWith('模型数据 ·');
 }
 let publicNoticeInitialized=false;
 function publicNoticeLink(path){
@@ -4576,7 +4577,8 @@ function updatePageMeta(){
     const meta=document.getElementById('meta');
     if(!meta||!data)return;
     const scanAt=activeDaily==='d2_alert'?dailyExtra.d2Proximity?.generated_at:'';
-    meta.textContent=pageDateLabel()+(scanAt?' · 扫描 '+formatDateTime(scanAt):'')+(activeDaily==='d2_alert'&&d2LiveLoadFailed?' · 实时更新暂不可用，显示已加载快照':'');
+    const dateLabel=activeDaily==='d2_alert'&&dailyExtra.d2Proximity?.daily_date?'行情日：'+formatDate(dailyExtra.d2Proximity.daily_date):pageDateLabel();
+    meta.textContent=dateLabel+(scanAt?' · 最新扫描：'+formatDateTime(scanAt):'')+(activeDaily==='d2_alert'&&d2LiveLoadFailed?' · 实时更新暂不可用，显示已加载快照':'');
 }
 async function refreshD2MonitorData(){
     if(location.protocol==='file:')return;
