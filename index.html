@@ -636,14 +636,15 @@ async function publicCloudFetch(path,version=publicCloudVersion){
         const immutable=/^page\/objects\/[0-9a-f]{64}\.json$/.test(path);
         const suffix=immutable?'':`?v=${encodeURIComponent(version)}`;
         const urls=[`data/${path}${suffix}`];
-        if(location.hostname.toLowerCase()==='waxwingin.github.io'){
+        if(immutable&&location.hostname.toLowerCase()==='waxwingin.github.io'){
             urls.push(`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/live-data/data/${path}${suffix}`);
             urls.push(`https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@live-data/data/${path}${suffix}`);
         }
+        if(immutable)return fetchStaticObject(urls,path);
         let error;
         for(const url of urls){
             try{
-                const response=await fetch(url,{cache:/^page\/objects\/[0-9a-f]{64}\.json$/.test(path)?'force-cache':'no-store',credentials:'omit',signal:AbortSignal.timeout(120000)});
+                const response=await fetch(url,{cache:'no-cache',credentials:'omit',signal:AbortSignal.timeout(15000)});
                 if(!response.ok)throw new Error('模型数据 HTTP '+response.status+'：'+path);
                 return response;
             }catch(cause){error=cause}
@@ -655,6 +656,39 @@ async function publicCloudFetch(path,version=publicCloudVersion){
     if(response.status===409)throw new Error('腾讯云已切换数据版本，请刷新页面');
     if(!response.ok)throw new Error('腾讯云数据 HTTP '+response.status+'：'+path);
     return response;
+}
+async function fetchStaticObject(urls,path){
+    const expected=path.match(/([0-9a-f]{64})\.json$/)[1];
+    const controllers=urls.map(()=>new AbortController());
+    if(typeof pageRequestControllers!=='undefined')controllers.forEach(c=>pageRequestControllers.add(c));
+    let settled=false,backupTimer;
+    try{
+        return await new Promise((resolve,reject)=>{
+            let started=0,finished=0,lastError;
+            const backups=()=>{while(started<urls.length)request(started++)};
+            const request=async index=>{
+                const timer=setTimeout(()=>controllers[index].abort(),20000);
+                try{
+                    const response=await fetch(urls[index],{cache:'force-cache',credentials:'omit',signal:controllers[index].signal});
+                    if(!response.ok)throw new Error('模型数据 HTTP '+response.status+'：'+path);
+                    const bytes=await response.clone().arrayBuffer();
+                    const digest=await crypto.subtle.digest('SHA-256',bytes);
+                    const actual=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+                    if(actual!==expected)throw new Error('模型数据校验失败：'+path);
+                    // Parse before selecting a winner; headers alone do not
+                    // establish that a stalled response body has completed.
+                    JSON.parse(new TextDecoder().decode(bytes));
+                    if(!settled){settled=true;resolve(response)}
+                }catch(error){lastError=error;if(!settled)backups()}
+                finally{clearTimeout(timer);finished++;if(!settled&&finished===urls.length){settled=true;reject(lastError)}}
+            };
+            request(started++);
+            if(urls.length>1)backupTimer=setTimeout(backups,800);
+        });
+    }finally{
+        settled=true;clearTimeout(backupTimer);
+        controllers.forEach(c=>{c.abort();if(typeof pageRequestControllers!=='undefined')pageRequestControllers.delete(c)});
+    }
 }
 async function publicCloudJson(path,version=publicCloudVersion){return (await publicCloudFetch(path,version)).json()}
 window.clearWaxwingProtectedData=()=>{
@@ -717,6 +751,7 @@ async function refreshPageVersion({reload=false}={}){
         consolidationDatePromises.clear();
         d2ArchiveDateRequests.clear();
         await loadDailyBundle('page/navigation');
+        if(typeof renderDailyNavigation==='function'&&typeof activeDaily!=='undefined')renderDailyNavigation(activeDaily);
         if(reload)await loadDailyData(activeDaily,{checkVersion:false});
         return true;
     })().catch(error=>{
@@ -1086,7 +1121,7 @@ async function loadModelPoolFunnelResults(id){
 }
 let navigationD2Load=null;
 function renderDailyNavigation(id){
-    if(id!=='d2_alert'&&(!dailyExtra.d2Proximity||!dailyExtra.d2History)&&dailyExtra.navigationSignals&&!navigationD2Load&&!privateDataClosed){
+    if(id!=='d2_alert'&&(!dailyExtra.d2Proximity||!dailyExtra.d2History)&&dailyExtra.navigationSignals&&dailyExtra.navigationSignals.counts?.d2_alert==null&&!navigationD2Load&&!privateDataClosed){
         const indexed=Boolean(dailyExtra.pageManifest?.assets?.['page/tab_d2_alert']);
         navigationD2Load=(indexed?loadDailyBundle('page/tab_d2_alert').then(()=>[
             {payload:dailyExtra.d2Proximity},{payload:dailyExtra.d2History}]):
@@ -1125,7 +1160,7 @@ function renderDailyNavigation(id){
     const known=Boolean(dailyExtra.navigationSignals);
     dailyNav.innerHTML=dailyModels.filter(([key])=>!['holding_pool','legacy_history','stock_lookup'].includes(key)).map(([key,label])=>{
         const count=key==='holding_pool'?(dailyExtra.holdingPool?.positions?.length??null):
-            key==='d2_alert'?(dailyExtra.d2Proximity&&dailyExtra.d2History?currentEffectiveAlertCount(key):null):known?currentEffectiveAlertCount(key):null;
+            key==='d2_alert'?(dailyExtra.d2Proximity&&dailyExtra.d2History?currentEffectiveAlertCount(key):dailyExtra.navigationSignals?.counts?.d2_alert??null):known?currentEffectiveAlertCount(key):null;
         const countTitle=key==='holding_pool'?'当前跟踪池操作笔数':key==='second'?'所选最新日期当前有效的类二买股票数':key==='d2_alert'?'最新数据日期的已确认提醒，同股只计一次':['daily_macd','sixty_minute_macd'].includes(key)?'最新行情日期的提醒股票数；历史记录见提醒日期':'最新数据日期、全部已确认提醒股票数，不限制漏斗；同股只计一次；历史日期和筛选数量见列表';
         return `<button type="button" id="daily-${key}" role="tab" data-daily="${key}" aria-controls="content" aria-selected="${key===id}" tabindex="${key===id?0:-1}">${label}${['stock_lookup','legacy_history'].includes(key)?'':` <span class="d2-nav-count" title="${countTitle}">${count==null?'待加载':Number(count)}</span>`}</button>`;
     }).join('')+(publicCloudPage&&!publicStaticPage?'<button type="button" id="publicCloudNotifyToggle" aria-label="开启所有模型桌面提醒">🔔 开启桌面提醒</button>':'')+
@@ -1187,6 +1222,18 @@ async function loadDailyData(id,{checkVersion=true}={}){
             if(!Array.isArray(dailyExtra.classIiTracking?.stocks))throw bundleError||new Error('类二买归档不可用');
             dailyBundlesReady.add('page/tab_second');
         }else if(id==='stock_lookup'){
+            if(publicCloudPage&&dailyExtra.pageManifest?.assets?.['page/stock_lookup_public']){
+                await loadDailyBundle('page/stock_lookup_public');
+                dailyExtra.lookupIncomplete=false;
+                if(activeDaily===id)draw();
+                if(dailyExtra.pageManifest.assets['page/stock_lookup_legacy']&&!dailyBundlesReady.has('page/stock_lookup_legacy')){
+                    dailyExtra.lookupLegacyLoading=true;
+                    loadDailyBundle('page/stock_lookup_legacy').catch(error=>{
+                        dailyExtra.lookupIncomplete=true;console.warn('Legacy lookup unavailable',error);
+                    }).finally(()=>{dailyExtra.lookupLegacyLoading=false;if(activeDaily===id)draw()});
+                }
+                return;
+            }
             await loadDailyBundle('page/stock_lookup');
             const companions=await Promise.allSettled([
                 ...(publicCloudPage?[]:[['holdingPool','holding_tracking_pool.json']]),
@@ -1647,7 +1694,7 @@ function d2ManualApprovalButton(row,date){
 function d2DisplaySnapshot(){
     const snapshot=d2AlertSnapshot(),day=snapshot.session?.date,confirmed=dailyExtra.d2ConfirmedReminders;
     const rows=new Map(snapshot.rows.map(row=>[String(row.code).padStart(6,'0'),row]));
-    const records=[...d2ArchivedStockGroups(d2ArchivedEvents().filter(item=>item.date===day)),...(confirmed?.date===day?confirmed.records||[]:[])];
+    const records=[...d2ArchivedStockGroups(d2ArchivedEvents().filter(item=>item.date===day)),...(confirmed&&confirmed.date===day?confirmed.records||[]:[])];
     for(const record of records){
         if(d2ManuallyExcluded(record.row.code,day))continue;
         const live=(snapshot.candidates||[]).find(row=>String(row.code).padStart(6,'0')===String(record.row.code).padStart(6,'0'));
@@ -3462,6 +3509,7 @@ function syncChartTimeAxes(container){
     },{passive:true}));
 }
 function stockLookupEntries(primary=data,extra=dailyExtra){
+    if(extra===dailyExtra&&Array.isArray(extra.stockLookupRows))return [...extra.stockLookupRows,...extra.stockLookupLegacyRows||[]];
     let indexed=[];
     if(extra===dailyExtra&&extra.stockLookupIndex){
         const index=extra.stockLookupIndex;
@@ -3669,7 +3717,8 @@ function stockLookupPanel(state){
     const selectedGroup=triggerGroups.find(item=>`${item.code}|${item.model}`===state.lookupTriggerKey);
     const selectedExit=unique.find(item=>item.operationExit&&item.exitKey===state.lookupTriggerKey);
     const modal=selectedExit?`<div class="second-detail-modal" data-stock-trigger-modal><section class="second-detail-dialog" role="dialog" aria-modal="true" aria-label="卖出依据">${stockLookupExitDetail(selectedExit)}</section></div>`:selectedGroup?`<div class="second-detail-modal" data-stock-trigger-modal><section class="second-detail-dialog" role="dialog" aria-modal="true" aria-label="触发记录"><header class="second-detail-head"><h3>${safe(selectedGroup.name)} ${safe(selectedGroup.code)} · ${safe(selectedGroup.model)}</h3><button type="button" class="second-detail-close" data-stock-trigger-close aria-label="关闭">×</button></header><div class="wrap"><table><thead><tr><th>触发日期</th><th>详情</th></tr></thead><tbody>${selectedGroup.records.map(item=>`<tr><td>${safe(formatDate(item.date))}</td><td><button type="button" class="stock-lookup-open" data-stock-lookup-target="${safe(stockLookupTargetId(item.model))}" data-stock-lookup-code="${safe(item.code)}" data-stock-lookup-date="${safe(item.date)}" data-stock-lookup-source="${safe(item.source)}" data-stock-lookup-record="${safe(item.detail)}">查看模型与依据</button></td></tr>`).join('')}</tbody></table></div></section></div>`:'';
-    return `<section class="stock-lookup"><h2>股票检索</h2>${stockLookupTabs(state)}${form}${extraArchivePending()?'<p class="daily-note">触发记录正在加载…</p>':''}${unique.length?`<div class="wrap"><table class="stock-lookup-table"><thead><tr><th>股票</th><th>模型</th><th>最近记录日期</th><th>记录类型</th><th>详情</th></tr></thead><tbody>${body}</tbody></table></div>${unique.length>400?'<p class="daily-note">仅显示最近400条，请输入完整代码。</p>':''}`:dailyExtra.lookupIncomplete?'<p class="daily-error">部分记录未能加载，请使用浏览器刷新重试。</p>':'<p class="daily-note">未找到记录。</p>'}${modal}</section>`;
+    const legacyLoading=state.stockIncludeLegacy!==false&&dailyExtra.lookupLegacyLoading;
+    return `<section class="stock-lookup"><h2>股票检索</h2>${stockLookupTabs(state)}${form}${extraArchivePending()?'<p class="daily-note">触发记录正在加载…</p>':''}${legacyLoading?'<p class="daily-note">已停用模型历史正在加载…</p>':''}${unique.length?`<div class="wrap"><table class="stock-lookup-table"><thead><tr><th>股票</th><th>模型</th><th>最近记录日期</th><th>记录类型</th><th>详情</th></tr></thead><tbody>${body}</tbody></table></div>${unique.length>400?'<p class="daily-note">仅显示最近400条，请输入完整代码。</p>':''}`:dailyExtra.lookupIncomplete?'<p class="daily-error">部分记录未能加载，请使用浏览器刷新重试。</p>':legacyLoading?'':'<p class="daily-note">未找到记录。</p>'}${modal}</section>`;
 }
 function holdingSimulation(positions,options={}){
     const fixedPriority=['60分钟MACD底背离选股法','周线盘整背驰一买','日线MACD底背离选股法','日线趋势一买','周线类二买'];
