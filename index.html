@@ -571,13 +571,6 @@ function publicNoticeLink(path){
     return typeof path==='string'&&/^\/stocks\/(?:[A-Za-z0-9_./?#=&%-]*)$/.test(path)&&!path.includes('..')
         ?'https://waxwingin.cn'+path:'https://waxwingin.cn/stocks/';
 }
-function publicNoticePanel(events,warning=''){
-    let panel=document.getElementById('publicCloudNotices');
-    if(!panel){panel=document.createElement('section');panel.id='publicCloudNotices';panel.className='model-supplement';document.getElementById('publicCloudStatus').after(panel)}
-    const shown=events.slice(-8).reverse();
-    panel.innerHTML='<h3>云端最新提醒</h3>'+(warning?`<p class="daily-error">${safe(warning)}</p>`:'')+
-        (shown.length?shown.map(item=>`<p><a href="${safe(publicNoticeLink(item.url))}" target="_blank" rel="noopener noreferrer">${safe(item.title)} · ${safe(item.body)}</a> <small>${safe(formatDateTime(item.at))}</small></p>`).join(''):'<p class="daily-note">当前没有新提醒。</p>');
-}
 async function togglePublicCloudNotification(){
     if(typeof Notification==='undefined'){publicCloudStatus('当前浏览器不支持桌面提醒；网页提醒仍可查看。');return}
     if(Notification.permission==='denied'){publicCloudStatus('浏览器已阻止通知，请在站点权限中允许。');return}
@@ -600,7 +593,6 @@ async function refreshPublicCloudNotifications(){
             return typeof item?.id==='string'&&typeof item?.title==='string'&&typeof item?.body==='string'&&
                 Number.isFinite(stamp)&&stamp<=now&&now-stamp<=45*60000;
         });
-        publicNoticePanel(events);
         let seen=[];
         try{seen=JSON.parse(localStorage.getItem('waxwing_public_cloud_notice_seen')||'[]')}catch(_error){}
         const known=new Set(Array.isArray(seen)?seen:[]);
@@ -614,7 +606,7 @@ async function refreshPublicCloudNotifications(){
         }
         publicNoticeInitialized=true;
         try{localStorage.setItem('waxwing_public_cloud_notice_seen',JSON.stringify([...known].slice(-2000)))}catch(_error){}
-    }catch(error){publicNoticePanel([],`云端提醒暂不可用：${error.message}`)}
+    }catch(error){console.warn('Cloud desktop notifications unavailable',error)}
 }
 async function publicCloudVersionInfo(){
     if(publicStaticPage){
@@ -647,7 +639,7 @@ async function publicCloudFetch(path,version=publicCloudVersion){
         let error;
         for(const url of urls){
             try{
-                const response=await fetch(url,{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(120000)});
+                const response=await fetch(url,{cache:/^page\/objects\/[0-9a-f]{64}\.json$/.test(path)?'force-cache':'no-store',credentials:'omit',signal:AbortSignal.timeout(120000)});
                 if(!response.ok)throw new Error('模型数据 HTTP '+response.status+'：'+path);
                 return response;
             }catch(cause){error=cause}
@@ -655,7 +647,7 @@ async function publicCloudFetch(path,version=publicCloudVersion){
         throw error;
     }
     const url=PUBLIC_CLOUD_ORIGIN+'/api/public-data/'+path+'?version='+encodeURIComponent(version);
-    const response=await fetch(url,{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(120000)});
+    const response=await fetch(url,{cache:/^page\/objects\/[0-9a-f]{64}\.json$/.test(path)?'force-cache':'no-store',credentials:'omit',signal:AbortSignal.timeout(120000)});
     if(response.status===409)throw new Error('腾讯云已切换数据版本，请刷新页面');
     if(!response.ok)throw new Error('腾讯云数据 HTTP '+response.status+'：'+path);
     return response;
@@ -769,6 +761,11 @@ async function hydratePageDetails(code,record=null){
 }
 async function loadD2ArchiveDate(stamp){
     if(!stamp||stamp==='latest')return;
+    if(stamp==='all'){
+        if(!d2ArchiveDateRequests.has(stamp))d2ArchiveDateRequests.set(stamp,
+            loadDailyBundle('page/tab_d2_archive').catch(error=>{d2ArchiveDateRequests.delete(stamp);throw error}));
+        return d2ArchiveDateRequests.get(stamp);
+    }
     const name=`page/d2_history_${stamp}`;
     if(!dailyExtra.pageManifest?.assets?.[name])return;
     if(!d2ArchiveDateRequests.has(stamp))d2ArchiveDateRequests.set(stamp,readPageAsset(name).then(payload=>{
@@ -896,6 +893,13 @@ function saveD2DisplayCache(){if(privatePage()||publicCloudPage)return;try{local
 function restoreD2DisplayCache(){if(privatePage()||publicCloudPage)return;try{const cached=JSON.parse(localStorage.getItem('waxwing_d2_display_cache_v2')||'null');if(cached)mergeDailyBundle(cached)}catch(_error){}}
 async function initializeD2Data(){
     if(d2DataInitialized)return;
+    // Version-pinned tab data already contains the compact history index.
+    // Polling its manifest refreshes it; downloading the full live archive again
+    // duplicates first-load data and can mix an older page with newer history.
+    if(dailyExtra.d2Proximity&&Array.isArray(dailyExtra.d2History?.days)&&
+        Object.keys(dailyExtra.pageManifest?.assets||{}).some(name=>name.startsWith('page/d2_history_'))){
+        d2DataInitialized=true;return;
+    }
     if(!initialD2DataPromise)initialD2DataPromise=(async()=>{
         restoreD2DisplayCache();
         await Promise.all(publicCloudPage?[refreshD2MonitorData(),refreshD2HistoryData()]:[refreshD2MonitorData(),refreshD2HistoryData(),refreshD2ManualExclusions(),refreshD2ManualApprovals()]);
@@ -1057,7 +1061,13 @@ async function loadDailyCoreSnapshot(id){
 }
 const dailyEnsurePromises=new Map();
 let modelPoolFunnelPromise=null;
-async function loadModelPoolFunnelResults(){
+async function loadModelPoolFunnelResults(id){
+    const scoped=`page/funnel_${id}`;
+    if(dailyExtra.pageManifest?.assets?.[scoped]){
+        dailyExtra.modelPoolFunnels=await readPageAsset(scoped);
+        if(privateDataClosed)throw new Error('访问已退出');
+        return;
+    }
     if(dailyExtra.modelPoolFunnels?.green_stop_generated)return;
     if(publicStaticPage&&Array.isArray(dailyExtra.modelPoolFunnels?.rows))return;
     if(!modelPoolFunnelPromise)modelPoolFunnelPromise=fetchLiveJson('model_pool_funnels.json',{live:false})
@@ -1071,11 +1081,15 @@ async function loadModelPoolFunnelResults(){
 }
 let navigationD2Load=null;
 function renderDailyNavigation(id){
-    if(!dailyExtra.d2Proximity&&dailyExtra.navigationSignals&&dailyExtra.navigationSignals.d2Count==null&&!navigationD2Load&&!privateDataClosed){
-        navigationD2Load=fetchLiveJson('d2_proximity_latest.json',{live:false}).then(({payload})=>{
+    if(id!=='d2_alert'&&(!dailyExtra.d2Proximity||!dailyExtra.d2History)&&dailyExtra.navigationSignals&&!navigationD2Load&&!privateDataClosed){
+        const indexed=Boolean(dailyExtra.pageManifest?.assets?.['page/tab_d2_alert']);
+        navigationD2Load=(indexed?loadDailyBundle('page/tab_d2_alert').then(()=>[
+            {payload:dailyExtra.d2Proximity},{payload:dailyExtra.d2History}]):
+            Promise.all([fetchLiveJson('d2_proximity_latest.json',{live:false}),fetchLiveJson('d2_proximity_history.json',{live:false})])).then(([{payload},{payload:history}])=>{
             if(privateDataClosed)return;
-            if(!Array.isArray(payload?.rows))throw new Error('D2 snapshot rows missing');
+            if(!Array.isArray(payload?.rows)||!Array.isArray(history?.days))throw new Error('D2 reminder snapshot or history missing');
             dailyExtra.d2Proximity=payload;
+            dailyExtra.d2History=mergeD2History(dailyExtra.d2History,history);
             renderDailyNavigation(activeDaily);
         }).catch(error=>{navigationD2Load=null;console.warn('D2 navigation count load failed',error)});
     }
@@ -1106,13 +1120,13 @@ function renderDailyNavigation(id){
     const known=Boolean(dailyExtra.navigationSignals);
     dailyNav.innerHTML=dailyModels.filter(([key])=>!['holding_pool','legacy_history','stock_lookup'].includes(key)).map(([key,label])=>{
         const count=key==='holding_pool'?(dailyExtra.holdingPool?.positions?.length??null):
-            key==='d2_alert'?(dailyExtra.d2Proximity?currentEffectiveAlertCount(key):dailyExtra.navigationSignals?.d2Count):known?currentEffectiveAlertCount(key):null;
-        const countTitle=key==='holding_pool'?'当前跟踪池操作笔数':key==='second'?'所选最新日期当前有效的类二买股票数':key==='d2_alert'?'最新数据日期的已确认提醒，同股只计一次':['daily_macd','sixty_minute_macd'].includes(key)?'最新行情日期的提醒股票数；历史记录见提醒日期':'最新数据日期、默认筛选下的提醒股票数，同股只计一次；历史日期和筛选数量见列表';
+            key==='d2_alert'?(dailyExtra.d2Proximity&&dailyExtra.d2History?currentEffectiveAlertCount(key):null):known?currentEffectiveAlertCount(key):null;
+        const countTitle=key==='holding_pool'?'当前跟踪池操作笔数':key==='second'?'所选最新日期当前有效的类二买股票数':key==='d2_alert'?'最新数据日期的已确认提醒，同股只计一次':['daily_macd','sixty_minute_macd'].includes(key)?'最新行情日期的提醒股票数；历史记录见提醒日期':'最新数据日期、全部已确认提醒股票数，不限制漏斗；同股只计一次；历史日期和筛选数量见列表';
         return `<button type="button" id="daily-${key}" role="tab" data-daily="${key}" aria-controls="content" aria-selected="${key===id}" tabindex="${key===id?0:-1}">${label}${['stock_lookup','legacy_history'].includes(key)?'':` <span class="d2-nav-count" title="${countTitle}">${count==null?'待加载':Number(count)}</span>`}</button>`;
     }).join('')+(publicCloudPage&&!publicStaticPage?'<button type="button" id="publicCloudNotifyToggle" aria-label="开启所有模型桌面提醒">🔔 开启桌面提醒</button>':'')+
         (privatePage()?'':'<a class="standalone-model-link" href="momentum-v6.html">V6 动量 ↗</a>');
     const quickActions=document.createElement('div');quickActions.className='daily-quick-actions';quickActions.setAttribute('aria-label','常用入口');
-    quickActions.innerHTML=`${privatePage()||!publicCloudPage?'<button type="button" data-daily="holding_pool">持有跟踪池</button>':''}<button type="button" data-daily="stock_lookup">股票检索</button><button type="button" data-daily="legacy_history">已停用模型历史</button>`;
+    quickActions.innerHTML=`<button type="button" data-daily="holding_pool">${publicCloudPage?'每日买入试算':'持有跟踪池'}</button><button type="button" data-daily="stock_lookup">股票检索</button><button type="button" data-daily="legacy_history">已停用模型历史</button>`;
     dailyNav.append(quickActions);
     if(publicCloudPage&&!publicStaticPage){
         const button=document.getElementById('publicCloudNotifyToggle');
@@ -1136,8 +1150,15 @@ async function loadDailyData(id,{checkVersion=true}={}){
     const content=document.getElementById('content');
     try{
         if(publicCloudPage&&id==='holding_pool'){
-            content.innerHTML='<p class="daily-note" role="status">持有跟踪池仅在腾讯云私密站查看；私密站暂不可用时请稍后再试。<a href="https://waxwingin.cn/" target="_blank" rel="noopener noreferrer">打开私密站</a></p>';
-            document.body.classList.remove('daily-ui-booting');
+            if(checkVersion)await refreshPageVersion();
+            if(!dailyExtra.pageManifest?.assets?.['page/tab_model_simulation']){
+                content.innerHTML='<section class="holding-pool"><h2>每日买入试算</h2><p class="daily-error" role="status">当前数据版本尚未包含公开模型试算数据，需更新该数据源的发布版本后使用。</p></section>';
+                document.body.classList.remove('daily-ui-booting');
+                return;
+            }
+            await loadDailyBundle('page/tab_model_simulation');
+            if(!Array.isArray(dailyExtra.modelSimulation?.records))throw new Error('公开模型试算数据不完整');
+            if(activeDaily===id)draw();
             return;
         }
         if(checkVersion&&(privatePage()||publicCloudPage))await refreshPageVersion();
@@ -1172,7 +1193,7 @@ async function loadDailyData(id,{checkVersion=true}={}){
             activeDaily='d2_alert';await loadDailyBundle('page/tab_d2_alert');
         }else{
             await Promise.all([loadDailyBundle(`page/tab_${id}`),loadDailyCoreSnapshot(id)]);
-            if(['daily_macd','sixty_minute_macd','weekly_first','weekly_consolidation_first','two_centers'].includes(id))await loadModelPoolFunnelResults();
+            if(['daily_macd','sixty_minute_macd','weekly_first','weekly_consolidation_first','two_centers'].includes(id))await loadModelPoolFunnelResults(id);
             if(id==='daily_consolidation_first'){
                 await loadDailyConsolidationSessions();
                 const view=dailyConsolidationDateRecords(),requested=stateFor(id).date;
@@ -1188,7 +1209,10 @@ async function loadDailyData(id,{checkVersion=true}={}){
             d2DataInitialized=true;
             if(!privatePage())initializeD2DataInBackground().catch(error=>console.warn('D2 live refresh failed; showing loaded snapshot',error));
             loadDailyBundle('page/navigation').then(()=>draw()).catch(()=>{});
-            if(!privatePage())loadDailyBundle('page/tab_d2_archive').then(()=>{if(activeDaily==='d2_alert')draw()}).catch(()=>{});
+            // Legacy exports lack date shards; current exports fetch archive
+            // detail only when a historical date or all-history is selected.
+            if(!privatePage()&&!Object.keys(dailyExtra.pageManifest?.assets||{}).some(name=>name.startsWith('page/d2_history_')))
+                loadDailyBundle('page/tab_d2_archive').then(()=>{if(activeDaily==='d2_alert')draw()}).catch(()=>{});
         }
         if(activeDaily===id)draw();
         if(!privatePage()&&!publicCloudPage&&['d2_alert','holding_pool','stock_lookup'].includes(id))refreshHoldingPoolData();
@@ -3312,13 +3336,15 @@ function currentEffectiveAlertCount(modelId){
     if(modelId==='second')return dailyExtra.classIiTracking?.archived_current_count??dailyExtra.classIiTracking?.stocks?.filter(row=>row.status==='当前有效').length??dailyExtra.navigationSignals?.counts?.second??0;
     if(modelId==='m30_first')return 0;
     const globalCounts=dailyExtra.navigationSignals?.counts;
+    // The shared snapshot is computed with default candidate gates and all
+    // confirmed reminders. Lazy tab data and historical filters cannot replace it.
+    if(modelId!=='d2_alert'&&globalCounts&&Object.prototype.hasOwnProperty.call(globalCounts,modelId))return Number(globalCounts[modelId]);
     const currentWeekly=modelId==='weekly_first'?dailyExtra.weeklyFirst:modelId==='weekly_consolidation_first'?dailyExtra.weeklyConsolidationFirst:null;
     if(currentWeekly){
         const name=modelId==='weekly_first'?'周线类二买':'周线盘整背驰一买';
         const candidates=modelId==='weekly_first'?weeklyFirstCandidateRows(currentWeekly,{}):currentWeekly.rows||[];
-        return reminderStockCount(candidates.filter(row=>shortCycleConditionState(weeklyShortCycleEvidence(name,row.code,row.markers?.D?.date||row.b?.end_date,row.markers?.E?.date||row.c?.low_date)).appeared&&modelFunnelAccept(modelId,{},row,shortCycleAlertEvent(name,row))));
+        return reminderStockCount(candidates.filter(row=>shortCycleConditionState(weeklyShortCycleEvidence(name,row.code,row.markers?.D?.date||row.b?.end_date,row.markers?.E?.date||row.c?.low_date)).appeared&&modelFunnelAccept(modelId,{funnelLevel:'raw'},row,shortCycleAlertEvent(name,row))));
     }
-    if(modelId!=='d2_alert'&&!['daily_macd','sixty_minute_macd'].includes(modelId)&&globalCounts&&Object.prototype.hasOwnProperty.call(globalCounts,modelId))return Number(globalCounts[modelId]);
     const close=dailyExtra.navigationSignals?.dailyCloseReminders||dailyExtra.dailyCloseReminders;
     if(['daily_macd','sixty_minute_macd'].includes(modelId)){
         // Other tabs load smaller projections of this archive. Keep the
@@ -3329,7 +3355,7 @@ function currentEffectiveAlertCount(modelId){
         const through=String(history.snapshots?.[modelId]?.data_through||history.snapshots?.[modelId]?.asof||history.data_through||'').slice(0,10);
         if(!through)return Number(globalCounts?.[modelId]||0);
         const events=modelFunnelEvents(name,[...(history.replay_events||[]),...(history.recent_replay_events||[]),...(history.events||[])]);
-        return reminderStockCount(events.filter(e=>e.model===name&&String(e.triggered_at).slice(0,10)===through&&modelFunnelAccept(modelId,{},e,e)));
+        return reminderStockCount(events.filter(e=>e.model===name&&String(e.triggered_at).slice(0,10)===through&&modelFunnelAccept(modelId,{funnelLevel:'raw'},e,e)));
     }
     const closeNames={daily_consolidation_first:'日线盘整背驰一买',two_centers:'日线趋势一买',weekly_first:'周线类二买',weekly_consolidation_first:'周线盘整背驰一买'};
     if(modelId==='weekly_consolidation_first'){
@@ -3895,6 +3921,7 @@ function holdingTrackingPoolSummary(positions){
     return {...total,by_model};
 }
 function holdingPoolPanel(state){
+    if(publicCloudPage)return publicModelSimulationPanel(state);
     const section=state.holdingSection==='simulation'?'simulation':'history';
     const replay=false,payload=normalizeD2HoldingPool(holdingRecentWindow(dailyExtra.holdingPool||{})),quotes=dailyExtra.holdingSimulationQuotes?.quotes||{};
     if(!Array.isArray(payload.positions)||!payload.data_through)return '<section class="holding-pool"><h2>持有跟踪池</h2><p class="daily-error" role="status">跟踪池数据尚未载入。</p></section>';
@@ -3941,13 +3968,20 @@ function holdingPoolPanel(state){
     const costNote=payload.selection?.profile==='strong'?'较强收紧档案：买入成本 0.08%，卖出成本股票 0.13%／ETF 0.08%；持有估值不扣尚未发生的卖出费用。':'以上不含费用与滑点。';
     return `<section class="holding-pool"><div class="holding-pool-hero"><h2>持有跟踪池</h2></div><details class="holding-help"><summary>跟踪池说明与统计口径</summary><p class="daily-note">跟踪池数据日期 ${safe(formatDate(payload.data_through))}；更新时间 ${safe(formatDateTime(payload.generated_at))}。</p><p class="daily-note">统一采用较强收紧筛选。买入信号当天归入“待买入”，下一交易日按开盘参考价计算持有；卖出按档案退出规则及参考执行价计算。</p>${replayLink}</details>${alert}<div class="holding-pool-tabs holding-view-tabs" role="tablist" aria-label="跟踪池视图"><button type="button" role="tab" data-holding-section="history" aria-selected="${section==='history'}">跟踪记录</button><button type="button" role="tab" data-holding-section="simulation" aria-selected="${section==='simulation'}">每日买入试算</button></div><div data-holding-history-panel ${section==='history'?'':'hidden'}>${durationSummary}<p class="daily-note">跟踪记录范围：${safe(formatDate(payload.window.from))}—${safe(formatDate(payload.data_through))}（最近 30 个交易日 · 较强收紧）。</p>${filters}${performance}<h3>股票跟踪记录${day==='all'?'':` · ${safe(formatDate(day))}`}</h3><div class="wrap"><table class="holding-pool-table"><colgroup><col class="holding-col-stock"><col class="holding-col-buy"><col class="holding-col-sell"><col class="holding-col-status"><col class="holding-col-return"><col class="holding-col-source"></colgroup><thead><tr><th>股票名称</th><th>买入日／价格</th><th>卖出信号日／价格</th><th>状态</th><th>本次操作收益</th><th>来源模型</th></tr></thead><tbody>${body||'<tr><td colspan="6">当前筛选下暂无记录。</td></tr>'}</tbody></table></div><p class="daily-note">个股显示本次买入至截止日估值或卖出的净收益；平均收益按有效操作等权计算，待买入不计。${costNote}</p></div><div ${section==='simulation'?'':'hidden'}>${holdingSimulationPanel(state,sourcePayload,all)}</div></section>`;
 }
+function publicModelSimulationPanel(state){
+    const source=dailyExtra.modelSimulation;
+    if(!Array.isArray(source?.records))return '<section class="holding-pool"><h2>每日买入试算</h2><p class="daily-error">公开模型试算数据尚未载入。</p></section>';
+    const payload=holdingRecentWindow({...source,positions:source.records,selection:{profile:'strong'}});
+    payload.summary=holdingTrackingPoolSummary(payload.positions);
+    return `<section class="holding-pool"><h2>每日买入试算</h2><p class="daily-note">较强收紧 · ${safe(formatDate(payload.window.from))}—${safe(formatDate(payload.window.through))} · ${payload.positions.length}笔模型记录 · 更新时间 ${safe(formatDateTime(payload.generated_at))}。按已核验提醒的次交易日开盘参考价试算，金额与持有状态均为模拟结果。</p>${holdingSimulationPanel(state,payload,payload.positions)}</section>`;
+}
 /* Model exploration is independent of the calculator's tightened tracking pool. */
 const GREEN_WAVE_MODELS=['daily_macd','sixty_minute_macd','weekly_consolidation_first'];
 function greenWaveEnabled(id){return GREEN_WAVE_MODELS.includes(id)}
 function modelFunnelRows(id,state){
     const dataset=dailyExtra.modelPoolFunnels,model=dataset?.models?.[id];
     if(!model)return null;
-    const level=state.funnelLevel||'strong',green=greenWaveEnabled(id)?(state.funnelGreen||'none'):'none';
+    const level=state.funnelLevel||'raw',green=greenWaveEnabled(id)?(state.funnelGreen||'none'):'none';
     return dataset.rows.filter(r=>r.model===model&&(level==='raw'||r[level]))
         .map(r=>({...r,...(level==='raw'?{}:r.tightened||{}),
             ...(green==='short_and_expanding'?(level==='raw'?r.greenStopRaw:r.greenStop)||{}:{} )}));
@@ -3955,12 +3989,12 @@ function modelFunnelRows(id,state){
 function modelFunnelEnabled(id){return ['daily_macd','sixty_minute_macd','weekly_first','weekly_consolidation_first','two_centers'].includes(id)}
 function modelFunnelControls(id,state){
     if(!modelFunnelEnabled(id))return '';
-    const level=state.funnelLevel||'strong',green=state.funnelGreen||'none';
+    const level=state.funnelLevel||'raw',green=state.funnelGreen||'none';
     return `<div class="daily-filters model-funnel-controls"><label>模型池漏斗 <select data-model-funnel="funnelLevel">${[['raw','不限制'],['strong','较强收紧'],['stronger','强收紧']].map(([v,t])=>`<option value="${v}"${level===v?' selected':''}>${t}</option>`).join('')}</select></label>${greenWaveEnabled(id)?`<label class="green-funnel-check"><input type="checkbox" data-model-funnel="funnelGreen" ${green==='short_and_expanding'?'checked':''}>第二绿段≤3根且继续放大（止损）</label>`:''}</div>`;
 }
 function modelFunnelAccept(id,state,row,event=null){
     if(!modelFunnelEnabled(id)||!dailyExtra.modelPoolFunnels?.models?.[id])return true;
-    const level=state.funnelLevel||'strong';
+    const level=state.funnelLevel||'raw';
     if(level==='raw')return true;
     const model=dailyExtra.modelPoolFunnels.models[id],code=String(row?.code||row?.['代码']||event?.code||'').padStart(6,'0');
     const identity=event?.event_id||row?.event_id||row?._trendOutcome?.event_id;
@@ -3975,7 +4009,13 @@ function modelFunnelAccept(id,state,row,event=null){
 function modelFunnelEvents(model,events){
     const byKey=new Map();
     for(const row of dailyExtra.modelPoolFunnels?.rows||[])if(row.model===model&&row.event)byKey.set(row.event.event_id||row.key,row.event);
-    for(const event of events||[])if(event.model===model)byKey.set(event.event_id||`${event.code}|${event.triggered_at}`,event);
+    for(const event of events||[])if(event.model===model){
+        const key=event.event_id||`${event.code}|${event.triggered_at}`,prior=byKey.get(key);
+        const merged={...prior,...event,outcomes:{...prior?.outcomes,...event.outcomes}};
+        if(String(prior?.outcomes_through||prior?.latest_date||'')>String(event.outcomes_through||event.latest_date||''))for(const field of ['baseline_date','baseline_close','latest_date','latest_close','latest_return_pct','strict_m30_top_divergence_exit','outcomes_through'])if(prior[field]!==undefined)merged[field]=prior[field];
+        for(const [h,value] of Object.entries(prior?.outcomes||{}))if(value.status==='已结算'&&merged.outcomes[h]?.status!=='已结算')merged.outcomes[h]=value;
+        byKey.set(key,merged);
+    }
     return [...byKey.values()];
 }
 function modelFunnelHistory(id){
@@ -4008,7 +4048,7 @@ function modelFunnelResultsPanel(id,state,content){
     const inScope=row=>(day==='all'||shortCycleDate(row.signal)===day)&&modelSectorAccept(state,row)&&
         (!query||`${row.code} ${row.name}`.toLowerCase().includes(query));
     const trials=(modelFunnelRows(id,state)||[]).filter(inScope);
-    const priced=trials.filter(row=>row.net!=null&&Number.isFinite(Number(row.net)));
+    const priced=trials.filter(row=>!row.settlement_error&&!row.operation_settlement_error&&row.net!=null&&Number.isFinite(Number(row.net)));
     const baseline=(modelFunnelRows(id,{...state,funnelGreen:'none'})||[]).filter(inScope);
     const original=new Map(baseline.map(row=>[row.key,row]));
     const average=rows=>rows.length?rows.reduce((sum,row)=>sum+Number(row.net),0)/rows.length:null;
@@ -4021,7 +4061,9 @@ function modelFunnelResultsPanel(id,state,content){
     const delta=green&&triggered&&avg!=null&&before!=null?`；较未勾选 ${avg-before>=0?'+':''}${(avg-before).toFixed(2)} 个百分点`:'';
     const greenNote=green?`第二绿段止损触发 ${triggered} 笔${delta}。${triggered?'':'当前范围没有符合该止损条件的试算记录。'}`:greenWaveEnabled(id)?'第二绿段止损未启用。':'';
     const dates=events.map(event=>shortCycleDate(event.triggered_at)).sort(),range=day==='all'?(dates.length?`${formatDate(dates[0])}—${formatDate(dates.at(-1))}`:'暂无归档'):formatDate(day);
-    return `<section class="model-funnel-results"><h3>当前筛选收益统计</h3><p class="daily-note">${safe(range)} · ${reminderStockCount(events)}只股票 · ${events.length}次提醒；已建档操作试算 ${trials.length}笔。</p><div class="wrap"><table class="return-summary-table"><thead><tr><th>统计项目</th><th>平均收益</th><th>上涨比例</th><th>样本数</th></tr></thead><tbody>${tableRows}${operation}</tbody></table></div><p class="daily-note">${greenNote}T+N 为提醒后固定交易日收盘收益，不受止损勾选影响；操作试算按当前漏斗的可核验买卖及持有估值计算。</p></section>`;
+    const unverified=trials.filter(row=>row.operation_settlement_error||row.settlement_error).length;
+    const verificationNote=unverified?`<p class="daily-note" role="status">${unverified}条记录的行情或历史依据暂不可核验，本轮未计入未核验的操作收益；已确认的历史提醒保留。</p>`:'';
+    return `<section class="model-funnel-results"><h3>当前筛选收益统计</h3><p class="daily-note">${safe(range)} · ${reminderStockCount(events)}只股票 · ${events.length}次提醒；已建档操作试算 ${trials.length}笔。</p>${verificationNote}<div class="wrap"><table class="return-summary-table"><thead><tr><th>统计项目</th><th>平均收益</th><th>上涨比例</th><th>样本数</th></tr></thead><tbody>${tableRows}${operation}</tbody></table></div><p class="daily-note">${greenNote}T+N 为提醒后固定交易日收盘收益，不受止损勾选影响；操作试算按当前漏斗的可核验买卖及持有估值计算。</p></section>`;
 }
 function installModelFunnelHandlers(content,id,state){
     if(!modelFunnelEnabled(id))return;
@@ -4258,7 +4300,8 @@ draw=function(){
     stickyControls.querySelectorAll('.daily-filters,.d2-inner-tabs,.holding-view-tabs').forEach(control=>control.remove());
     const id=activeDaily,state=stateFor(id);
     const d2Date=id==='d2_alert'?d2SelectedScope(state):null;
-    if(privatePage()&&d2Date&&d2Date!=='latest'&&!d2ArchiveDateRequests.has(d2Date)&&dailyExtra.pageManifest?.assets?.[`page/d2_history_${d2Date}`]){
+    if(d2Date&&d2Date!=='latest'&&!d2ArchiveDateRequests.has(d2Date)&&
+        (dailyExtra.pageManifest?.assets?.[`page/d2_history_${d2Date}`]||d2Date==='all'&&dailyExtra.pageManifest?.assets?.['page/tab_d2_archive'])){
         showDailyLoading(id);loadD2ArchiveDate(d2Date).then(()=>{if(activeDaily===id)draw()}).catch(()=>{content.innerHTML='<p class="daily-error">历史数据加载失败，请重新选择日期重试。</p>'});return;
     }
     const m30Date=id==='m30_first'?m30FirstSelectedDate(state):null;
@@ -4822,7 +4865,7 @@ if(location.protocol!=='file:'){
         setInterval(refreshPublicCloudNotifications,30000);
         setTimeout(refreshPublicCloudNotifications,3000);
     }
-    if(!privatePage()){
+    if(!privatePage()&&!publicCloudPage){
         setInterval(refreshHoldingPoolData,60000);
         setInterval(refreshD2MonitorData,60000);
         setInterval(refreshD2HistoryData,60000);
