@@ -1193,6 +1193,7 @@ async function loadDailyData(id,{checkVersion=true}={}){
                 ['classIiTracking','class_ii_tracking.json'],
                 ...(publicCloudPage?[]:[['nextDayBuyPlan','next_day_buy_plan.json']]),
                 ['modelPoolFunnels','model_pool_funnels.json'],
+                ['d2History','d2_proximity_history.json'],
             ].map(async([key,file])=>{const {payload}=await fetchLiveJson(file,{live:false});if(key==='holdingPool'&&!isStrongHoldingPool(payload))return;dailyExtra[key]=key==='holdingPool'?normalizeD2HoldingPool(payload):payload;if(key==='classIiTracking')dailyExtra.classIiTrackingLive=true}));
             dailyExtra.lookupIncomplete=companions.some(result=>result.status==='rejected');
         }else if(id==='m30_two_centers'){
@@ -3476,8 +3477,9 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
         const key=[model,code,date,status,source,detail].join('|');
         if(seen.has(key))return;
         seen.add(key);
-        entries.push({model,code,name:row?.['名称']||row?.name||names[code]||'',date,asset_type:reminderAssetType(row),
-            time:String(when||'').match(/\d{2}:\d{2}/)?String(when):'',status,source,detail});
+        const entry={model,code,name:row?.['名称']||row?.name||names[code]||'',date,asset_type:reminderAssetType(row),
+            time:String(when||'').match(/\d{2}:\d{2}/)?String(when):'',status,source,detail};
+        entries.push(entry);return entry;
     };
     for(const session of extra.second?.sessions||[]){
         const group=session.models?.second_buy||{};
@@ -3526,7 +3528,19 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
     for(const field of ['events','replay_events','recent_replay_events'])for(const event of extra.macdModelHistory?.[field]||[])add(event.model,event,event.triggered_at,'买入条件已确认','模型扫描',event.event_id);
     for(const record of extra.modelPoolFunnels?.rows||[]){
         const event=record.event;
-        if(event)add(event.model||record.model,event,event.triggered_at,'提醒归档',event.origin||'模型池归档',event.event_id||record.key);
+        if(!event)continue;
+        const model=event.model||record.model,key=event.event_id||record.key;
+        const buyEntry=add(model,event,event.triggered_at,'提醒归档',event.origin||'模型池归档',key);
+        const exit=event.strict_m30_top_divergence_exit;
+        if(exit?.status!=='已触发'||exit.rule_version!=='strict-m30-macd-top-divergence-exit-v2'||!exit.confirmed_at)continue;
+        const exitDay=dateKey(exit.confirmed_at),signalDay=dateKey(event.triggered_at);
+        const through=dateKey(extra.historyWindow?.through||dailyExtra.historyWindow?.through);
+        if(exitDay.length!==8||signalDay.length!==8||exitDay<=signalDay||(through&&exitDay>through))continue;
+        const sellEntry=add(model,event,exit.confirmed_at,'卖出信号已确认',event.origin||'模型规则归档',key);
+        if(sellEntry)Object.assign(sellEntry,{operationExit:true,exitKey:`exit|${key}|${exit.confirmed_at}`,
+            exitEvidence:exit,buySignal:event.triggered_at,entryDate:record.entry});
+        const from=dateKey(extra.historyWindow?.from||dailyExtra.historyWindow?.from);
+        if(buyEntry&&from&&exitDay>=from)buyEntry.operationContext=true;
     }
     for(const candidate of extra.nextDayBuyPlan?.candidates||[])add(candidate.source_model,candidate,candidate.signal_at,'下一交易日待买候选',candidate.origin||'待买清单档案',candidate.key);
     // Historical operations are searchable independently of today's model list.
@@ -3546,7 +3560,11 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
     for(const item of combined)if(!item.name||item.name==='名称未归档')item.name=resolvedNames.get(item.code)||names[item.code]||item.name;
     const validClassIi=Array.isArray(extra.classIiTracking?.stocks)?new Set(extra.classIiTracking.stocks.filter(row=>row.status==='当前有效').map(row=>String(row.code).padStart(6,'0'))):null;
     const activeEntries=combined.filter(item=>item.source!=='模拟试算'&&(item.target||stockLookupTargetId(item.model))&&(item.model!=='类二买'||!validClassIi||validClassIi.has(item.code)));
-    return cutoff?activeEntries.filter(item=>stockLookupTargetId(item.model)==='legacy_history'||item.date>=cutoff):activeEntries;
+    return cutoff?activeEntries.filter(item=>stockLookupTargetId(item.model)==='legacy_history'||item.date>=cutoff||item.operationContext):activeEntries;
+}
+function stockLookupExitDetail(item){
+    const exit=item.exitEvidence||{},first=exit.peak1||{},second=exit.peak2||{};
+    return `<header class="second-detail-head"><h3>${safe(item.name)} ${safe(item.code)} · 卖出依据</h3><button type="button" class="second-detail-close" data-stock-trigger-close aria-label="关闭">×</button></header><p>${safe(item.model)} · ${safe(item.source)}。</p><div class="wrap"><table><tbody><tr><th>原买入信号确认</th><td>${safe(formatDateTime(item.buySignal))}</td></tr><tr><th>模型买入生效日</th><td>${safe(formatDate(item.entryDate||''))}</td></tr><tr><th>卖出信号确认</th><td>${safe(formatDateTime(item.time))}</td></tr><tr><th>前高</th><td>${safe(first.time||'—')} · 价格 ${safe(first.price??'—')} · DIF ${safe(first.dif??'—')}</td></tr><tr><th>后高</th><td>${safe(second.time||'—')} · 价格 ${safe(second.price??'—')} · DIF ${safe(second.dif??'—')}</td></tr></tbody></table></div><p>${safe(exit.confirmation||'30分钟严格MACD顶背离确认')}；${safe(exit.protection||'沿用原严格卖出规则')}。</p><p class="daily-note">模型规则记录用于核对信号，不代表当时收到通知或发生真实成交。</p>`;
 }
 function stockLookupTargetId(model){
     return ({'类二买':'second','周线盘整背驰一买':'weekly_consolidation_first','日线趋势一买':'two_centers','D2第二回调双路径提醒':'d2_alert','日线MACD底背离选股法':'daily_macd','60分钟MACD底背离选股法':'sixty_minute_macd','周线类二买':'weekly_first'})[model]||(dailyExtra.legacyModelHistory?.models?.[model]?'legacy_history':'');
@@ -3639,17 +3657,18 @@ function stockLookupPanel(state){
     matches.sort((a,b)=>b.date.localeCompare(a.date)||reminderEtfPriority(a,b)||a.model.localeCompare(b.model,'zh-CN')||a.code.localeCompare(b.code)||a.status.localeCompare(b.status,'zh-CN'));
     const priority=item=>item.status.includes('已确认买入提醒')?4:['待买入','已持有','已卖出'].includes(item.status)?3:item.status==='短周期提醒新触发'?2:1;
     const bySelection=new Map();
-    for(const item of matches){const key=[item.code,item.model,item.date,item.target||'model',item.target?item.source:'',item.target?item.detail:''].join('|'),previous=bySelection.get(key);if(!previous||priority(item)>priority(previous))bySelection.set(key,item)}
-    const grouped=new Map(),isTrigger=item=>!item.target&&/提醒|触发|买入条件已确认/.test(item.status);
+    for(const item of matches){const key=[item.code,item.model,item.date,item.target||'model',item.target?item.source:'',item.operationExit?item.exitKey:item.target?item.detail:''].join('|'),previous=bySelection.get(key);if(!previous||priority(item)>priority(previous))bySelection.set(key,item)}
+    const grouped=new Map(),isTrigger=item=>!item.operationExit&&!item.target&&/提醒|触发|买入条件已确认/.test(item.status);
     for(const item of bySelection.values()){
         const key=isTrigger(item)?`trigger|${item.code}|${item.model}`:`${item.code}|${item.model}|${item.date}|${item.source}|${item.detail}`;
         if(!grouped.has(key))grouped.set(key,{...item,records:[]});
         if(isTrigger(item))grouped.get(key).records.push(item);
     }
     const unique=[...grouped.values()],triggerGroups=unique.filter(item=>item.records.length);
-    const body=unique.slice(0,400).map(item=>{const candidate=!item.target&&(dailyExtra.nextDayBuyPlan?.candidates||[]).find(c=>c.key===item.detail);const target=item.target||stockLookupTargetId(item.model);const triggerKey=`${item.code}|${item.model}`;return `<tr><td><b>${safe(item.name||'名称未归档')}</b><small>${safe(item.code)}</small></td><td>${safe(item.model)}</td><td>${safe(formatDate(item.date))}${item.target&&item.time?`<small>${safe(item.time.match(/\d{2}:\d{2}/)?.[0]||'')}</small>`:''}</td><td>${item.records.length?'触发记录':safe(item.status)}</td><td>${item.records.length?`<button type="button" class="stock-lookup-open" data-stock-trigger-records="${safe(triggerKey)}">查看 ${item.records.length} 条触发</button>`:candidate?stockLookupPlanEvidence(candidate):target?`<button type="button" class="stock-lookup-open" data-stock-lookup-target="${safe(target)}" data-stock-lookup-code="${safe(item.code)}" data-stock-lookup-date="${safe(item.date)}" data-stock-lookup-source="${safe(item.source)}" data-stock-lookup-record="${safe(item.detail)}">${target==='holding_pool'?'查看跟踪记录':'查看模型与依据'}</button>`:'<span class="pending-return">暂无详情入口</span>'}</td></tr>`}).join('');
+    const body=unique.slice(0,400).map(item=>{const candidate=!item.target&&(dailyExtra.nextDayBuyPlan?.candidates||[]).find(c=>c.key===item.detail);const target=item.target||stockLookupTargetId(item.model);const triggerKey=`${item.code}|${item.model}`;return `<tr><td><b>${safe(item.name||'名称未归档')}</b><small>${safe(item.code)}</small></td><td>${safe(item.model)}</td><td>${safe(formatDate(item.date))}${(item.target||item.operationExit)&&item.time?`<small>${safe(item.time.match(/\d{2}:\d{2}/)?.[0]||'')}</small>`:''}</td><td>${item.records.length?'触发记录':safe(item.status)}</td><td>${item.records.length?`<button type="button" class="stock-lookup-open" data-stock-trigger-records="${safe(triggerKey)}">查看 ${item.records.length} 条触发</button>`:item.operationExit?`<button type="button" class="stock-lookup-open" data-stock-trigger-records="${safe(item.exitKey)}">查看卖出依据</button>`:candidate?stockLookupPlanEvidence(candidate):target?`<button type="button" class="stock-lookup-open" data-stock-lookup-target="${safe(target)}" data-stock-lookup-code="${safe(item.code)}" data-stock-lookup-date="${safe(item.date)}" data-stock-lookup-source="${safe(item.source)}" data-stock-lookup-record="${safe(item.detail)}">${target==='holding_pool'?'查看跟踪记录':'查看模型与依据'}</button>`:'<span class="pending-return">暂无详情入口</span>'}</td></tr>`}).join('');
     const selectedGroup=triggerGroups.find(item=>`${item.code}|${item.model}`===state.lookupTriggerKey);
-    const modal=selectedGroup?`<div class="second-detail-modal" data-stock-trigger-modal><section class="second-detail-dialog" role="dialog" aria-modal="true" aria-label="触发记录"><header class="second-detail-head"><h3>${safe(selectedGroup.name)} ${safe(selectedGroup.code)} · ${safe(selectedGroup.model)}</h3><button type="button" class="second-detail-close" data-stock-trigger-close aria-label="关闭">×</button></header><div class="wrap"><table><thead><tr><th>触发日期</th><th>详情</th></tr></thead><tbody>${selectedGroup.records.map(item=>`<tr><td>${safe(formatDate(item.date))}</td><td><button type="button" class="stock-lookup-open" data-stock-lookup-target="${safe(stockLookupTargetId(item.model))}" data-stock-lookup-code="${safe(item.code)}" data-stock-lookup-date="${safe(item.date)}" data-stock-lookup-source="${safe(item.source)}" data-stock-lookup-record="${safe(item.detail)}">查看模型与依据</button></td></tr>`).join('')}</tbody></table></div></section></div>`:'';
+    const selectedExit=unique.find(item=>item.operationExit&&item.exitKey===state.lookupTriggerKey);
+    const modal=selectedExit?`<div class="second-detail-modal" data-stock-trigger-modal><section class="second-detail-dialog" role="dialog" aria-modal="true" aria-label="卖出依据">${stockLookupExitDetail(selectedExit)}</section></div>`:selectedGroup?`<div class="second-detail-modal" data-stock-trigger-modal><section class="second-detail-dialog" role="dialog" aria-modal="true" aria-label="触发记录"><header class="second-detail-head"><h3>${safe(selectedGroup.name)} ${safe(selectedGroup.code)} · ${safe(selectedGroup.model)}</h3><button type="button" class="second-detail-close" data-stock-trigger-close aria-label="关闭">×</button></header><div class="wrap"><table><thead><tr><th>触发日期</th><th>详情</th></tr></thead><tbody>${selectedGroup.records.map(item=>`<tr><td>${safe(formatDate(item.date))}</td><td><button type="button" class="stock-lookup-open" data-stock-lookup-target="${safe(stockLookupTargetId(item.model))}" data-stock-lookup-code="${safe(item.code)}" data-stock-lookup-date="${safe(item.date)}" data-stock-lookup-source="${safe(item.source)}" data-stock-lookup-record="${safe(item.detail)}">查看模型与依据</button></td></tr>`).join('')}</tbody></table></div></section></div>`:'';
     return `<section class="stock-lookup"><h2>股票检索</h2>${stockLookupTabs(state)}${form}${extraArchivePending()?'<p class="daily-note">触发记录正在加载…</p>':''}${unique.length?`<div class="wrap"><table class="stock-lookup-table"><thead><tr><th>股票</th><th>模型</th><th>最近记录日期</th><th>记录类型</th><th>详情</th></tr></thead><tbody>${body}</tbody></table></div>${unique.length>400?'<p class="daily-note">仅显示最近400条，请输入完整代码。</p>':''}`:dailyExtra.lookupIncomplete?'<p class="daily-error">部分记录未能加载，请使用浏览器刷新重试。</p>':'<p class="daily-note">未找到记录。</p>'}${modal}</section>`;
 }
 function holdingSimulation(positions,options={}){
