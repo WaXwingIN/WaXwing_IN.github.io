@@ -661,7 +661,7 @@ async function fetchStaticObject(urls,path){
     const expected=path.match(/([0-9a-f]{64})\.json$/)[1];
     const controllers=urls.map(()=>new AbortController());
     if(typeof pageRequestControllers!=='undefined')controllers.forEach(c=>pageRequestControllers.add(c));
-    let settled=false,backupTimer;
+    let settled=false,backupTimer,winner=-1;
     try{
         return await new Promise((resolve,reject)=>{
             let started=0,finished=0,lastError;
@@ -678,7 +678,7 @@ async function fetchStaticObject(urls,path){
                     // Parse before selecting a winner; headers alone do not
                     // establish that a stalled response body has completed.
                     JSON.parse(new TextDecoder().decode(bytes));
-                    if(!settled){settled=true;resolve(response)}
+                    if(!settled){winner=index;settled=true;resolve(response)}
                 }catch(error){lastError=error;if(!settled)backups()}
                 finally{clearTimeout(timer);finished++;if(!settled&&finished===urls.length){settled=true;reject(lastError)}}
             };
@@ -687,7 +687,7 @@ async function fetchStaticObject(urls,path){
         });
     }finally{
         settled=true;clearTimeout(backupTimer);
-        controllers.forEach(c=>{c.abort();if(typeof pageRequestControllers!=='undefined')pageRequestControllers.delete(c)});
+        controllers.forEach((c,index)=>{if(index!==winner)c.abort();if(typeof pageRequestControllers!=='undefined')pageRequestControllers.delete(c)});
     }
 }
 async function publicCloudJson(path,version=publicCloudVersion){return (await publicCloudFetch(path,version)).json()}
