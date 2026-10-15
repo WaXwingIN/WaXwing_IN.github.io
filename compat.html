@@ -4366,7 +4366,7 @@ draw=function(){
         document.getElementById('content').innerHTML='<p class="daily-error" role="alert">腾讯云已核验数据暂不可用，请稍后重试。</p>';
         return;
     }
-    const required=activeDaily==='stock_lookup'?'page/stock_lookup':publicCloudPage&&activeDaily==='holding_pool'?'page/tab_model_simulation':activeDaily==='m30_two_centers'?'m30_two_centers_research':`page/tab_${activeDaily}`;
+    const required=activeDaily==='stock_lookup'?(publicCloudPage&&dailyExtra.pageManifest?.assets?.['page/stock_lookup_public']?'page/stock_lookup_public':'page/stock_lookup'):publicCloudPage&&activeDaily==='holding_pool'?'page/tab_model_simulation':activeDaily==='m30_two_centers'?'m30_two_centers_research':`page/tab_${activeDaily}`;
     if(!dailyBundlesReady.has(required)){showDailyLoading(activeDaily);ensureDailyData(activeDaily);return}
     if(!initialD2RouteChecked){
         initialD2RouteChecked=true;
