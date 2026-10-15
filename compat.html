@@ -1494,7 +1494,7 @@ function secondOverviewHelp(payload,template,session){
 function secondModelRulesPanel(){
     return '<details class="daily-rules" open><summary>模型条件与计算口径</summary>'+
         '<p><strong>参考形态：</strong>铭普光磁（002902）在 2026/08/03—2026/09/04 的日线走势。参考区间有25根日K，但候选股不要求用相同天数完成结构。</p>'+
-        '<p><strong>结构条件：</strong>日线先处理包含关系，再识别最近四笔“上涨→回调→上涨→回调”，对应 D0→G1→D1→G2→D2。必须满足 D1&gt;D0、D2&gt;D1、D2&lt;min(G1,G2)，中枢评分≥73。各段内部不得越过端点。D2须位于最近3根处理后K线内；D2后不得再跌破D2，也不得重新达到或突破G2。相邻转折至少相隔2根处理后K线。D2笔尚未完整的观察结构不入选。</p>'+
+        '<p><strong>结构条件：</strong>日线先处理包含关系，再识别最近四笔“上涨→回调→上涨→回调”，对应 D0→G1→D1→G2→D2。必须满足 D1&gt;D0、D2&gt;D0、D2&lt;min(G1,G2)，中枢评分≥73。各段内部不得越过端点。D2须位于最近3根处理后K线内；D2后不得再跌破D2，也不得重新达到或突破G2。相邻转折至少相隔2根处理后K线。D2笔尚未完整的观察结构不入选。</p>'+
         '<p><strong>D2状态：</strong>D2可以是尚未由右侧日K确认的回调低点；“底分型已确认／回调低点待确认”只作状态展示，不改变入池资格。历史计算只使用选股日及以前数据。</p>'+
         '<p><strong>相似度门槛：</strong>G1—D2中枢结构相似度必须≥73分。中枢距离由归一化收盘路径60%、三段涨跌幅25%、三段持续时间15%加权，相似度按 100÷(1＋距离) 换算。D0—D2整段相似度按横轴拉伸后的收盘路径60%、最高价路径20%、最低价路径20%计算，只用于同分比较，没有单独门槛。</p>'+
         '<p><strong>排名与股票池：</strong>先按中枢相似度由高到低，再按整段相似度由高到低，最后按股票代码排序；形态候选取前15只，不足15只不补位。历史冻结名单保留当时规则和名次，不用当前文案重解释。股票池为沪深主板及创业板非ST、非退市股票，并排除参考股本身。</p>'+
@@ -1570,9 +1570,9 @@ function secondDetailModal(row){
 }
 style.textContent+='.d2-proximity-list,.d2-history-minute-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px}.d2-proximity-item,.d2-history-minute-card{min-width:0;box-sizing:border-box}.d2-condition-table{table-layout:auto!important;width:100%!important;min-width:0!important}.d2-condition-table th,.d2-condition-table td{width:auto!important;min-width:0!important;white-space:normal!important;overflow-wrap:anywhere}.d2-condition-table th:nth-child(2),.d2-condition-table td:nth-child(2){width:65px!important;white-space:nowrap!important}.d2-count-reconciliation{padding:12px 14px;margin:12px 0;border:1px solid #cbd5e1;border-radius:8px;background:#fff;line-height:1.8}.d2-count-reconciliation p{margin:4px 0}@media(max-width:700px){.d2-proximity-list,.d2-history-minute-list{grid-template-columns:minmax(0,1fr)!important}}';
 function d2Gap(row){const d1=Number(row?.structure?.D1?.price),d2=Number(row?.structure?.D2?.price);if(d1>0&&Number.isFinite(d2))return (d2/d1-1)*100;const raw=row?.d2_vs_d1_pct??row?.structure?.gap_pct;if(raw==null||raw==='')return null;const value=Number(raw);return Number.isFinite(value)?value:null}
-function d2WithinRange(row){const d1=Number(row?.structure?.D1?.price),d2=Number(row?.structure?.D2?.price);if(d1>0&&Number.isFinite(d2))return d2>=d1;const gap=d2Gap(row);return gap!=null&&gap>=0}
+function d2WithinRange(row){const d0=Number(row?.structure?.D0?.price),d2=Number(row?.structure?.D2?.price);return Number.isFinite(d0)&&Number.isFinite(d2)&&d0>0&&d2>d0}
 function secondCenterEligible(row){const similarity=Number(row?.center_similarity);return row?.center_similarity!=null&&Number.isFinite(similarity)&&similarity>=SECOND_CENTER_MIN}
-function d2Eligible(row){const s=row?.structure||{},d1=Number(s.D1?.price),d2=Number(s.D2?.price),g2=Number(s.G2?.price),g2Day=String(s.G2?.date||'').slice(0,10),d2Day=String(s.D2?.date||'').slice(0,10);return !row?.alert_extension_only&&!row?.observation_only&&!row?.diagnostic_only&&!s.observation_only&&secondCenterEligible(row)&&[d1,d2,g2].every(Number.isFinite)&&0<d1&&d1<d2&&d2<g2&&g2Day.length===10&&d2Day.length===10&&g2Day<d2Day}
+function d2Eligible(row){const s=row?.structure||{},d0=Number(s.D0?.price),d1=Number(s.D1?.price),d2=Number(s.D2?.price),g2=Number(s.G2?.price),g2Day=String(s.G2?.date||'').slice(0,10),d2Day=String(s.D2?.date||'').slice(0,10);return !row?.alert_extension_only&&!row?.observation_only&&!row?.diagnostic_only&&!s.observation_only&&secondCenterEligible(row)&&[d0,d1,d2,g2].every(Number.isFinite)&&0<d0&&d0<d1&&d0<d2&&d2<g2&&g2Day.length===10&&d2Day.length===10&&g2Day<d2Day}
 function d2KdjEligible(row){return row?.d2_kdj_alert_eligible===true&&Number(row?.daily_kdj?.d)>=49&&Number(row?.daily_kdj?.j)<=20}
 const D2_IDEAL_M30_RULE='d2-adjacent-double-bottom-divergence-no-fractal-v9';
 const D2_LEGACY_IDEAL_M30_RULE='adjacent-double-bottom-divergence-then-m30-fractal-v8';
@@ -1651,7 +1651,7 @@ function d2DisplaySnapshot(){
         if(d2ManuallyExcluded(record.row.code,day))continue;
         const live=(snapshot.candidates||[]).find(row=>String(row.code).padStart(6,'0')===String(record.row.code).padStart(6,'0'));
         const frozen=record.event.structure?record.event:{...record.row,center_similarity:record.event.center_similarity??record.row.center_similarity};
-        if(frozen.alert_extension_only||frozen.observation_only||frozen.structure?.observation_only||Number(frozen.gap_pct)<0)continue;
+        if(frozen.alert_extension_only||frozen.observation_only||frozen.structure?.observation_only)continue;
         if(!d2Eligible(frozen.structure?frozen:live))continue;
         const ideal=['ideal_m30_divergence','daily_kdj+ideal_m30_divergence'].includes(record.event.source);
         const code=String(record.row.code).padStart(6,'0'),prior=rows.get(code);
@@ -1748,7 +1748,7 @@ function d2ConditionList(checks,passed,code,date){
     const autoEntry=ideal?.passed===true||d2ManuallyApproved(code,date);
     const finalDetail=passed?(autoEntry?'提醒条件已满足，不等待30分钟底分型；是否买入由你判断':'仅满足KDJ，触发人工筛选提醒；批准前不进入跟踪池'):'类二买池已入选，但两个提醒分支均未触发';
     const row=(label,status,detail,final=false)=>`<tr${final?' class="d2-condition-final"':''}><th scope="row">${label}</th><td class="d2-condition-status">${status==='yes'?'✅ '+(final?'触发':'满足'):status==='no'?'❌ '+(final?'未触发':'不满足'):'❔ 待行情补齐'}</td><td>${detail}</td></tr>`;
-    return `<div class="d2-condition-list"><b>买入提醒条件</b>${bottom.status==='yes'?`<small class="fractal-hint">⚠️ 日线底分型提示：${bottom.detail}（不参与买入触发）</small>`:''}<table class="d2-condition-table"><thead><tr><th>条件</th><th>状态</th><th>实际／说明</th></tr></thead><tbody>${row('正式类二买（D2＞D1，中枢评分≥73）',structure?structure.passed?'yes':'no':'unknown',structure?value(structure):'历史记录未留存结构核验结果')}${row('日线KDJ（D≥49且J≤20）',kdjKnown?kdjPassed?'yes':'no':'unknown',kdjActual)}${row('30分钟理想MACD底背离',ideal?ideal.passed?'yes':'no':'unknown',value(ideal))}${row(autoEntry||!passed?'买入提醒':'人工筛选提醒',passed?'yes':'no',finalDetail,true)}</tbody></table></div>`;
+    return `<div class="d2-condition-list"><b>买入提醒条件</b>${bottom.status==='yes'?`<small class="fractal-hint">⚠️ 日线底分型提示：${bottom.detail}（不参与买入触发）</small>`:''}<table class="d2-condition-table"><thead><tr><th>条件</th><th>状态</th><th>实际／说明</th></tr></thead><tbody>${row('正式类二买（D2＞D0，中枢评分≥73）',structure?structure.passed?'yes':'no':'unknown',structure?value(structure):'历史记录未留存结构核验结果')}${row('日线KDJ（D≥49且J≤20）',kdjKnown?kdjPassed?'yes':'no':'unknown',kdjActual)}${row('30分钟理想MACD底背离',ideal?ideal.passed?'yes':'no':'unknown',value(ideal))}${row(autoEntry||!passed?'买入提醒':'人工筛选提醒',passed?'yes':'no',finalDetail,true)}</tbody></table></div>`;
 }
 function compareD2Rows(a,b){
     const aFirst=a.d2_first_strengthening?.status==='active',bFirst=b.d2_first_strengthening?.status==='active';
@@ -1762,7 +1762,7 @@ function compareD2Rows(a,b){
 function d2Card(row,scanAt,detailed=false,offline=false,filterDate=''){
     const routeDate=filterDate||String(scanAt||'').slice(0,10),manuallyApproved=d2ManuallyApproved(row.code,routeDate),autoPool=d2AutoPoolEligible(row,routeDate);
     const s=row.structure||{},lastSeen=row.quick_quote_time||row.d2_near_d1_last_seen_at||scanAt;
-    const details=`<div class="d2-card-grid"><small>D1：<b>${d2Value(s.D1?.price)}</b></small><small>D2：<b>${d2Value(s.D2?.price)}</b></small><small>D2 距 D1：<b>${d2Signed(d2Gap(row))}</b></small><small>D2 日期：<b>${safe(s.D2?.date||'--')}</b></small><small>当前价：<b>${d2Value(row.close)}</b></small><small>日线 KDJ：<b>D ${d2Value(row.daily_kdj?.d,2)} / J ${d2Value(row.daily_kdj?.j,2)}</b></small></div>`;
+    const details=`<div class="d2-card-grid"><small>D0：<b>${d2Value(s.D0?.price)}</b></small><small>D1：<b>${d2Value(s.D1?.price)}</b></small><small>D2：<b>${d2Value(s.D2?.price)}</b></small><small>D2 距 D1：<b>${d2Signed(d2Gap(row))}</b></small><small>D2 日期：<b>${safe(s.D2?.date||'--')}</b></small><small>当前价：<b>${d2Value(row.close)}</b></small><small>日线 KDJ：<b>D ${d2Value(row.daily_kdj?.d,2)} / J ${d2Value(row.daily_kdj?.j,2)}</b></small></div>`;
     const times=detailed?`<small>首次进入D2候选 ${d2TriggerLabel(row,scanAt)}</small>`:'';
     const signal=row.d2_30m_divergence||{},strength=row.d2_first_strengthening||{},ideal=row.d2_ideal_m30_divergence||{};
     const aActive=signal.status==='active'&&signal.rule_version==='d2-g2-m30-price-dif-v4',bActive=strength.status==='active'&&strength.rule_version==='d2-g2-m30-pivot-m5-break-volume-v1',kdjGate=d2KdjEligible(row),idealGate=d2IdealM30Eligible(row),gate=d2AlertGateEligible(row);
@@ -1963,7 +1963,7 @@ function d2AlertPanel(state){
     const sectorRows=rows;
     const allCodes=new Set([...sectorRows.map(row=>row.code),...d2ArchivedStockGroups(archived).map(item=>item.row.code),...replayDays.flatMap(day=>(day.replay_rows||[]).map(row=>row.code))]);
     const options=`<option value="all"${selected==='all'?' selected':''}>全部历史 · ${allCodes.size}只</option><option value="latest"${selected==='latest'||selected===session?.date?' selected':''}>${formatDate(session?.date)} · 已确认提醒${sectorRows.length}只</option>`+dates.filter(date=>date!==session?.date).map(date=>{const groups=d2ArchivedStockGroups(archived.filter(item=>item.date===date)),replay=replayDays.find(day=>day.date===date),codes=new Set([...groups.map(g=>g.row.code),...(replay?.replay_rows||[]).map(r=>r.code)]);return `<option value="${safe(date)}"${selected===date?' selected':''}>${formatDate(date)} · 已确认提醒${codes.size}只</option>`}).join('');
-    const rule=idealOnly?'<strong>正式类二买＋当日理想30分钟MACD底背离。</strong>结构须满足 D2＞D1、中枢评分≥73；不接入扩展候选或未完成观察结构。30分钟底背离不等待底分型。本页包括同时满足日线KDJ的股票，已确认历史提醒保留。':'<strong>正式类二买 → 日线KDJ，或当日30分钟理想底背离。</strong>结构须满足 D2＞D1、中枢评分≥73；不接入扩展候选或未完成观察结构。仅满足日线KDJ的先进入“需人工筛选”，人工通过后按批准时间进入跟踪池；理想30分钟分支不等待底分型，是否买入由你判断。独立量化仅处理理想30分钟分支。已确认历史提醒保留，同股同日去重。';
+    const rule=idealOnly?'<strong>正式类二买＋当日理想30分钟MACD底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。30分钟底背离不等待底分型。本页包括同时满足日线KDJ的股票，已确认历史提醒保留。':'<strong>正式类二买 → 日线KDJ，或当日30分钟理想底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。仅满足日线KDJ的先进入“需人工筛选”，人工通过后按批准时间进入跟踪池；理想30分钟分支不等待底分型，是否买入由你判断。独立量化仅处理理想30分钟分支。已确认历史提醒保留，同股同日去重。';
     let html=`<section class="d2-alert-page${idealOnly?' d2-ideal-branch-page':''}">${d2InnerTabs(state)}<h2>${idealOnly?'理想30分钟分支':'D2第二回调双路径提醒'}</h2><details class="model-help" open><summary>规则与通知设置</summary><div class="d2-alert-rule">${rule}</div>${d2ManualExclusionManager()}<label class="d2-history-filter d2-sticky-history-filter">提醒日期 <select data-d2-alert-date>${options}</select></label>`;
     html+=publicCloudPage?(publicStaticPage?'':'<p class="daily-note">桌面提醒由页面上方的云端提醒开关控制；提醒详情在腾讯云私密站查看。</p>'):`<div class="d2-push-tools"><strong>浏览器桌面通知</strong>${d2NotificationButton()}<button type="button" class="d2-notification-test" data-d2-notification-test>测试 Windows 推送</button><span class="d2-push-status" data-d2-push-status aria-live="polite"></span></div>`;
     html+='</details>';
