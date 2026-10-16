@@ -2401,10 +2401,10 @@ function d2DesktopEvents(snapshot,now=Date.now()){
     }
     return [...events.values()];
 }
-async function sendD2M30DesktopNotification(){
+async function sendD2M30DesktopNotification(observedSnapshot=null){
     if(publicCloudPage&&!publicStaticPage)return;
     if(!d2NotificationAvailable()||Notification.permission!=='granted'||!d2NotificationEnabled())return;
-    const snapshot=d2AlertSnapshot(),now=Date.now(),scanTime=d2NotificationTime(snapshot.payload?.generated_at);
+    const snapshot=observedSnapshot||d2AlertSnapshot(),now=Date.now(),scanTime=d2NotificationTime(snapshot.payload?.generated_at);
     if(snapshot.offline)return;
     if(!Number.isFinite(scanTime)||now<scanTime||now-scanTime>45*60000)return;
     let seen=[];
