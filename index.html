@@ -2146,7 +2146,7 @@ function d2AlertPanel(state){
     const options=`<option value="all"${selected==='all'?' selected':''}>全部历史 · ${allCodes.size}只</option><option value="latest"${selected==='latest'||selected===session?.date?' selected':''}>${formatDate(session?.date)} · 已确认提醒${sectorRows.length}只</option>`+dates.filter(date=>date!==session?.date).map(date=>{const groups=d2ArchivedStockGroups(archived.filter(item=>item.date===date)),replay=replayDays.find(day=>day.date===date),codes=new Set([...groups.map(g=>g.row.code),...(replay?.replay_rows||[]).map(r=>r.code)]);return `<option value="${safe(date)}"${selected===date?' selected':''}>${formatDate(date)} · 已确认提醒${codes.size}只</option>`}).join('');
     const rule=idealOnly?'<strong>正式类二买＋当日理想30分钟MACD底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。30分钟底背离不等待底分型。本页包括同时满足日线KDJ的股票，已确认历史提醒保留。':'<strong>正式类二买 → 日线KDJ，或当日30分钟理想底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。仅满足日线KDJ的先进入“需人工筛选”，人工通过后按批准时间进入跟踪池；理想30分钟分支按相邻绿→红→绿比较：价格创新低、DIF和DEA均不创新低时盘中提醒，不等30分钟收盘、绿柱结束或底分型，是否买入由你判断。独立量化仅处理理想30分钟分支。已确认历史提醒保留，同股同日去重。';
     let html=`<section class="d2-alert-page${idealOnly?' d2-ideal-branch-page':''}">${d2InnerTabs(state)}<h2>${idealOnly?'理想30分钟分支':'D2第二回调双路径提醒'}</h2><details class="model-help" open><summary>规则与通知设置</summary><div class="d2-alert-rule">${rule}</div>${d2ManualExclusionManager()}<label class="d2-history-filter d2-sticky-history-filter">提醒日期 <select data-d2-alert-date>${options}</select></label>`;
-    html+=publicCloudPage&&!publicStaticPage?'<p class="daily-note">桌面提醒由页面上方的云端提醒开关控制；提醒详情在腾讯云私密站查看。</p>':`<div class="d2-push-tools"><strong>理想30分钟桌面通知</strong>${d2NotificationButton()}<button type="button" class="d2-notification-test" data-d2-notification-test>测试 Windows 推送</button><span class="d2-push-status" data-d2-push-status aria-live="polite"></span></div><p class="daily-note">保持本页打开，新发布的理想30分钟提醒会推送到 Windows；关闭页面后停止。仅通知近45分钟的新提醒，历史回算不补发。</p>`;
+    html+=publicCloudPage&&!publicStaticPage?'<p class="daily-note">桌面提醒由页面上方的云端提醒开关控制；提醒详情在腾讯云私密站查看。</p>':`<div class="d2-push-tools"><strong>D2桌面通知</strong>${d2NotificationButton()}<button type="button" class="d2-notification-test" data-d2-notification-test>测试 Windows 推送</button><span class="d2-push-status" data-d2-push-status aria-live="polite"></span></div><p class="daily-note">保持本页打开，理想30分钟和日线KDJ人工筛选的新提醒都会推送到 Windows，并标明所属分支；关闭页面后停止。仅通知近45分钟的新提醒，历史回算不补发。</p>`;
     html+='</details>';
     if(!payload&&selected==='latest')return html+'<p class="daily-error">D2交集提醒数据尚未生成。</p></section>';
     if(selected==='all'){
@@ -2221,13 +2221,13 @@ async function dispatchD2SystemNotification(title,options){
                 return navigator.serviceWorker.ready;
             })();
             const registration=await Promise.race([ready,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('通知后台启动超时')),8000)})]);
-            await registration.showNotification(title,{...options,data:{...(options.data||{}),url:location.href.split('#')[0]+'#d2-ideal'}});
+            await registration.showNotification(title,{...options,data:{...(options.data||{}),url:options.data?.url||location.href.split('#')[0]+'#d2-ideal'}});
             return {mode:'service-worker',notice:null};
         }catch(_error){/* A page notification remains available if the worker cannot start. */}
         finally{clearTimeout(timer)}
     }
     const notice=new Notification(title,options);
-    notice.onclick=()=>{window.focus();activeDaily='d2_alert';stateFor('d2_alert').d2Section='ideal';draw();notice.close()};
+    notice.onclick=()=>{window.focus();activeDaily='d2_alert';stateFor('d2_alert').d2Section=options.data?.d2Section==='alerts'?'alerts':'ideal';draw();notice.close()};
     return {mode:'window',notice};
 }
 function d2NotificationTime(value){
@@ -2265,10 +2265,10 @@ async function testD2DesktopNotification(){
     if(Notification.permission==='denied'){setD2PushStatus('浏览器已阻止通知：请点击地址栏左侧图标，将“通知”改为允许。','error');return}
     const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();
     if(permission!=='granted'){setD2PushStatus('没有取得通知权限，请允许后重新测试。','error');return}
-    const snapshot=d2AlertSnapshot(),closest=snapshot.rows.find(d2AutoBuyEligible);
-    const body=closest?`测试成功。扫描 ${formatDateTime(snapshot.scanAt)}；当前理想30分钟分支：${closest.name} ${closest.code}。`:'测试成功。正式D2结构满足且当日出现理想30分钟MACD底背离时提醒，不等待底分型。';
+    const snapshot=d2AlertSnapshot(),closest=snapshot.rows.find(d2AlertGateEligible);
+    const body=closest?`测试成功。扫描 ${formatDateTime(snapshot.scanAt)}；当前D2提醒：${closest.name} ${closest.code}。`:'测试成功。正式D2结构满足后，理想30分钟分支和日线KDJ人工筛选的新提醒均会推送。';
     try{
-        const result=await dispatchD2SystemNotification('WaXwing · 理想30分钟推送测试',{body,icon:'favicon.ico',badge:'favicon.ico',tag:`waxwing-d2-test-${Date.now()}`,requireInteraction:true});
+        const result=await dispatchD2SystemNotification('WaXwing · D2双路径推送测试',{body,icon:'favicon.ico',badge:'favicon.ico',tag:`waxwing-d2-test-${Date.now()}`,requireInteraction:true});
         setD2PushStatus(`已于 ${new Date().toLocaleTimeString('zh-CN',{hour12:false})} 交给 Windows（${result.mode==='service-worker'?'后台系统通知':'页面通知'}）。若右下角未弹出，请按 Win+N 查看通知中心，并检查 Windows“通知/请勿打扰”设置。`,'success');
     }catch(error){setD2PushStatus(`发送失败：${error?.message||'浏览器未能创建系统通知'}。请刷新页面后重试。`,'error')}
 }
@@ -2379,6 +2379,28 @@ function weeklyPullbackChart(row,kind,weeks){
     return `<div class="macd-chart-panel"><strong>${price?'周线K线 + MA55':'周线MACD(12,26,9)'}</strong><small>${legend}</small><div class="macd-chart-scroll"><svg viewBox="0 0 ${width} ${height}" style="width:${width}px;height:${height}px" role="img" aria-label="${price?'价格与MA55':'DIF、DEA和MACD柱'}图，标记A至E">${drawing}${marks}<text x="42" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[0]))}</text><text x="1050" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[n-1]))}</text></svg></div></div>`;
 }
 let d2M30NotificationPending='';
+function d2DesktopEvents(snapshot,now=Date.now()){
+    const scan=d2NotificationTime(snapshot.payload?.generated_at);
+    if(snapshot.offline||!Number.isFinite(scan)||now<scan||now-scan>45*60000)return [];
+    const events=new Map();
+    for(const row of snapshot.rows.filter(d2AlertGateEligible)){
+        const pool=d2PoolAvailableAt(row),branches=[];
+        if(d2KdjEligible(row)){
+            const day=String(row.daily_kdj?.date||'').slice(0,10);
+            branches.push({at:row.d2_kdj_first_eligible_at||(day?`${day} 15:00:00`:''),label:'日线KDJ · 需人工筛选'});
+        }
+        if(d2IdealM30Eligible(row))branches.push({at:row.d2_ideal_m30_divergence.confirmed_at,label:'理想30分钟分支'});
+        for(const branch of branches){
+            if(!pool||!branch.at)continue;
+            const confirmedText=[pool,branch.at].sort().reverse()[0],confirmed=d2NotificationTime(confirmedText),key=`${row.code}:${confirmedText}`;
+            if(!Number.isFinite(confirmed)||now<confirmed||now-confirmed>45*60000)continue;
+            const prior=events.get(key);
+            if(prior)prior.branches.push(branch.label);
+            else events.set(key,{row,key,confirmed,branches:[branch.label]});
+        }
+    }
+    return [...events.values()];
+}
 async function sendD2M30DesktopNotification(){
     if(publicCloudPage&&!publicStaticPage)return;
     if(!d2NotificationAvailable()||Notification.permission!=='granted'||!d2NotificationEnabled())return;
@@ -2388,16 +2410,18 @@ async function sendD2M30DesktopNotification(){
     let seen=[];
     try{seen=JSON.parse(localStorage.getItem('waxwing_d2_m30_seen_v1')||'[]')}catch(_error){}
     const known=new Set(Array.isArray(seen)?seen:[]);
-    const events=snapshot.rows.filter(d2AutoBuyEligible).map(row=>{const confirmedText=[d2PoolAvailableAt(row),row.d2_ideal_m30_divergence.confirmed_at].sort().reverse()[0],key=`${row.code}:${confirmedText}`,confirmed=d2NotificationTime(confirmedText);return {row,key,confirmed}}).filter(item=>!known.has(item.key)&&Number.isFinite(item.confirmed)&&now>=item.confirmed&&now-item.confirmed<=45*60000);
-    if(!events.length)return;
+    const events=d2DesktopEvents(snapshot,now).filter(item=>!known.has(item.key));
+    if(!events.length){setD2PushStatus('已开启，等待新的理想30分钟或日线KDJ人工筛选提醒。');return}
     const signature=events.map(item=>item.key).join('|');
     if(d2M30NotificationPending)return;
     d2M30NotificationPending=signature;
     try{
-        const summary=events.slice(0,5).map(({row})=>`${row.name} ${row.code}（30分钟理想底背离）`).join('、');
-        await dispatchD2SystemNotification(`WaXwing 理想30分钟：${events.length}条新提醒`,{
+        const summary=events.slice(0,5).map(({row,branches})=>`${row.name} ${row.code}（${branches.join(' / ')}）`).join('、');
+        await dispatchD2SystemNotification(`WaXwing D2双路径：${events.length}条新提醒`,{
             body:`${summary}。仅供观察，不是买入信号。`,
-            icon:'favicon.ico',badge:'favicon.ico',tag:'waxwing-d2-m30',renotify:true,requireInteraction:true});
+            icon:'favicon.ico',badge:'favicon.ico',tag:'waxwing-d2-m30',renotify:true,requireInteraction:true,
+            data:{url:location.href.split('#')[0]+'#d2-alert',d2Section:'alerts'}});
+        setD2PushStatus(`已发送 ${events.length} 条新提醒到系统通知。`,'success');
         for(const item of events)known.add(item.key);
         try{localStorage.setItem('waxwing_d2_m30_seen_v1',JSON.stringify([...known].slice(-1000)))}catch(_error){}
     }catch(error){setD2PushStatus(`桌面推送失败：${error?.message||'请测试通知权限'}，下次更新会重试。`,'error')}finally{d2M30NotificationPending=''}
