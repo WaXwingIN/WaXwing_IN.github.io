@@ -1351,6 +1351,7 @@ let initialD2RouteChecked=false;
 try{const initialUrl=new URL(location.href);if(initialUrl.searchParams.has('model')){initialUrl.searchParams.delete('model');history.replaceState(null,'',initialUrl)}}catch(_error){}
 const modelName=()=> '首踩10日线';
 const stateFor=id=>{if(!dailyState.has(id)){const second=id==='second',sortKey=second?'center_similarity':'rank',sortDirection=second?-1:1,weekly=id==='weekly_first'||id==='weekly_consolidation_first';dailyState.set(id,{date:'latest',reference:id==='limit1'?'001299':'002155',sortKey,sortDirection,sortStack:[{key:sortKey,direction:sortDirection}],combineSort:false,expandAll:second,secondDetailCode:null,shortCycleFilter:weekly||id==='two_centers'?'appeared':'all',funnelLevel:id==='holding_pool'?'strong':'raw'})}return dailyState.get(id)};
+if(location.hash==='#d2-ideal')stateFor('d2_alert').d2Section='ideal';
 const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const formatDate=value=>{const digits=String(value??'').replace(/\D/g,'');return digits.length>=8?`${digits.slice(0,4)}/${digits.slice(4,6)}/${digits.slice(6,8)}`:'--'};
 const formatDateTime=value=>{const text=String(value??''),date=formatDate(text),match=text.match(/(?:T|\s)(\d{2}:\d{2}:\d{2})/);return date==='--'?'--':date+(match?' '+match[1]:'')};
@@ -2056,7 +2057,7 @@ function d2AlertPanel(state){
     const options=`<option value="all"${selected==='all'?' selected':''}>全部历史 · ${allCodes.size}只</option><option value="latest"${selected==='latest'||selected===session?.date?' selected':''}>${formatDate(session?.date)} · 已确认提醒${sectorRows.length}只</option>`+dates.filter(date=>date!==session?.date).map(date=>{const groups=d2ArchivedStockGroups(archived.filter(item=>item.date===date)),replay=replayDays.find(day=>day.date===date),codes=new Set([...groups.map(g=>g.row.code),...(replay?.replay_rows||[]).map(r=>r.code)]);return `<option value="${safe(date)}"${selected===date?' selected':''}>${formatDate(date)} · 已确认提醒${codes.size}只</option>`}).join('');
     const rule=idealOnly?'<strong>正式类二买＋当日理想30分钟MACD底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。30分钟底背离不等待底分型。本页包括同时满足日线KDJ的股票，已确认历史提醒保留。':'<strong>正式类二买 → 日线KDJ，或当日30分钟理想底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。仅满足日线KDJ的先进入“需人工筛选”，人工通过后按批准时间进入跟踪池；理想30分钟分支不等待底分型，是否买入由你判断。独立量化仅处理理想30分钟分支。已确认历史提醒保留，同股同日去重。';
     let html=`<section class="d2-alert-page${idealOnly?' d2-ideal-branch-page':''}">${d2InnerTabs(state)}<h2>${idealOnly?'理想30分钟分支':'D2第二回调双路径提醒'}</h2><details class="model-help" open><summary>规则与通知设置</summary><div class="d2-alert-rule">${rule}</div>${d2ManualExclusionManager()}<label class="d2-history-filter d2-sticky-history-filter">提醒日期 <select data-d2-alert-date>${options}</select></label>`;
-    html+=publicCloudPage?(publicStaticPage?'':'<p class="daily-note">桌面提醒由页面上方的云端提醒开关控制；提醒详情在腾讯云私密站查看。</p>'):`<div class="d2-push-tools"><strong>浏览器桌面通知</strong>${d2NotificationButton()}<button type="button" class="d2-notification-test" data-d2-notification-test>测试 Windows 推送</button><span class="d2-push-status" data-d2-push-status aria-live="polite"></span></div>`;
+    html+=publicCloudPage&&!publicStaticPage?'<p class="daily-note">桌面提醒由页面上方的云端提醒开关控制；提醒详情在腾讯云私密站查看。</p>':`<div class="d2-push-tools"><strong>理想30分钟桌面通知</strong>${d2NotificationButton()}<button type="button" class="d2-notification-test" data-d2-notification-test>测试 Windows 推送</button><span class="d2-push-status" data-d2-push-status aria-live="polite"></span></div><p class="daily-note">保持本页打开，新发布的理想30分钟提醒会推送到 Windows；关闭页面后停止。仅通知近45分钟的新提醒，历史回算不补发。</p>`;
     html+='</details>';
     if(!payload&&selected==='latest')return html+'<p class="daily-error">D2交集提醒数据尚未生成。</p></section>';
     if(selected==='all'){
@@ -2124,13 +2125,25 @@ function setD2PushStatus(message,kind=''){
 }
 async function dispatchD2SystemNotification(title,options){
     if('serviceWorker' in navigator&&location.protocol!=='file:'){
-        await navigator.serviceWorker.register('notification-sw.js',{scope:'./',updateViaCache:'none'});
-        const registration=await navigator.serviceWorker.ready;
-        await registration.showNotification(title,{...options,data:{...(options.data||{}),url:location.href.split('#')[0]+'#d2-alert'}});
-        return {mode:'service-worker',notice:null};
+        let timer;
+        try{
+            const ready=(async()=>{
+                await navigator.serviceWorker.register('notification-sw.js',{scope:'./',updateViaCache:'none'});
+                return navigator.serviceWorker.ready;
+            })();
+            const registration=await Promise.race([ready,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('通知后台启动超时')),8000)})]);
+            await registration.showNotification(title,{...options,data:{...(options.data||{}),url:location.href.split('#')[0]+'#d2-ideal'}});
+            return {mode:'service-worker',notice:null};
+        }catch(_error){/* A page notification remains available if the worker cannot start. */}
+        finally{clearTimeout(timer)}
     }
     const notice=new Notification(title,options);
+    notice.onclick=()=>{window.focus();activeDaily='d2_alert';stateFor('d2_alert').d2Section='ideal';draw();notice.close()};
     return {mode:'window',notice};
+}
+function d2NotificationTime(value){
+    const text=String(value||'').trim().replace(' ','T');
+    return Date.parse(/^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(text)?text+'+08:00':text);
 }
 function d2EventRows(snapshot){
     if(snapshot.offline)return [];
@@ -2163,12 +2176,11 @@ async function testD2DesktopNotification(){
     if(Notification.permission==='denied'){setD2PushStatus('浏览器已阻止通知：请点击地址栏左侧图标，将“通知”改为允许。','error');return}
     const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();
     if(permission!=='granted'){setD2PushStatus('没有取得通知权限，请允许后重新测试。','error');return}
-    const snapshot=d2AlertSnapshot(),closest=snapshot.rows[0];
-    const body=closest?`测试成功。扫描 ${formatDateTime(snapshot.scanAt)}；当前双路径候选：${closest.name} ${closest.code}。`:'测试成功。路径A价格/DIF底背离或路径B第二回调首次转强满足其一即可提醒。';
+    const snapshot=d2AlertSnapshot(),closest=snapshot.rows.find(d2AutoBuyEligible);
+    const body=closest?`测试成功。扫描 ${formatDateTime(snapshot.scanAt)}；当前理想30分钟分支：${closest.name} ${closest.code}。`:'测试成功。正式D2结构满足且当日出现理想30分钟MACD底背离时提醒，不等待底分型。';
     try{
-        const result=await dispatchD2SystemNotification('WaXwing · D2双路径提醒测试',{body,icon:'favicon.ico',badge:'favicon.ico',tag:`waxwing-d2-test-${Date.now()}`,requireInteraction:true});
+        const result=await dispatchD2SystemNotification('WaXwing · 理想30分钟推送测试',{body,icon:'favicon.ico',badge:'favicon.ico',tag:`waxwing-d2-test-${Date.now()}`,requireInteraction:true});
         setD2PushStatus(`已于 ${new Date().toLocaleTimeString('zh-CN',{hour12:false})} 交给 Windows（${result.mode==='service-worker'?'后台系统通知':'页面通知'}）。若右下角未弹出，请按 Win+N 查看通知中心，并检查 Windows“通知/请勿打扰”设置。`,'success');
-        if(result.notice)result.notice.onclick=()=>{window.focus();activeDaily='d2_alert';draw();result.notice.close()};
     }catch(error){setD2PushStatus(`发送失败：${error?.message||'浏览器未能创建系统通知'}。请刷新页面后重试。`,'error')}
 }
 function rollingTemplateEntry(){
@@ -2279,27 +2291,27 @@ function weeklyPullbackChart(row,kind,weeks){
 }
 let d2M30NotificationPending='';
 async function sendD2M30DesktopNotification(){
-    if(publicCloudPage)return; // All public-model notices use the verified cloud feed.
+    if(publicCloudPage&&!publicStaticPage)return;
     if(!d2NotificationAvailable()||Notification.permission!=='granted'||!d2NotificationEnabled())return;
-    const snapshot=d2AlertSnapshot(),now=Date.now(),scanTime=Date.parse(String(snapshot.payload?.generated_at||'').replace(' ','T'));
+    const snapshot=d2AlertSnapshot(),now=Date.now(),scanTime=d2NotificationTime(snapshot.payload?.generated_at);
     if(snapshot.offline)return;
     if(!Number.isFinite(scanTime)||now<scanTime||now-scanTime>45*60000)return;
     let seen=[];
     try{seen=JSON.parse(localStorage.getItem('waxwing_d2_m30_seen_v1')||'[]')}catch(_error){}
     const known=new Set(Array.isArray(seen)?seen:[]);
-    const events=snapshot.rows.map(row=>{const confirmedText=d2EffectiveConfirmedAt(row),key=`${row.code}:${confirmedText}`,confirmed=Date.parse(String(confirmedText).replace(' ','T'));return {row,key,confirmed}}).filter(item=>d2AlertGateEligible(item.row)&&!known.has(item.key)&&Number.isFinite(item.confirmed)&&now>=item.confirmed&&now-item.confirmed<=45*60000);
+    const events=snapshot.rows.filter(d2AutoBuyEligible).map(row=>{const confirmedText=[d2PoolAvailableAt(row),row.d2_ideal_m30_divergence.confirmed_at].sort().reverse()[0],key=`${row.code}:${confirmedText}`,confirmed=d2NotificationTime(confirmedText);return {row,key,confirmed}}).filter(item=>!known.has(item.key)&&Number.isFinite(item.confirmed)&&now>=item.confirmed&&now-item.confirmed<=45*60000);
     if(!events.length)return;
     const signature=events.map(item=>item.key).join('|');
-    if(d2M30NotificationPending===signature)return;
+    if(d2M30NotificationPending)return;
     d2M30NotificationPending=signature;
     try{
-        const summary=events.slice(0,5).map(({row})=>`${row.name} ${row.code}（${d2IdealM30Eligible(row)?'自动池 · 30分钟理想底背离':'需人工筛选 · 日线KDJ'}）`).join('、');
-        await dispatchD2SystemNotification(`WaXwing D2第二回调：${events.length}条新提醒`,{
+        const summary=events.slice(0,5).map(({row})=>`${row.name} ${row.code}（30分钟理想底背离）`).join('、');
+        await dispatchD2SystemNotification(`WaXwing 理想30分钟：${events.length}条新提醒`,{
             body:`${summary}。仅供观察，不是买入信号。`,
             icon:'favicon.ico',badge:'favicon.ico',tag:'waxwing-d2-m30',renotify:true,requireInteraction:true});
         for(const item of events)known.add(item.key);
         try{localStorage.setItem('waxwing_d2_m30_seen_v1',JSON.stringify([...known].slice(-1000)))}catch(_error){}
-    }catch(_error){}finally{d2M30NotificationPending=''}
+    }catch(error){setD2PushStatus(`桌面推送失败：${error?.message||'请测试通知权限'}，下次更新会重试。`,'error')}finally{d2M30NotificationPending=''}
 }
 function dailyClosePolicyActive(policy){
     return policy?.version==='model-daily-bottom-close-v1'&&Boolean(policy.daily_date)&&String(policy.daily_date).replace(/\D/g,'').slice(0,8)>=String(policy.effective_date||'2026-10-09').replace(/\D/g,'').slice(0,8);
