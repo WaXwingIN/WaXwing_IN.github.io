@@ -849,11 +849,14 @@ function mergeD2FrozenEvent(previous,incoming){
     const sameDiscovery=previous.event_key===incoming.event_key&&previous.confirmed_at===incoming.confirmed_at&&previous.first_observed_at===incoming.first_observed_at&&previous.center_similarity===incoming.center_similarity;
     if(sameDiscovery&&indexOnly(previous)!==indexOnly(incoming))earlier=indexOnly(previous)?incoming:previous;
     const other=earlier===previous?incoming:previous,value={...previous,...incoming};
-    for(const field of ['confirmed_at','source','rule_version','structure','episode_id','center_similarity','close_at_scan','daily_kdj','ideal_m30_divergence','pivot','breakout_price','volume_ratio','low1','low2','area_shrunk','gap_pct','alert_gate','structure_evidence','structure_reference','structure_reference_evidence']){
+    for(const field of ['confirmed_at','source','rule_version','structure','episode_id','center_similarity','close_at_scan','daily_kdj','ideal_m30_divergence','pivot','breakout_price','volume_ratio','low1','low2','area_shrunk','gap_pct','alert_gate','structure_evidence','structure_reference','structure_reference_evidence','alert_extension_only','observation_only','diagnostic_only']){
         if(Object.prototype.hasOwnProperty.call(earlier,field))value[field]=earlier[field];else delete value[field];
     }
     const sameIdentity=other.event_key===earlier.event_key&&other.episode_id===earlier.episode_id&&other.center_similarity===earlier.center_similarity;
     const evidence=other.structure_evidence||{},reference=other.structure_reference_evidence||{};
+    if(sameIdentity&&evidence.verified_at_discovery===true&&evidence.source_sha256===earlier.structure_evidence?.source_sha256&&String(evidence.captured_at||'').slice(0,19)===String(earlier.first_observed_at||'').slice(0,19)&&JSON.stringify(other.structure)===JSON.stringify(earlier.structure)){
+        for(const flag of ['alert_extension_only','observation_only','diagnostic_only'])if(!Object.prototype.hasOwnProperty.call(earlier,flag)&&Object.prototype.hasOwnProperty.call(other,flag))value[flag]=other[flag];
+    }
     if(!value.structure&&other.structure&&sameIdentity&&evidence.verified_at_discovery===true&&/^[0-9a-f]{64}$/.test(evidence.source_sha256||'')&&String(evidence.captured_at||'').slice(0,19)===String(earlier.first_observed_at||'').slice(0,19)){
         value.structure=other.structure;value.structure_evidence=evidence;
         delete value.structure_reference;delete value.structure_reference_evidence;
@@ -1986,7 +1989,7 @@ function d2ArchivedStockGroups(events){
 }
 function d2ArchivedConditionChecks(event,date){
     const checks=[],kdj=event.daily_kdj||{},ideal=event.ideal_m30_divergence||{};
-    if(event.structure)checks.push({condition:'正式类二买且中枢评分≥73',passed:d2Eligible(event),actual:`D0 ${d2Value(event.structure.D0?.price)} / D1 ${d2Value(event.structure.D1?.price)} / D2 ${d2Value(event.structure.D2?.price)}；中枢评分 ${d2Value(event.center_similarity)}${event.structure_evidence?.verified_at_discovery?'；发现时快照 '+event.structure_evidence.captured_at:''}`});
+    if(event.structure)checks.push({condition:'正式类二买且中枢评分≥73',passed:d2Eligible(event),actual:`D0 ${d2Value(event.structure.D0?.price)} / D1 ${d2Value(event.structure.D1?.price)} / D2 ${d2Value(event.structure.D2?.price)}；中枢评分 ${d2Value(event.center_similarity)}${event.alert_extension_only?'；发现时为扩展候选':event.observation_only?'；发现时为未完成观察结构':event.diagnostic_only?'；发现时为诊断记录':''}${event.structure_evidence?.verified_at_discovery?'；发现时快照 '+event.structure_evidence.captured_at:''}`});
     else if(event.structure_reference){const s=event.structure_reference;checks.push({condition:'正式类二买且中枢评分≥73',passed:null,reference_only:true,actual:`原归档模型：D0 ${d2Value(s.D0?.price)} / D1 ${d2Value(s.D1?.price)} / D2 ${d2Value(s.D2?.price)}；原评分 ${d2Value(event.center_similarity)}；结构编号核验一致，发现时盘中状态未留存，不据此判定满足条件`})}
     else checks.push({condition:'正式类二买且中枢评分≥73',passed:null,missing_frozen:true,actual:'未找到可追溯的发现时结构快照；保留原确认提醒，不用后续行情补写历史事实'});
     if(kdj.d!=null&&kdj.j!=null){
