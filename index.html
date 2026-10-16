@@ -2212,6 +2212,17 @@ function setD2PushStatus(message,kind=''){
     const status=document.querySelector('[data-d2-push-status]');
     if(status){status.textContent=message;status.className=`d2-push-status${kind?' '+kind:''}`}
 }
+function d2PushReceipt(update=null){
+    let receipt={};
+    try{receipt=JSON.parse(localStorage.getItem('waxwing_d2_push_receipt_v1')||'{}')||{}}catch(_error){}
+    if(update){receipt={...receipt,...update};try{localStorage.setItem('waxwing_d2_push_receipt_v1',JSON.stringify(receipt))}catch(_error){}}
+    return receipt;
+}
+async function d2NotificationDeadline(operation,milliseconds,message){
+    let timer;
+    try{return await Promise.race([operation,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message)),milliseconds)})])}
+    finally{clearTimeout(timer)}
+}
 async function dispatchD2SystemNotification(title,options){
     if('serviceWorker' in navigator&&location.protocol!=='file:'){
         let timer;
@@ -2221,13 +2232,23 @@ async function dispatchD2SystemNotification(title,options){
                 return navigator.serviceWorker.ready;
             })();
             const registration=await Promise.race([ready,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('通知后台启动超时')),8000)})]);
-            await registration.showNotification(title,{...options,data:{...(options.data||{}),url:options.data?.url||location.href.split('#')[0]+'#d2-ideal'}});
+            await d2NotificationDeadline(registration.showNotification(title,{...options,data:{...(options.data||{}),url:options.data?.url||location.href.split('#')[0]+'#d2-ideal'}}),8000,'系统通知接口响应超时');
+            if(typeof registration.getNotifications==='function'){
+                const visible=await d2NotificationDeadline(registration.getNotifications({tag:options.tag}),3000,'无法读取系统通知回执');
+                if(!visible.some(notice=>notice.tag===options.tag))throw new Error('浏览器未保留本次通知');
+            }
             return {mode:'service-worker',notice:null};
         }catch(_error){/* A page notification remains available if the worker cannot start. */}
         finally{clearTimeout(timer)}
     }
     const notice=new Notification(title,options);
     notice.onclick=()=>{window.focus();activeDaily='d2_alert';stateFor('d2_alert').d2Section=options.data?.d2Section==='alerts'?'alerts':'ideal';draw();notice.close()};
+    if(typeof notice.addEventListener==='function'){
+        await d2NotificationDeadline(new Promise((resolve,reject)=>{
+            notice.addEventListener('show',resolve,{once:true});
+            notice.addEventListener('error',()=>reject(new Error('浏览器未能显示通知')),{once:true});
+        }),5000,'页面通知未确认显示');
+    }
     return {mode:'window',notice};
 }
 function d2NotificationTime(value){
@@ -2403,28 +2424,34 @@ function d2DesktopEvents(snapshot,now=Date.now()){
 }
 async function sendD2M30DesktopNotification(observedSnapshot=null){
     if(publicCloudPage&&!publicStaticPage)return;
-    if(!d2NotificationAvailable()||Notification.permission!=='granted'||!d2NotificationEnabled())return;
+    if(!d2NotificationAvailable()||Notification.permission!=='granted'||!d2NotificationEnabled()){
+        const reason=!d2NotificationAvailable()?'当前页面不能调用桌面通知':Notification.permission!=='granted'?'浏览器尚未允许通知':'桌面推送开关未开启';
+        d2PushReceipt({checked_at:new Date().toISOString(),state:'blocked',reason});
+        setD2PushStatus(reason,'error');return;
+    }
     const snapshot=observedSnapshot||d2AlertSnapshot(),now=Date.now(),scanTime=d2NotificationTime(snapshot.payload?.generated_at);
     if(snapshot.offline)return;
     if(!Number.isFinite(scanTime)||now<scanTime||now-scanTime>45*60000)return;
     let seen=[];
     try{seen=JSON.parse(localStorage.getItem('waxwing_d2_m30_seen_v1')||'[]')}catch(_error){}
     const known=new Set(Array.isArray(seen)?seen:[]);
-    const events=d2DesktopEvents(snapshot,now).filter(item=>!known.has(item.key));
-    if(!events.length){setD2PushStatus('已开启，等待新的理想30分钟或日线KDJ人工筛选提醒。');return}
-    const signature=events.map(item=>item.key).join('|');
+    const eligible=d2DesktopEvents(snapshot,now),events=eligible.filter(item=>!known.has(item.key));
+    const receipt=d2PushReceipt({checked_at:new Date().toISOString(),scan_at:snapshot.payload.generated_at,eligible_count:eligible.length,pending_count:events.length,state:events.length?'pending':'idle',reason:''});
+    if(!events.length){const last=receipt.delivered_at?`；上次 ${new Date(receipt.delivered_at).toLocaleTimeString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'})} 已交给系统`:'；尚无系统交付记录';setD2PushStatus(`已开启，本轮 ${eligible.length} 条近期提醒均已处理，暂无未通知的新提醒${last}`);return}
+    const signature=events.map(item=>item.key).sort().join('|');
     if(d2M30NotificationPending)return;
     d2M30NotificationPending=signature;
     try{
         const summary=events.slice(0,5).map(({row,branches})=>`${row.name} ${row.code}（${branches.join(' / ')}）`).join('、');
-        await dispatchD2SystemNotification(`WaXwing D2双路径：${events.length}条新提醒`,{
+        const result=await dispatchD2SystemNotification(`WaXwing D2双路径：${events.length}条新提醒`,{
             body:`${summary}。仅供观察，不是买入信号。`,
-            icon:'favicon.ico',badge:'favicon.ico',tag:'waxwing-d2-m30',renotify:true,requireInteraction:true,
+            icon:'favicon.ico',badge:'favicon.ico',tag:'waxwing-d2-m30:'+signature,renotify:true,requireInteraction:true,
             data:{url:location.href.split('#')[0]+'#d2-alert',d2Section:'alerts'}});
-        setD2PushStatus(`已发送 ${events.length} 条新提醒到系统通知。`,'success');
+        d2PushReceipt({state:'accepted',delivered_at:new Date().toISOString(),delivered_count:events.length,mode:result.mode,tag:'waxwing-d2-m30:'+signature,reason:''});
+        setD2PushStatus(`已将 ${events.length} 条新提醒交给系统通知。若未见横幅，请按 Win+N 检查通知中心。`,'success');
         for(const item of events)known.add(item.key);
         try{localStorage.setItem('waxwing_d2_m30_seen_v1',JSON.stringify([...known].slice(-1000)))}catch(_error){}
-    }catch(error){setD2PushStatus(`桌面推送失败：${error?.message||'请测试通知权限'}，下次更新会重试。`,'error')}finally{d2M30NotificationPending=''}
+    }catch(error){d2PushReceipt({state:'failed',reason:error?.message||'通知接口失败'});setD2PushStatus(`桌面推送失败：${error?.message||'请测试通知权限'}，下次更新会重试。`,'error')}finally{d2M30NotificationPending=''}
 }
 function dailyClosePolicyActive(policy){
     return policy?.version==='model-daily-bottom-close-v1'&&Boolean(policy.daily_date)&&String(policy.daily_date).replace(/\D/g,'').slice(0,8)>=String(policy.effective_date||'2026-10-09').replace(/\D/g,'').slice(0,8);
@@ -5236,7 +5263,7 @@ style.textContent+=`.daily-sticky-controls .holding-pool-tabs button[aria-select
 style.textContent+=`.return-summary{margin:0}.return-summary>h3{margin:0 0 14px;font-size:15px;font-weight:600;color:#334155}.return-summary>.wrap{border:1px solid #dce3ec;border-radius:8px;background:#fff}.return-summary-table tbody tr:last-child>*{border-bottom:0}.macd-history-summary{border:1px solid #dce3ec;border-radius:10px;background:#fff;margin:24px 0!important}.macd-history-summary>summary{padding:16px 18px;font-size:15px;font-weight:600}.macd-history-summary>summary span{display:block;margin:6px 0 0 18px;font-size:13px;font-weight:400;color:#64748b}.model-summary-content{padding:0 18px 18px}.model-summary-actions{display:flex;justify-content:flex-end;margin-top:16px}.model-summary-actions button{font-size:14px;font-weight:400;padding:8px 14px}.stock-lookup-form{margin:18px 0 24px}.stock-lookup-table{font-size:14px}.stock-lookup-table th,.stock-lookup-table td{padding:14px!important;line-height:1.6}`;
 
 style.textContent+=`.short-cycle-outcomes:has(>details):not(:has(>.wrap)){border:0!important;padding:0!important;margin:12px 0!important;background:transparent!important}.short-cycle-outcomes>details{margin:8px 0!important}.short-cycle-outcomes>details>summary{padding:8px 0!important}`;
-</script><script data-waxwing-signal-feed="1">/* Public observed reminders, independent of full Pages builds. No account writes. */
+</script><script src="rolling_plan_browser_entry.js"></script><script data-waxwing-signal-feed="1">/* Public observed reminders, independent of full Pages builds. No account writes. */
 (function () {
     'use strict';
     if (window.__waxwingD2SignalFeed || location.hostname.toLowerCase() !== 'waxwingin.github.io') return;
@@ -5310,4 +5337,4 @@ style.textContent+=`.short-cycle-outcomes:has(>details):not(:has(>.wrap)){border
     setInterval(refresh, 15000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 })();
-</script><script src="rolling_plan_browser_entry.js"></script></body></html>
+</script></body></html>
