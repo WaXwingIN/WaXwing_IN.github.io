@@ -181,7 +181,35 @@
     const shares=Number.isFinite(event.qty)?new Intl.NumberFormat('zh-CN').format(event.qty)+' 股':'';
     return `<div class="daily-action daily-action--${kind}"><span class="daily-action-badge">${escapeText(event.side)}</span><strong class="daily-action-stock">${stockCode(event.code)} ${escapeText(event.name)}</strong><div class="daily-action-size"><strong>${escapeText(shares)}</strong>${Number.isFinite(event.price)?`<span> × ${event.price.toFixed(3)} 元</span>`:''}</div>${event.reason?`<div class="daily-action-reason">${escapeText(event.reason)}</div>`:''}<div class="daily-action-meta"><span>模拟执行 ${escapeText(event.at?.slice(11,16)||'待核验')}</span>${event.observed_at?`<span>实际核验 ${escapeText(event.observed_at.slice(11,16))}</span>`:''}</div></div>`;
   }
-  const api = {sizePurchase, account, buyPlan, afternoonRows, afternoonReason, newestFirst, todayActions, todayActionNotice, reminderEvents, historicalTradeTimes, profitMarkup, stockCode, returnTone};
+  function marketDecision(plan) {
+    const market=plan?.market;
+    if(!market)return {summary:'大盘条件待核验',html:''};
+    const weekly=plan.model==='weekly_low_2_stress',proxies=market.proxies||[];
+    const names={'510300':'沪深300','510500':'中证500','159915':'创业板'};
+    const complete=proxies.length===3&&proxies.every(p=>weekly?Number.isFinite(p.ret5):[p.close,p.ma20,p.slope5].every(Number.isFinite));
+    const weak=complete?proxies.filter(p=>weekly?p.ret5<-.03:p.close<p.ma20&&p.slope5<0).length:null;
+    const breadth=Number.isFinite(market.breadth)?(market.breadth*100).toFixed(2)+'%':'待核验';
+    const rule=weekly?'三只宽基中，至少2只近5个交易日跌幅严格超过3%，暂停新买；未触发则通过大盘这一关。':
+      '至少2只宽基同时满足“收盘价低于20日均线、20日均线较5个交易日前下降”，且主板站上20日均线比例≤40%，判为下跌并暂停新买。';
+    let summary;
+    if(plan.read_only)summary=plan.no_buy_reason||'公开行情尚未更新，暂停新增模拟成交';
+    else if(market.allow_buy==null||!complete||(!weekly&&!Number.isFinite(market.breadth)))summary='大盘条件尚未核验完整：'+(market.reason||'缺少完整行情');
+    else if(market.allow_buy===false)summary=weekly?`暂停新买：${weak}/3只宽基近5日跌幅超过3%（门槛≥2只）`:
+      `暂停新买：${weak}/3只宽基满足下跌条件（门槛≥2只），主板站上20日均线比例${breadth}（门槛≤40%）`;
+    else summary=weekly?`大盘未触发暂停：${weak}/3只宽基近5日跌幅超过3%（暂停门槛≥2只）`:
+      `大盘未触发下跌暂停：宽基下跌${weak}/3只，主板站上20日均线比例${breadth}；两项暂停条件须同时满足`;
+    const rows=proxies.map(p=>{
+      const known=weekly?Number.isFinite(p.ret5):[p.close,p.ma20,p.slope5].every(Number.isFinite);
+      const met=known&&(weekly?p.ret5<-.03:p.close<p.ma20&&p.slope5<0);
+      const value=weekly?`近5日涨跌 ${Number.isFinite(p.ret5)?(p.ret5*100).toFixed(3)+'%':'待核验'}`:
+        `收盘 ${Number.isFinite(p.close)?p.close.toFixed(3):'待核验'} / 20日均线 ${Number.isFinite(p.ma20)?p.ma20.toFixed(5):'待核验'} / 均线5日变化 ${Number.isFinite(p.slope5)?(p.slope5*100).toFixed(3)+'%':'待核验'}`;
+      return `<li>${escapeText(names[p.code]||p.code)}：${value} · ${known?met?'满足暂停子条件':'未满足暂停子条件':'待核验'}</li>`;
+    }).join('');
+    const basis=`依据 ${plan.signal_date||'待核验'} 收盘数据，判断 ${plan.trade_date||'待核验'} 的计划`;
+    const html=`<p><strong>大盘判断依据</strong> · ${escapeText(basis)}</p><p><strong>暂停条件：</strong>${rule}</p><p><strong>本次结论：</strong>${escapeText(summary)}。</p>${rows?`<ul>${rows}</ul>`:''}<p>${weekly?'近5日涨跌=信号日收盘÷5个交易日前收盘−1。':'主板宽度按已核验的主板样本统计'+(Number.isInteger(market.members)?`（${market.members}只）`:'')+'；均线5日变化=信号日MA20÷5个交易日前MA20−1。'}大盘暂停只限制新买，已有持仓继续按原严格卖出条件管理。</p>`;
+    return {summary,html};
+  }
+  const api = {sizePurchase, account, buyPlan, afternoonRows, afternoonReason, newestFirst, todayActions, todayActionNotice, reminderEvents, historicalTradeTimes, profitMarkup, stockCode, returnTone, marketDecision};
   if (typeof module !== 'undefined') module.exports = api;
   if (typeof document === 'undefined') return;
 
@@ -197,6 +225,13 @@
   const priceKey=()=>`${modelPrefix()}${state.startDate}:${state.cap}:${plan?.trade_date}${state.model===weeklyModel&&plan?.trade_date===chinaClock().day&&chinaClock().time>='11:30'?':13:00':''}`;
   let state = {capital:50000, cap:2, model:defaultModel, desktop:false, seen:[],alertSeen:[],pendingAlerts:[],startMode:'latest',startDate:null};
   try { const value = JSON.parse(localStorage.getItem(key)||localStorage.getItem('waxwing_position_plan_v1')); if (value && Number.isFinite(value.capital) && value.capital >= 100) state = {capital:value.capital,cap:value.cap,model:value.model===weeklyModel?weeklyModel:defaultModel,desktop:Boolean(value.desktop),seen:Array.isArray(value.seen)?value.seen:[],alertSeen:Array.isArray(value.alertSeen)?value.alertSeen:[],pendingAlerts:Array.isArray(value.pendingAlerts)?value.pendingAlerts:[],startMode:value.startMode==='manual'?'manual':'latest',startDate:value.startDate||null}; } catch (_) {}
+  const entryPolicy='active-models-20261016-v1';
+  try {
+    if(localStorage.getItem('waxwing_rolling_entry_policy')!==entryPolicy){
+      for(let i=localStorage.length-1;i>=0;i--){const name=localStorage.key(i);if(name?.startsWith('waxwing_plan_view_v1:'))localStorage.removeItem(name);}
+      state.pendingAlerts=[];localStorage.setItem('waxwing_rolling_entry_policy',entryPolicy);
+    }
+  }catch(_){}
   if(state.model===weeklyModel)state.cap=2;
   let historyData, plan, busy = false, lastRequest = 0, tab = 'plan', priceInputs={}, paperBooks={};
   function currentPrices(){return priceInputs[priceKey()]||{};}
@@ -220,7 +255,20 @@
   }
   function metric(label, value, tone='') { return `<div class="metric"><span>${escape(label)}</span><strong class="${tone}">${escape(value)}</strong></div>`; }
   function empty(columns, text) { return `<tr><td colspan="${columns}" class="empty">${escape(text)}</td></tr>`; }
-  function showNotice(text, error=false) { $('notice').textContent = text; $('notice').classList.toggle('error', error); }
+  let loadingDepth=0;
+  function loadingProgress(text){if(loadingDepth)$('globalLoadingMessage').textContent=text;}
+  function beginLoading(text){
+    loadingDepth++;$('globalLoading').hidden=false;$('planPageContent').inert=true;
+    $('planPageContent').setAttribute?.('aria-busy','true');loadingProgress(text);
+  }
+  function endLoading(){
+    loadingDepth=Math.max(0,loadingDepth-1);
+    if(!loadingDepth){$('globalLoading').hidden=true;$('planPageContent').inert=false;$('planPageContent').setAttribute?.('aria-busy','false');}
+  }
+  async function withLoading(operation,text){beginLoading(text);try{return await operation();}finally{endLoading();}}
+  async function foregroundRefresh(){while(busy)await new Promise(resolve=>setTimeout(resolve,100));await refresh();}
+  if(typeof window!=='undefined')window.WaXwingRollingProgress=loadingProgress;
+  function showNotice(text, error=false) { $('notice').textContent = text; $('notice').classList.toggle('error', error);loadingProgress(text); }
   async function request(url, options={}) { if(globalThis.WaXwingRollingStatic)return globalThis.WaXwingRollingStatic.request(url,options);const response = await fetch(url, {...options, cache:'no-store'}), value = await response.json(); if (!response.ok || value.error) throw new Error(value.error || '读取失败'); return value; }
 
   function tradeAlertKey(row) {
@@ -314,6 +362,8 @@
     $('buyPriceNote').textContent=afternoon?'评估价默认取11:30收盘价，可输入13:00实际价格重算股数。接近涨停、买入前已确认卖出或行情不可核验时跳过；卖出未成交则不使用其资金和空位。参考股数不代表成交。':defaultPriceNote;
     $('planTitle').textContent = plan ? `${state.startDate} 起 · ${afternoon?'13:00补仓计划':'买入计划'}` : '买入计划';
     $('marketBadge').textContent = plan ? `当前大盘：${plan.market.state}` : '';
+    const decision=marketDecision(plan);
+    $('marketDecision').hidden=!plan;$('marketDecision').innerHTML=decision.html;
     $('planReason').textContent = !plan ? '数据尚未核验，暂停新增模拟买入。' : afternoon ? afternoonReason(plan) : plan.no_buy_reason || (plan.simulation?.opened_days?.includes(plan.trade_date)?weekly?'本日开盘模拟已完成，午休核验13:00补仓机会':'本日开盘模拟已完成，盘中空位等待下一交易日':!priced?'模拟持仓行情未核验，暂停新买预算计算':!rows.length?'没有可新增的空位或当日新提醒':'开盘按下列顺序评估模拟新买');
     $('buyBasis').textContent = plan ? `当前计划交易日 ${plan.trade_date} · 信号日 ${plan.signal_date} · 最多考察排序前${state.cap}名 · 每笔预算为前收盘参考资产的1/${state.cap}` : '';
     $('simulationBasis').textContent = `从 ${state.startDate||'所选交易日'} 以零持仓和设定本金开始，按前一交易日信号模拟买入，随后滚动到最新行情。${weekly?'周线增加13:00补空位，已有流水保留；13:30完成K线到达后核验下午开盘模拟价。':''}过去日期不补发旧提醒，模拟持仓不代表实际成交。`;
@@ -321,7 +371,7 @@
     $('startPurchases').hidden=state.startDate===chinaClock().day||b.unloaded;
     $('startPurchasesTitle').textContent=`起点当日模拟买入 · ${state.startDate}`;
     $('startPurchaseRows').innerHTML=firstBuys.map(e=>`<tr><td>${escape(e.at)}</td><td>${stockCode(e.code)} ${escape(e.name)}<small>${escape(e.model)}</small></td><td>${e.qty}</td><td>${e.price.toFixed(3)}</td><td>${money(-e.cash_change)}</td></tr>`).join('')||empty(5,'起点当日未模拟买入，从现金开始继续按规则等待');
-    $('buyRows').innerHTML = rows.length ? rows.map(r => `<tr><td>${stockCode(r.code)} ${escape(r.name)}<small>${escape(r.model)}</small></td><td>${escape(r.signal_day)}</td><td>${(r.atr_fraction*100).toFixed(2)}%</td><td><input style="width:110px" type="number" min="0.001" step="any" value="${r.evaluation_price}" data-price="${escape(r.code)}" aria-label="${escape(r.name)}评估买入价"><small>信号收盘 ${r.reference_price.toFixed(3)}</small></td><td>${r.qty ? r.qty+'股':r.blocked?'接近涨停，跳过':'预算不足最小买入量'}</td><td>${money(r.cost)}</td></tr>`).join('') : empty(6,plan?.no_buy_reason || '暂无可执行买入名单');
+    $('buyRows').innerHTML = rows.length ? rows.map(r => `<tr><td>${stockCode(r.code)} ${escape(r.name)}<small>${escape(r.model)}</small></td><td>${escape(r.signal_day)}</td><td>${(r.atr_fraction*100).toFixed(2)}%</td><td><input style="width:110px" type="number" min="0.001" step="any" value="${r.evaluation_price}" data-price="${escape(r.code)}" aria-label="${escape(r.name)}评估买入价"><small>信号收盘 ${r.reference_price.toFixed(3)}</small></td><td>${r.qty ? r.qty+'股':r.blocked?'接近涨停，跳过':'预算不足最小买入量'}</td><td>${money(r.cost)}</td></tr>`).join('') : empty(6,plan?.market?.allow_buy===false?decision.summary:plan?.no_buy_reason || '暂无可执行买入名单');
     $('holdingRows').innerHTML = b.positions.length ? b.positions.map(p => {
       const q=marks.get(p.code),v=valuation?.positions?.[p.code],sell=q?.sell;
       return `<tr><td>${stockCode(p.code)} ${escape(p.name)}</td><td>${escape(p.entry_day)}<small>信号 ${escape(p.signal_day)} · ${escape(p.model)}</small></td><td>${p.qty}股<small>含费成本 ${v?money(v.cost_price):'待核验'}</small></td><td>${v?v.price.toFixed(3):'—'}</td><td>${profitMarkup(v?.daily_pnl,v?.daily_pct)}${v?`<small>${escape(v.day)}${v.day!==chinaClock().day?' · 今日待更新':''}</small>`:''}</td><td>${profitMarkup(v?.holding_pnl,v?.holding_pct)}</td><td>${escape(v?.asof||q?.last_bar||'待核验')}</td><td>${sell?`${escape(sell.reason)}<small>确认 ${escape(sell.confirmed_at)}<br>最早模拟执行 ${escape(sell.execution_at)}</small>`:escape(q?.status||'严格卖出待30分钟行情核验')}</td></tr>`;
@@ -420,17 +470,20 @@
     state.capital=next;lastRequest++;plan=null;historyData=null;save();draw();
     $('schemes').innerHTML='';$('historyDetail').textContent='正在按新本金重算';
     showNotice('正在保存本金并重算当前模型的股数与费用…');
-    try{await request('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({capital:next})});await loadHistory();await refresh();}
-    catch(error){showNotice(error.message+'；当前本金保留为'+money(state.capital),true);}
+    beginLoading('正在保存本金并重算当前模型的股数与费用…');
+    try{await request('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({capital:next})});await loadHistory();await foregroundRefresh();}
+    catch(error){restoreSavedView(error.message+'；显示上次已核验记录，暂停新增买入。');draw();showNotice(error.message+'；当前本金保留为'+money(state.capital),true);}
+    finally{endLoading();}
   });
   $('rollingModel').addEventListener('change',async event=>{
     state.model=event.target.value===weeklyModel?weeklyModel:defaultModel;state.cap=2;lastRequest++;plan=null;historyData=null;save();draw();
     showNotice('正在按所选模型重新计算…');
-    try{await loadHistory();await refresh();}catch(error){showNotice(error.message,true);}
+    beginLoading('正在按所选模型重新计算…');
+    try{await loadHistory();await foregroundRefresh();}catch(error){showNotice(error.message,true);}finally{endLoading();}
   });
-  $('schemes').addEventListener('click',event=>{const button=event.target.closest('[data-cap]');if(!button)return;state.cap=Number(button.dataset.cap);plan=null;lastRequest++;save();draw();if(busy)setTimeout(refresh,1500);else refresh();});
-  $('refresh').addEventListener('click',refresh);
-  $('startDate').addEventListener('change',event=>{state.startMode=event.target.value==='latest'?'latest':'manual';if(state.startMode==='manual')state.startDate=event.target.value;lastRequest++;plan=null;save();draw();showNotice('正在从所选交易日重新计算模拟账户…');refresh();});
+  $('schemes').addEventListener('click',event=>{const button=event.target.closest('[data-cap]');if(!button)return;state.cap=Number(button.dataset.cap);plan=null;lastRequest++;save();draw();void withLoading(async()=>{while(busy)await new Promise(resolve=>setTimeout(resolve,100));await refresh();},'正在切换持仓方案并重算…');});
+  $('refresh').addEventListener('click',()=>withLoading(foregroundRefresh,'正在刷新行情并核验模拟记录…'));
+  $('startDate').addEventListener('change',event=>{state.startMode=event.target.value==='latest'?'latest':'manual';if(state.startMode==='manual')state.startDate=event.target.value;lastRequest++;plan=null;save();draw();showNotice('正在从所选交易日重新计算模拟账户…');void withLoading(foregroundRefresh,'正在从所选交易日重新计算模拟账户…');});
   $('buyRows').addEventListener('change',event=>{const code=event.target.dataset.price;if(!code||!plan)return;const price=Number(event.target.value);if(!Number.isFinite(price)||price<=0){showNotice('请输入有效的评估价格。',true);return;}const key=priceKey();priceInputs[key]={...(priceInputs[key]||{}),[code]:price};draw();});
   function setTab(value){tab=value;$('planTab').setAttribute('aria-selected',String(tab==='plan'));$('historyTab').setAttribute('aria-selected',String(tab==='history'));$('planPanel').hidden=tab!=='plan';$('historyPanel').hidden=tab!=='history';}
   $('planTab').addEventListener('click',()=>setTab('plan'));$('historyTab').addEventListener('click',()=>setTab('history'));$('historyDay').addEventListener('change',drawHistoryDay);
@@ -458,10 +511,13 @@
   async function initialize(){
     showTradeAlerts();
     if(restoreSavedView())draw();
-    try{const value=await request('/api/settings');state.capital=value.capital;$('capital').value=state.capital;restoreSavedView();save();draw();}
-    catch(error){showNotice('本机本金设置读取失败：'+error.message,true);return;}
-    // The current plan must not queue behind all five historical comparisons.
-    await refresh();
+    beginLoading('正在读取计划所需数据，已有模拟记录会保留…');
+    try{
+      try{const value=await request('/api/settings');state.capital=value.capital;$('capital').value=state.capital;restoreSavedView();save();draw();}
+      catch(error){showNotice('本机本金设置读取失败：'+error.message,true);return;}
+      // The current plan must not queue behind all five historical comparisons.
+      await refresh();
+    }finally{endLoading();}
     await loadHistory().catch(error=>{$('historyBasis').textContent='历史推算读取失败：'+error.message;});
   }
   initialize();

@@ -25,6 +25,7 @@
     worker.onmessage = ({data}) => {
       if (data.progress) {
         if(pending.size){const historyOnly=[...pending.values()].every(task=>task.route==='history');document.getElementById(historyOnly?'historyBasis':'notice').textContent=data.progress;}
+        if(pending.size)window.WaXwingRollingProgress?.(data.progress);
         return;
       }
       const task = pending.get(data.id); if (!task) return;

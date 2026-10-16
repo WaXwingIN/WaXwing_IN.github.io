@@ -55,6 +55,10 @@ body.waxwing-ui .callout.error{color:#a33e38}
  body.waxwing-ui main{padding-top:20px!important}
  body.waxwing-ui main>header>.actions{margin-top:0}
 }
+
+body.waxwing-ui .daily-quick-actions button[aria-pressed="true"]{background:var(--wx-blue);border-color:var(--wx-blue);color:#fff}
+body.waxwing-ui .sim-submit-row{justify-content:space-between}
+body.waxwing-ui .sim-submit-row>button{margin-left:auto;flex:none}
 </style></head><body class="daily-ui-booting waxwing-ui"><script>/* Shared ES5 controls for model, holding and history pages. */
 (function () {
     if (window.__waxwingStockCodeCopy) return;
@@ -4167,8 +4171,10 @@ function holdingSimulationPanel(state,payload,positions){
     const priority=holdingSimulationPriority(payload),modelReturns=priority.modelReturns,valuationThrough=priority.through;
     const options={principal,perTrade,maxShares:shareLimit===''?null:Number(shareLimit),listOnly:state.simPrincipal===''||(state.simPerTrade===''&&shareLimit===''),startDate,through:valuationThrough,quotes:dailyExtra.holdingSimulationQuotes?.quotes||{},modelReturns,order:state.simOrder||'model',unlimited:Boolean(state.simUnlimited),excludeChiNext:Boolean(state.simExcludeChiNext),dayStats:payload.selection?.by_buy_day,reasonLabels:payload.selection?.reason_labels,d2FallbackPositions:payload.simulation_d2_fallback||[],d2ExitUnverifiedByDay:payload.simulation_d2_exit_unverified?.by_buy_day||{},d2ExitUnverifiedTotal:Number(payload.simulation_d2_exit_unverified?.total||0),allowD2Fallback:state.simModels==null||state.simModels.length>0};
     const fixedModels=['60分钟MACD底背离选股法','周线盘整背驰一买','日线MACD底背离选股法','日线趋势一买','周线类二买'];
-    const models=[...new Set([...fixedModels,...positions.map(p=>p.source_model).filter(m=>m&&m!=='D2第二回调双路径提醒')])];
-    const selected=state.simModels||models;
+    const models=fixedModels;
+    const validSelected=state.simModels?.filter(m=>models.includes(m));
+    const selected=state.simModels==null||(state.simModels.length>0&&!validSelected.length)?models:validSelected;
+    options.allowD2Fallback=selected.length>0;
     const eligible=positions.filter(p=>selected.includes(p.source_model));
     const channel=options.excludeChiNext?'不包含创业板':'全部';
     const savedOrders=state.simOrders??[state.simOrder||'model'];
@@ -4178,6 +4184,7 @@ function holdingSimulationPanel(state,payload,positions){
     // already has an accepted reminder from one of the selected models.
     const strongBuyDays=new Set(eligible.map(item=>String(item.buy_effective_date||'').slice(0,10)).filter(Boolean));
     const d2Fallback=(options.d2FallbackPositions||[]).filter(item=>{
+        if(!options.allowD2Fallback||item.source_model!=='D2第二回调双路径提醒')return false;
         const day=String(item.buy_effective_date||'').slice(0,10);
         return day&&!strongBuyDays.has(day);
     });
@@ -4190,7 +4197,7 @@ function holdingSimulationPanel(state,payload,positions){
 <fieldset class="sim-step"><legend>1 · 设置资金与连续账户起点</legend><div class="sim-capital-fields"><label>原始本金（元）<input type="number" name="principal" min="100" step="100" placeholder="留空只看清单" value="${safe(state.simPrincipal??50000)}"></label><label>每笔最多（元）<input type="number" name="perTrade" min="100" step="100" placeholder="留空不限制金额" value="${safe(state.simPerTrade??10000)}"></label><label>每只股票最多（股）<input type="number" name="maxShares" min="1" step="1" placeholder="与金额二选一，例如1000" value="${safe(shareLimit)}"></label><label>连续账户买入开始日<input type="date" name="startDate" required min="${safe(payload.window?.from||'')}" value="${safe(startDate)}"></label></div><small class="sim-field-help">金额和股数上限二选一，填写一项会清空另一项；股数按100股向下取整，同一股票合并计算持有股数。连续账户从该日启动，卖出回款继续用于后续买入。每日独立试算不使用这个起始日，而是覆盖下方最近30个交易日。估值截止日 ${safe(formatDate(valuationThrough))}。</small></fieldset>
 <fieldset class="sim-step"><legend>2 · 选择参与模型</legend><div class="sim-model-actions"><span>已选 ${selected.filter(m=>models.includes(m)).length} / ${models.length} 个</span><button type="button" class="sim-secondary" data-sim-models="all">全选</button><button type="button" class="sim-secondary" data-sim-models="none">清空</button></div><div class="sim-options">${models.map(m=>`<label><input type="checkbox" name="models" value="${safe(m)}" ${selected.includes(m)?'checked':''}>${safe(m)}</label>`).join('')}</div></fieldset>
 <fieldset class="sim-step sim-methods"><legend>3 · 设置买入与资金规则</legend><div class="sim-option-row"><span>买入顺序</span><div class="sim-options">${[['model','模型优先'],['chronological','提醒时间顺序']].map(([value,label])=>`<label><input type="checkbox" name="orders" value="${value}" ${orders.includes(value)?'checked':''}>${label}</label>`).join('')}</div></div><div class="sim-option-row"><span>资金与范围</span><div class="sim-options"><label><input type="checkbox" name="unlimited" ${options.unlimited?'checked':''}>连续账户资金不足时追加本金</label><label><input type="checkbox" name="excludeChiNext" ${options.excludeChiNext?'checked':''}>剔除创业板</label></div></div><small class="sim-field-help">连续账户只投入一次本金，卖出回款继续买入；每日独立账户每天重新投入原始本金、空仓起步。两种结果在下方页签直接切换，买入开始日只影响连续账户。</small></fieldset>
-<div class="sim-submit-row"><button type="submit">计算试算结果</button><span class="sim-field-help">修改设置后，点击计算更新结果</span></div>
+<div class="sim-submit-row"><span class="sim-field-help">修改设置后，点击计算更新结果</span><button type="submit">计算试算结果</button></div>
 </form>`;
     const resultTabs=`<div class="holding-sim-mode-tabs" role="tablist" aria-label="试算结果口径"><button type="button" role="tab" data-sim-result-mode="continuous" aria-selected="${accountMode==='continuous'}">连续滚动账户</button><button type="button" role="tab" data-sim-result-mode="daily" aria-selected="${accountMode==='daily'}">每日独立本金</button></div>`;
     if(accountMode==='continuous'&&startDate>valuationThrough)return `<section class="holding-simulator"><h3>连续账户试算 · ${safe(formatDate(startDate))}</h3><p class="daily-note">可用估值截至 ${safe(formatDate(valuationThrough))}，连续账户开始日尚未到达。</p>${form}</section>`;
@@ -5275,7 +5282,7 @@ style.textContent+=`
 
 .holding-sim-form .sim-methods .sim-option-row{display:grid;grid-template-columns:76px minmax(0,1fr);gap:16px;align-items:center}.holding-sim-form .sim-methods .sim-option-row>span{width:auto;min-width:0}.holding-sim-form .sim-methods .sim-option-row+.sim-option-row{margin-top:12px}.holding-sim-form .sim-methods .sim-options{display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px 16px}.holding-sim-form .sim-methods .sim-options label{margin:0;min-height:24px;align-items:center}.holding-sim-form .sim-methods>.sim-field-help{margin:12px 0 0 92px;padding-top:10px;border-top:1px solid #e2e8f0}.holding-sim-form .sim-methods{padding:12px 14px 14px}
 @media(max-width:480px){.holding-sim-form .sim-methods .sim-option-row{grid-template-columns:1fr;gap:6px}.holding-sim-form .sim-methods .sim-options{grid-template-columns:1fr;gap:8px}.holding-sim-form .sim-methods>.sim-field-help{margin-left:0}}
-@media(max-width:640px){.stock-lookup-form{grid-template-columns:minmax(0,1fr) auto}.stock-lookup-form .stock-search-input{grid-column:1/-1;width:100%;max-width:none}.stock-lookup-form .stock-search-option{white-space:normal}.sim-capital-fields{grid-template-columns:1fr}.sim-option-row{align-items:flex-start}.sim-option-row>span{width:100%}.sim-options{gap:10px 16px}.d2-inline-check{grid-template-columns:1fr}.d2-inline-detail{grid-column:auto}.sim-submit-row button{width:100%}}
+@media(max-width:640px){.stock-lookup-form{grid-template-columns:minmax(0,1fr) auto}.stock-lookup-form .stock-search-input{grid-column:1/-1;width:100%;max-width:none}.stock-lookup-form .stock-search-option{white-space:normal}.sim-capital-fields{grid-template-columns:1fr}.sim-option-row{align-items:flex-start}.sim-option-row>span{width:100%}.sim-options{gap:10px 16px}.d2-inline-check{grid-template-columns:1fr}.d2-inline-detail{grid-column:auto}.sim-submit-row button{width:auto;margin-left:auto}}
 `;
 
 style.textContent+=`
