@@ -364,7 +364,16 @@
   async function loadHistory() {
     $('applyPlan').disabled=true;
     const capital=state.capital,model=state.model;
-    try {const value=await request('/api/history?capital='+encodeURIComponent(capital)+(model===defaultModel?'':'&model='+encodeURIComponent(model)));if(capital!==state.capital||model!==state.model)return;historyData=value;if(!historyData.selected_caps.includes(state.cap))state.cap=historyData.selected_caps[0];save();draw();}
+    try {
+      const value=await request('/api/history?capital='+encodeURIComponent(capital)+(model===defaultModel?'':'&model='+encodeURIComponent(model)));
+      if(capital!==state.capital||model!==state.model)return;
+      historyData=value;
+      const oldCap=state.cap;
+      if(!historyData.selected_caps.includes(state.cap))state.cap=historyData.selected_caps[0];
+      if(oldCap!==state.cap){lastRequest++;plan=null;}
+      save();draw();
+      if(oldCap!==state.cap)await refresh();
+    }
     finally{$('applyPlan').disabled=false;}
   }
   async function loadStartOptions(){
@@ -451,7 +460,9 @@
     if(restoreSavedView())draw();
     try{const value=await request('/api/settings');state.capital=value.capital;$('capital').value=state.capital;restoreSavedView();save();draw();}
     catch(error){showNotice('本机本金设置读取失败：'+error.message,true);return;}
-    await Promise.all([loadHistory().catch(error=>showNotice(error.message,true)),refresh()]);
+    // The current plan must not queue behind all five historical comparisons.
+    await refresh();
+    await loadHistory().catch(error=>{$('historyBasis').textContent='历史推算读取失败：'+error.message;});
   }
   initialize();
   setInterval(refresh,30000);setInterval(tick,15000);

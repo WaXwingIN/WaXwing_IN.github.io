@@ -3,16 +3,16 @@
   'use strict';
   const files = {"pyodide-lock.json":{"sha256":"9c45b916001a750f4102fc287494f3eab215909c7535c626a20db80fd6333e2c","size":112205},"pyodide.js":{"sha256":"b4cb23a53aba19c221659b9fb40a2f18281d685691dc06647fb0afd0681baf98","size":14913},"pyodide.asm.js":{"sha256":"6b4c90de5b7172873f04f21884d0e9d2274e305fe32116558fe3e4fbe3618d51","size":1255688,"gzip":"9954b33176491fb4265acd1a7e62cad1f48ac35360509d28ffb5ec90071d1341"},"pyodide.asm.wasm":{"sha256":"a50dd1843f805a0b7c45b61037ee0d7b26dfe85efe0e18ef95a34ad24e401f5f","size":10105545,"gzip":"a160dd4b8a73e020641c2c3b350151a27deea1f663e647d0a571bac861fe6f3d"},"python_stdlib.zip":{"sha256":"16611534726e5d8ac2bd8f926410b2dcb8d6f49aa24913463533b457a2115c16","size":2360737},"pandas-2.2.3-cp312-cp312-pyodide_2024_0_wasm32.whl":{"sha256":"5502f0f94f93a482b851d0b8ca43be692c1b8d20215a168313656847ff74d63a","size":5707178},"numpy-2.0.2-cp312-cp312-pyodide_2024_0_wasm32.whl":{"sha256":"ebb61241d962b98b21597d7ce43b67668a6d5bab3acec4fbe958657320d7cd08","size":3061133},"python_dateutil-2.9.0.post0-py2.py3-none-any.whl":{"sha256":"02811ea3714f6697d639c07dc5ec63f5774dc7a688e4e1cbbe9beb2f33c3e6c9","size":229892},"pytz-2024.1-py2.py3-none-any.whl":{"sha256":"fcfc168155da8d19057b17bee735fef71dc3a39f1dccd83514e16ecc6abaddc4","size":505474},"six-1.16.0-py2.py3-none-any.whl":{"sha256":"f61235bc3a15086f0369585e5071ae9ba0bd244a111d12b37f683862e6850c0a","size":11053}};
   const originalFetch = self.fetch.bind(self), base = new URL('./', self.location.href);
-  const cacheName = 'waxwing-rolling-components-v1', inflight = new Map(), bytesLoaded = new Map();
-  let enginePromise, report = () => {}, lastReport = 0;
+  const cacheName = 'waxwing-rolling-components-v1', inflight = new Map(), reused = new Map();
+  let enginePromise, report = () => {}, lastReport = 0, networkBytes = 0;
   const hash = async bytes => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(n => n.toString(16).padStart(2, '0')).join('');
   const mime = name => name.endsWith('.wasm') ? 'application/wasm' : name.endsWith('.js') ? 'text/javascript' : 'application/octet-stream';
-  function downloaded(name, size) {
-    bytesLoaded.set(name, Math.max(bytesLoaded.get(name) || 0, size));
+  function downloaded(name, size, cached=false) {
+    if(cached)reused.set(name,size);else networkBytes+=size;
     if (Date.now() - lastReport < 250) return;
     lastReport = Date.now();
-    const loaded = [...bytesLoaded.values()].reduce((a, b) => a + b, 0) / 1048576;
-    report(`正在准备网页计算，已读取 ${loaded.toFixed(1)} MB，完成的组件会保存在浏览器…`);
+    const cachedBytes = [...reused.values()].reduce((a, b) => a + b, 0) / 1048576;
+    report(`正在准备网页计算，网络读取 ${(networkBytes/1048576).toFixed(1)} MB${cachedBytes?` · 缓存复用 ${cachedBytes.toFixed(1)} MB`:''}…`);
   }
   async function cacheRead(name, expected) {
     try {
@@ -20,7 +20,7 @@
       const response = await cache.match(key);
       if (!response) return null;
       const raw = new Uint8Array(await response.arrayBuffer());
-      if (await hash(raw) === expected) { downloaded(name, raw.length); return raw; }
+      if (await hash(raw) === expected) { downloaded(name, raw.length, true); return raw; }
       await cache.delete(key);
     } catch (_) { /* Storage restrictions do not prevent calculation. */ }
     return null;
@@ -36,7 +36,9 @@
   async function candidate(item, expected, name, controller) {
     let idle;
     const reset = () => { clearTimeout(idle); idle = setTimeout(() => controller.abort(), 10000); };
-    const deadline = setTimeout(() => controller.abort(), 75000);
+    // A live, progressing package transfer must not restart from zero merely
+    // because it crossed 75 seconds. Idle/very slow routes still fail over.
+    const deadline = setTimeout(() => controller.abort(), 300000);
     reset();
     try {
       const response = await originalFetch(item.url, {cache: 'force-cache', credentials: 'omit', signal: controller.signal});
@@ -44,7 +46,7 @@
       const reader = response.body.getReader(), chunks = [], started = Date.now(); let size = 0;
       for (;;) {
         const part = await reader.read(); if (part.done) break;
-        reset(); chunks.push(part.value); size += part.value.byteLength; downloaded(name, size);
+        reset(); chunks.push(part.value); size += part.value.byteLength; downloaded(name, part.value.byteLength);
         if (Date.now() - started > 8000 && size / ((Date.now() - started) / 1000) < 10240) { controller.abort(); throw new Error('当前下载线路过慢'); }
       }
       let raw = new Uint8Array(size), at = 0;
@@ -131,8 +133,19 @@
     if (!/^[0-9a-f]{64}$/.test(expected || '')) return Promise.reject(new Error('公开资源版本清单不完整，请重试'));
     return race(name, expected, publicSources(name, expected));
   },
-    release: () => originalFetch(new URL('data/cloud_static_release.json', base), {cache: 'no-store', credentials: 'omit', signal: AbortSignal.timeout(15000)}).then(async response => {
-      if (!response.ok) throw new Error('公开行情版本读取失败，请重试');
-      return response.json();
-    }), progress: callback => { report = callback; }};
+    release: async () => {
+      try {
+        for(const name of ['data/rolling_release.json','data/cloud_static_release.json']){
+          const response=await originalFetch(new URL(name,base),{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(20000)});
+          if(response.status===404&&name==='data/rolling_release.json')continue;
+          if(!response.ok)throw new Error('公开行情版本读取失败，请点击“刷新数据”重试');
+          const value=await response.json();
+          if(!value?.source_version||!value.files)throw new Error('公开行情版本清单不完整，请重试');
+          return value;
+        }
+      }catch(error){
+        if(/abort|timeout|超时/i.test(String(error?.message||error)))throw new Error('公开行情版本读取超时，请点击“刷新数据”重试；本金和已有模拟记录保留');
+        throw error;
+      }
+    }, progress: callback => { report = callback; }};
 })();
