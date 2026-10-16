@@ -104,3 +104,7 @@ table:has(#simulationRows) th:nth-child(4),table:has(#simulationRows) th:nth-chi
  .rolling-action-row{margin-top:8px}
  .rolling-sticky-controls .tabs button{font-size:13px;padding:5px 10px}
 }
+
+.market-decision{font-size:12px;line-height:1.7;margin:10px 0 14px}.market-decision p{margin:4px 0}.market-decision strong{color:var(--ink)}.market-decision ul{margin:4px 0;padding-left:20px}
+
+.global-loading{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:20px;background:#f3f6facc;backdrop-filter:blur(2px)}.global-loading[hidden]{display:none}.global-loading-box{width:min(440px,100%);padding:28px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 48px #20324722;text-align:center}.global-loading-box strong{display:block;margin-top:12px;font-size:17px}.global-loading-box p{margin:10px 0;color:var(--teal);overflow-wrap:anywhere}.global-loading-box small{color:var(--muted)}.global-loading-spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:rolling-spin .8s linear infinite}@keyframes rolling-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.global-loading-spinner{animation:none}}
