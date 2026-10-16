@@ -571,6 +571,7 @@ let privateDataClosed=false,pageVersionRequest=null;
 let publicCloudVersion='',publicCloudDate='',publicCloudUpdatedAt='',publicCloudPublishedAt='',publicCloudAvailable=false;
 const publicStaticReleases=new Map();
 let staticHeadRequest=null,staticHeadCheckedAt=0,staticHeadSha='';
+let staticPagesUntil=0;
 const PUBLIC_CLOUD_ORIGIN=typeof WaxwingPublicDataSource!=='undefined'?WaxwingPublicDataSource.cloudOrigin:'https://waxwingin.cn';
 function publicCloudStatus(message){
     if(!publicCloudPage)return;
@@ -625,13 +626,13 @@ async function publicCloudVersionInfo(){
     if(publicStaticPage){
         // Pages deployment and its ten-minute edge cache must not hold back an
         // already published static snapshot. Pin all reads to one public commit.
-        if(location.hostname.toLowerCase()==='waxwingin.github.io'){
+        if(location.hostname.toLowerCase()==='waxwingin.github.io'&&!staticPagesPreferred()){
+            try{
             const sha=await publicStaticHead();
             if(sha){
                 if(publicStaticReleases.has(sha))return publicStaticReleases.get(sha);
                 const base=`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/${sha}/data/`;
-                const receiptResponse=await fetch(base+'cloud_static_release.json',{cache:'force-cache',credentials:'omit',signal:AbortSignal.timeout(15000)});
-                if(!receiptResponse.ok)throw new Error('静态发布回执 HTTP '+receiptResponse.status);
+                const receiptResponse=await fetchStaticObject([base+'cloud_static_release.json',`https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@${sha}/data/cloud_static_release.json`],'cloud_static_release.json',false);
                 const receipt=await receiptResponse.json(),expected=receipt.files?.['data/page/manifest.json'];
                 if(receipt.source!=='verified-cloud-public-models'||! /^[0-9a-f]{64}$/.test(expected||''))throw new Error('静态发布回执无效');
                 const response=await fetchStaticObject([base+'page/manifest.json',`https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@${sha}/data/page/manifest.json`],'page/manifest.json',expected);
@@ -643,6 +644,15 @@ async function publicCloudVersionInfo(){
                 publicStaticReleases.set(sha,active);
                 while(publicStaticReleases.size>3)publicStaticReleases.delete(publicStaticReleases.keys().next().value);
                 return active;
+            }
+            }catch(error){
+                // Mobile networks can reach Pages while both public Git blob
+                // hosts are unavailable. The fast path is optional; keep the
+                // existing, separately published static page transport usable.
+                console.warn('Fast static snapshot unavailable; using published Pages data',error);
+                preferStaticPages();
+                const current=publicStaticReleases.get(publicCloudVersion);
+                if(current)return current;
             }
         }
         const versionUrls=['data/page/manifest.json'];
@@ -661,6 +671,14 @@ async function publicCloudVersionInfo(){
     const value=await response.json();
     if(!/^[A-Za-z0-9._-]{1,128}$/.test(value?.version||'')||!/^\d{4}-\d{2}-\d{2}$/.test(value?.date||''))throw new Error('腾讯云版本信息不完整');
     return value;
+}
+function staticPagesPreferred(){
+    try{staticPagesUntil=Math.max(staticPagesUntil,Number(sessionStorage.getItem('waxwing_static_pages_until')||0))}catch(_error){}
+    return staticPagesUntil>Date.now();
+}
+function preferStaticPages(){
+    staticPagesUntil=Date.now()+600000;
+    try{sessionStorage.setItem('waxwing_static_pages_until',String(staticPagesUntil))}catch(_error){}
 }
 async function publicStaticHead(){
     const now=Date.now();
@@ -695,7 +713,13 @@ async function publicCloudFetch(path,version=publicCloudVersion){
                 `https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/${version}/data/${path}`,
                 `https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@${version}/data/${path}`,
                 `data/${path}`
-            ],path,expected);
+            ],path,expected).catch(error=>{
+                preferStaticPages();
+                // Restart the complete static snapshot rather than retaining
+                // half of a commit whose remaining resources cannot be read.
+                if(typeof location.reload==='function')location.reload();
+                throw error;
+            });
         }
         const immutable=/^page\/objects\/[0-9a-f]{64}\.json$/.test(path);
         const suffix=immutable?'':`?v=${encodeURIComponent(version)}`;
@@ -722,7 +746,7 @@ async function publicCloudFetch(path,version=publicCloudVersion){
     return response;
 }
 async function fetchStaticObject(urls,path,expectedHash=null){
-    const expected=expectedHash||path.match(/([0-9a-f]{64})\.json$/)[1];
+    const expected=expectedHash===false?null:expectedHash||path.match(/([0-9a-f]{64})\.json$/)[1];
     const controllers=urls.map(()=>new AbortController());
     if(typeof pageRequestControllers!=='undefined')controllers.forEach(c=>pageRequestControllers.add(c));
     let settled=false,backupTimer,winner=-1;
@@ -736,9 +760,11 @@ async function fetchStaticObject(urls,path,expectedHash=null){
                     const response=await fetch(urls[index],{cache:'force-cache',credentials:'omit',signal:controllers[index].signal});
                     if(!response.ok)throw new Error('模型数据 HTTP '+response.status+'：'+path);
                     const bytes=await response.clone().arrayBuffer();
-                    const digest=await crypto.subtle.digest('SHA-256',bytes);
-                    const actual=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
-                    if(actual!==expected)throw new Error('模型数据校验失败：'+path);
+                    if(expected){
+                        const digest=await crypto.subtle.digest('SHA-256',bytes);
+                        const actual=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+                        if(actual!==expected)throw new Error('模型数据校验失败：'+path);
+                    }
                     // Parse before selecting a winner; headers alone do not
                     // establish that a stalled response body has completed.
                     JSON.parse(new TextDecoder().decode(bytes));
