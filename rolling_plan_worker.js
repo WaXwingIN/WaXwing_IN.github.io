@@ -3,43 +3,49 @@ let engine, release, marketDate, marketHash, checkedAt = 0, initialized = false;
 let queue = Promise.resolve();
 const progress = text => self.postMessage({progress: text});
 async function digest(raw) { return [...new Uint8Array(await crypto.subtle.digest('SHA-256', raw))].map(b => b.toString(16).padStart(2, '0')).join(''); }
-async function fetchBytes(name, cached = false) { const response = await fetch(name, {cache: cached ? 'force-cache' : 'no-store'}); if (!response.ok) throw new Error('公开数据读取失败，请稍后刷新'); return new Uint8Array(await response.arrayBuffer()); }
-async function verified(name) { const bytes = await fetchBytes(name + '?sha256=' + release.files[name], true); if (await digest(bytes) !== release.files[name]) throw new Error('公开资源版本尚未一致，请稍后刷新'); return bytes; }
+importScripts('rolling_plan_loader.js');
+const assetLoader = self.WaXwingRollingLoader;
+assetLoader.progress(progress);
 function unpack(raw) { return Uint8Array.from(atob(raw), c => c.charCodeAt(0)); }
 async function prepare(books) {
-  if (!engine) {
-    progress('首次打开正在准备网页计算，完成后会保留本金与模拟记录…');
-    importScripts('rolling-runtime/pyodide.js');
-    engine = await loadPyodide({indexURL: new URL('rolling-runtime/', self.location.href).href});
-    await engine.loadPackage('pandas');
-  }
-  if (!release || Date.now() - checkedAt > 60000) {
-    progress('正在核验 GitHub 行情与计算资源…');
-    release = JSON.parse(new TextDecoder().decode(await fetchBytes('data/cloud_static_release.json')));
-    if (!initialized) {
-      const runtime = JSON.parse(new TextDecoder().decode(await verified('data/rolling_runtime.json')));
-      for (const item of runtime.files) {
-        const name = item.path, encoded = item.content;
-        if (!/^(?:[a-z0-9_]+\.py|research\/[a-z0-9_]+\.py|research\/reports\/[a-zA-Z0-9_\u4e00-\u9fff/]+\.(?:json|csv))$/.test(name)) throw new Error('计算资源路径无效');
-        const raw = unpack(encoded);
-        if (await digest(raw) !== item.sha256) throw new Error('计算资源哈希核验失败');
-        const path = '/waxwing/' + name; engine.FS.mkdirTree(path.slice(0, path.lastIndexOf('/'))); engine.FS.writeFile(path, raw);
-      }
-      await engine.runPythonAsync("import sys; sys.path.insert(0, '/waxwing'); import rolling_plan_browser_bridge as bridge");
-      engine.globals.set('saved_books', books);
-      await engine.runPythonAsync('bridge.initialize(saved_books)');
-      initialized = true;
+  const boot = engine ? Promise.resolve(engine) : assetLoader.engine().then(value => { engine = value; });
+  const refresh = !release || Date.now() - checkedAt > 60000;
+  const reading = refresh ? (async () => {
+    const selected = await assetLoader.release();
+    const marketName = selected.files['data/rolling_browser_market.json'] ? 'data/rolling_browser_market.json' : 'data/rolling_market.json';
+    const nextHash = selected.files[marketName];
+    const [runtime, market] = await Promise.all([
+      initialized ? null : assetLoader.verified('data/rolling_runtime.json', selected.files['data/rolling_runtime.json']),
+      marketHash === nextHash ? null : assetLoader.verified(marketName, nextHash)
+    ]);
+    return {selected, runtime, market, nextHash};
+  })() : Promise.resolve(null);
+  const [assets] = await Promise.all([reading, boot]);
+  if (!assets) return;
+  release = assets.selected;
+  if (!initialized) {
+    progress('正在校验计算规则与本机模拟记录…');
+    const runtime = JSON.parse(new TextDecoder().decode(assets.runtime));
+    for (const item of runtime.files) {
+      const name = item.path, encoded = item.content;
+      if (!/^(?:[a-z0-9_]+\.py|research\/[a-z0-9_]+\.py|research\/reports\/[a-zA-Z0-9_\u4e00-\u9fff/]+\.(?:json|csv))$/.test(name)) throw new Error('计算资源路径无效');
+      const raw = unpack(encoded);
+      if (await digest(raw) !== item.sha256) throw new Error('计算资源哈希核验失败');
+      const path = '/waxwing/' + name; engine.FS.mkdirTree(path.slice(0, path.lastIndexOf('/'))); engine.FS.writeFile(path, raw);
     }
-    const nextMarketHash = release.files['data/rolling_browser_market.json'];
-    if (marketHash !== nextMarketHash) {
-      const raw = await verified('data/rolling_browser_market.json');
-      engine.globals.set('market_wrapper', new TextDecoder().decode(raw));
-      engine.globals.set('source_version', release.source_version);
-      marketDate = await engine.runPythonAsync('bridge.load_market(market_wrapper, source_version)');
-      marketHash = nextMarketHash;
-    }
-    checkedAt = Date.now();
+    await engine.runPythonAsync("import sys; sys.path.insert(0, '/waxwing'); import rolling_plan_browser_bridge as bridge");
+    engine.globals.set('saved_books', books);
+    await engine.runPythonAsync('bridge.initialize(saved_books)');
+    initialized = true;
   }
+  if (assets.market) {
+    progress('行情已校验，正在载入本机计算…');
+    engine.globals.set('market_wrapper', new TextDecoder().decode(assets.market));
+    engine.globals.set('source_version', release.source_version);
+    marketDate = await engine.runPythonAsync('bridge.load_market(market_wrapper, source_version)');
+    marketHash = assets.nextHash;
+  }
+  checkedAt = Date.now();
 }
 self.onmessage = ({data}) => { queue = queue.catch(() => {}).then(async () => {
   try {
