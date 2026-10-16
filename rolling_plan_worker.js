@@ -1,10 +1,10 @@
 'use strict';
-let engine, release, marketDate, checkedAt = 0, initialized = false;
+let engine, release, marketDate, marketHash, checkedAt = 0, initialized = false;
 let queue = Promise.resolve();
 const progress = text => self.postMessage({progress: text});
 async function digest(raw) { return [...new Uint8Array(await crypto.subtle.digest('SHA-256', raw))].map(b => b.toString(16).padStart(2, '0')).join(''); }
-async function fetchBytes(name) { const response = await fetch(name, {cache: 'no-store'}); if (!response.ok) throw new Error('公开数据读取失败，请稍后刷新'); return new Uint8Array(await response.arrayBuffer()); }
-async function verified(name) { const bytes = await fetchBytes(name); if (await digest(bytes) !== release.files[name]) throw new Error('公开资源版本尚未一致，请稍后刷新'); return bytes; }
+async function fetchBytes(name, cached = false) { const response = await fetch(name, {cache: cached ? 'force-cache' : 'no-store'}); if (!response.ok) throw new Error('公开数据读取失败，请稍后刷新'); return new Uint8Array(await response.arrayBuffer()); }
+async function verified(name) { const bytes = await fetchBytes(name + '?sha256=' + release.files[name], true); if (await digest(bytes) !== release.files[name]) throw new Error('公开资源版本尚未一致，请稍后刷新'); return bytes; }
 function unpack(raw) { return Uint8Array.from(atob(raw), c => c.charCodeAt(0)); }
 async function prepare(books) {
   if (!engine) {
@@ -30,10 +30,14 @@ async function prepare(books) {
       await engine.runPythonAsync('bridge.initialize(saved_books)');
       initialized = true;
     }
-    const raw = await verified('data/rolling_market.json');
-    engine.globals.set('market_wrapper', new TextDecoder().decode(raw));
-    engine.globals.set('source_version', release.source_version);
-    marketDate = await engine.runPythonAsync('bridge.load_market(market_wrapper, source_version)');
+    const nextMarketHash = release.files['data/rolling_browser_market.json'];
+    if (marketHash !== nextMarketHash) {
+      const raw = await verified('data/rolling_browser_market.json');
+      engine.globals.set('market_wrapper', new TextDecoder().decode(raw));
+      engine.globals.set('source_version', release.source_version);
+      marketDate = await engine.runPythonAsync('bridge.load_market(market_wrapper, source_version)');
+      marketHash = nextMarketHash;
+    }
     checkedAt = Date.now();
   }
 }
