@@ -569,6 +569,8 @@ const pageAssetPending=new Set();
 const d2ArchiveDateRequests=new Map();
 let privateDataClosed=false,pageVersionRequest=null;
 let publicCloudVersion='',publicCloudDate='',publicCloudUpdatedAt='',publicCloudPublishedAt='',publicCloudAvailable=false;
+const publicStaticReleases=new Map();
+let staticHeadRequest=null,staticHeadCheckedAt=0,staticHeadSha='';
 const PUBLIC_CLOUD_ORIGIN=typeof WaxwingPublicDataSource!=='undefined'?WaxwingPublicDataSource.cloudOrigin:'https://waxwingin.cn';
 function publicCloudStatus(message){
     if(!publicCloudPage)return;
@@ -621,6 +623,28 @@ async function refreshPublicCloudNotifications(){
 }
 async function publicCloudVersionInfo(){
     if(publicStaticPage){
+        // Pages deployment and its ten-minute edge cache must not hold back an
+        // already published static snapshot. Pin all reads to one public commit.
+        if(location.hostname.toLowerCase()==='waxwingin.github.io'){
+            const sha=await publicStaticHead();
+            if(sha){
+                if(publicStaticReleases.has(sha))return publicStaticReleases.get(sha);
+                const base=`https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/${sha}/data/`;
+                const receiptResponse=await fetch(base+'cloud_static_release.json',{cache:'force-cache',credentials:'omit',signal:AbortSignal.timeout(15000)});
+                if(!receiptResponse.ok)throw new Error('静态发布回执 HTTP '+receiptResponse.status);
+                const receipt=await receiptResponse.json(),expected=receipt.files?.['data/page/manifest.json'];
+                if(receipt.source!=='verified-cloud-public-models'||! /^[0-9a-f]{64}$/.test(expected||''))throw new Error('静态发布回执无效');
+                const response=await fetchStaticObject([base+'page/manifest.json',`https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@${sha}/data/page/manifest.json`],'page/manifest.json',expected);
+                const manifest=await response.json(),metadata=manifest.metadata||{};
+                const stamp=String(metadata.date||metadata.daily_date||metadata.data_through||'').replace(/\//g,'-');
+                const date=/^\d{8}$/.test(stamp)?`${stamp.slice(0,4)}-${stamp.slice(4,6)}-${stamp.slice(6,8)}`:stamp.slice(0,10);
+                if(!manifest.datasetId||!manifest.assets||!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error('页面版本信息不完整');
+                const active={version:sha,date,page_updated_at:metadata.generated_at||'',published_at:receipt.published_at||'',manifest,receipt};
+                publicStaticReleases.set(sha,active);
+                while(publicStaticReleases.size>3)publicStaticReleases.delete(publicStaticReleases.keys().next().value);
+                return active;
+            }
+        }
         const versionUrls=['data/page/manifest.json'];
         let response,lastError;
         for(const url of versionUrls){try{response=await fetch(url,{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error('HTTP '+response.status);break}catch(error){lastError=error;response=null}}
@@ -638,10 +662,41 @@ async function publicCloudVersionInfo(){
     if(!/^[A-Za-z0-9._-]{1,128}$/.test(value?.version||'')||!/^\d{4}-\d{2}-\d{2}$/.test(value?.date||''))throw new Error('腾讯云版本信息不完整');
     return value;
 }
+async function publicStaticHead(){
+    const now=Date.now();
+    if(!staticHeadCheckedAt)try{
+        const saved=JSON.parse(sessionStorage.getItem('waxwing_static_head_v1')||'null');
+        if(/^[0-9a-f]{40}$/.test(saved?.sha||'')&&saved.checkedAt<=now&&now-saved.checkedAt<120000){staticHeadSha=saved.sha;staticHeadCheckedAt=saved.checkedAt}
+    }catch(_error){}
+    if(staticHeadCheckedAt&&now-staticHeadCheckedAt<120000)return staticHeadSha;
+    if(!staticHeadRequest)staticHeadRequest=(async()=>{
+        staticHeadCheckedAt=now;
+        try{
+            const response=await fetch('https://api.github.com/repos/WaXwingIN/WaXwing_IN.github.io/git/ref/heads/live-data',{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(8000)});
+            if(!response.ok)throw new Error('GitHub 数据版本 HTTP '+response.status);
+            const value=await response.json(),sha=value?.object?.sha;
+            if(!/^[0-9a-f]{40}$/.test(sha||''))throw new Error('GitHub 数据版本无效');
+            staticHeadSha=sha;
+            try{sessionStorage.setItem('waxwing_static_head_v1',JSON.stringify({sha,checkedAt:now}))}catch(_error){}
+        }catch(error){console.warn('Static version lookup unavailable; retaining published data',error)}
+        return staticHeadSha;
+    })().finally(()=>{staticHeadRequest=null});
+    return staticHeadRequest;
+}
 async function publicCloudFetch(path,version=publicCloudVersion){
     if(!publicCloudPage||!version)throw new Error('腾讯云已核验版本尚未加载');
     if(!/^[A-Za-z0-9_./-]+\.json$/.test(path)||path.split('/').includes('..'))throw new Error('无效的腾讯云数据路径');
     if(publicStaticPage){
+        const pinned=publicStaticReleases.get(version);
+        if(pinned){
+            const expected=pinned.receipt.files['data/'+path];
+            if(!/^[0-9a-f]{64}$/.test(expected||''))throw new Error('资源不在静态发布清单：'+path);
+            return fetchStaticObject([
+                `https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/${version}/data/${path}`,
+                `https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@${version}/data/${path}`,
+                `data/${path}`
+            ],path,expected);
+        }
         const immutable=/^page\/objects\/[0-9a-f]{64}\.json$/.test(path);
         const suffix=immutable?'':`?v=${encodeURIComponent(version)}`;
         const urls=[`data/${path}${suffix}`];
@@ -666,8 +721,8 @@ async function publicCloudFetch(path,version=publicCloudVersion){
     if(!response.ok)throw new Error('腾讯云数据 HTTP '+response.status+'：'+path);
     return response;
 }
-async function fetchStaticObject(urls,path){
-    const expected=path.match(/([0-9a-f]{64})\.json$/)[1];
+async function fetchStaticObject(urls,path,expectedHash=null){
+    const expected=expectedHash||path.match(/([0-9a-f]{64})\.json$/)[1];
     const controllers=urls.map(()=>new AbortController());
     if(typeof pageRequestControllers!=='undefined')controllers.forEach(c=>pageRequestControllers.add(c));
     let settled=false,backupTimer,winner=-1;
