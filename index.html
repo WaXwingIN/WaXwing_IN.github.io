@@ -1740,13 +1740,21 @@ function d2WithinRange(row){const d0=Number(row?.structure?.D0?.price),d2=Number
 function secondCenterEligible(row){const similarity=Number(row?.center_similarity);return row?.center_similarity!=null&&Number.isFinite(similarity)&&similarity>=SECOND_CENTER_MIN}
 function d2Eligible(row){const s=row?.structure||{},d0=Number(s.D0?.price),d1=Number(s.D1?.price),d2=Number(s.D2?.price),g2=Number(s.G2?.price),g2Day=String(s.G2?.date||'').slice(0,10),d2Day=String(s.D2?.date||'').slice(0,10);return !row?.alert_extension_only&&!row?.observation_only&&!row?.diagnostic_only&&!s.observation_only&&secondCenterEligible(row)&&[d0,d1,d2,g2].every(Number.isFinite)&&0<d0&&d0<d1&&d0<d2&&d2<g2&&g2Day.length===10&&d2Day.length===10&&g2Day<d2Day}
 function d2KdjEligible(row){return row?.d2_kdj_alert_eligible===true&&Number(row?.daily_kdj?.d)>=49&&Number(row?.daily_kdj?.j)<=20}
-const D2_IDEAL_M30_RULE='d2-adjacent-double-bottom-divergence-no-fractal-v9';
+const D2_IDEAL_M30_RULE='d2-green-red-green-price-dif-dea-intrabar-v10';
+const D2_PREVIOUS_IDEAL_M30_RULE='d2-adjacent-double-bottom-divergence-no-fractal-v9';
 const D2_LEGACY_IDEAL_M30_RULE='adjacent-double-bottom-divergence-then-m30-fractal-v8';
 function sameTradingDay(left,right){return String(left||'').slice(0,10)===String(right||'').slice(0,10)}
 function divergenceFractalOrderValid(divergenceAt,fractal={}){const pivot=fractal['发生时间'],confirmed=fractal['确认时间'];return !!divergenceAt&&!!pivot&&!!confirmed&&String(pivot)<String(confirmed)&&(sameTradingDay(divergenceAt,pivot)||String(divergenceAt)<String(pivot))}
-function d2IdealM30Eligible(row){const signal=row?.d2_ideal_m30_divergence||{},low=signal.low2||{},fractal=signal.bottom_fractal||{};return signal.status==='active'&&signal.triggered_on_scan_date===true&&!!signal.confirmed_at&&(signal.rule_version===D2_IDEAL_M30_RULE||(signal.rule_version===D2_LEGACY_IDEAL_M30_RULE&&divergenceFractalOrderValid(low.confirm_time,fractal)))}
+function d2IdealM30Eligible(row){const signal=row?.d2_ideal_m30_divergence||{},low=signal.low2||{},first=signal.low1||{},fractal=signal.bottom_fractal||{},numeric=[first.price,first.dif,first.dea,low.price,low.dif,low.dea].every(value=>value!=null&&Number.isFinite(Number(value))),current=signal.rule_version===D2_IDEAL_M30_RULE&&numeric&&Number(low.price)<Number(first.price)&&Number(low.dif)>=Number(first.dif)-1e-12&&Number(low.dea)>=Number(first.dea)-1e-12;return signal.status==='active'&&signal.triggered_on_scan_date===true&&!!signal.confirmed_at&&(current||signal.rule_version===D2_PREVIOUS_IDEAL_M30_RULE||(signal.rule_version===D2_LEGACY_IDEAL_M30_RULE&&divergenceFractalOrderValid(low.confirm_time,fractal)))}
 function d2AlertGateEligible(row){return d2Eligible(row)&&(d2KdjEligible(row)||d2IdealM30Eligible(row))}
 function d2AutoBuyEligible(row){return d2Eligible(row)&&d2IdealM30Eligible(row)}
+function d2IdealTimingText(ideal={},fallbackAt=''){
+    const at=formatDateTime(ideal.confirmed_at||fallbackAt),low=ideal.low2||{},first=ideal.low1||{};
+    const timing=ideal.intrabar?`盘中首次观察 ${at}（本根30分钟K线收盘 ${formatDateTime(ideal.bar_closes_at)}）`:
+        `低点K线 ${formatBarTime(low.time)}；${ideal.rule_version===D2_PREVIOUS_IDEAL_M30_RULE?'原确认':'确认'} ${at}`;
+    return timing+(first.dif!=null&&low.dif!=null?`；DIF ${d2Value(first.dif,4)} → ${d2Value(low.dif,4)}`:'')+
+        (first.dea!=null&&low.dea!=null?`；DEA ${d2Value(first.dea,4)} → ${d2Value(low.dea,4)}`:'');
+}
 function d2ManualReviewEligible(row,date){return d2AlertGateEligible(row)&&!d2AutoBuyEligible(row)&&!d2ManuallyApproved(row?.code,date)}
 function d2PoolAvailableAt(row){const trigger=String(row?.d2_near_d1_triggered_at||'');if(row?.d2_near_d1_trigger_precision==='second'&&trigger)return trigger;if(row?.d2_near_d1_trigger_precision==='date'&&trigger.length===10)return `${trigger} 15:00:00`;const day=String(row?.episode_start_date||row?.structure?.D2?.date||'').slice(0,10);return day?`${day} 15:00:00`:''}
 function d2EffectiveConfirmedAt(row){const pool=d2PoolAvailableAt(row);if(!pool||!d2AlertGateEligible(row))return '';const candidates=[];if(d2KdjEligible(row)){const day=String(row?.daily_kdj?.date||'').slice(0,10),kdjAt=row?.d2_kdj_first_eligible_at||(day?`${day} 15:00:00`:'');if(kdjAt)candidates.push([pool,kdjAt].sort().reverse()[0])}if(d2IdealM30Eligible(row))candidates.push([pool,row.d2_ideal_m30_divergence.confirmed_at].sort().reverse()[0]);return candidates.sort()[0]||''}
@@ -1946,7 +1954,7 @@ function d2Card(row,scanAt,detailed=false,offline=false,filterDate=''){
     ];
     const minute=signal.status==='active'?`<div class="d2-m30-alert"><b>路径A · 30分钟价格/DIF底背离</b><small>低点① ${safe(formatBarTime(signal.low1?.time))} / ${safe(signal.low1?.price)}（确认 ${safe(formatDateTime(signal.low1?.confirm_time))}）→ 低点② ${safe(formatBarTime(signal.low2?.time))} / ${safe(signal.low2?.price)}（确认 ${safe(formatDateTime(signal.low2?.confirm_time))}）；DIF ${d2Value(signal.low1?.dif,4)} → ${d2Value(signal.low2?.dif,4)}</small><small>DEA抬高 ${signal['DEA抬高']?'是':'否'} · 负柱高度降低 ${signal['负柱高度降低']?'是':'否'} · 面积缩小 ${signal['负柱面积缩小']?'是':'否'} · 扫描发现 ${safe(formatDateTime(signal.scan_discovered_at))}</small></div>`:`<small>路径A：${safe(signal['状态']||'未检测')}${signal.status==='unavailable'?`（${safe(signal['原因'])}）`:''}</small>`;
     const first=strength.status==='active'?`<div class="d2-m30-alert"><b>路径B · 二次回调首次转强</b><small>30分钟反弹高点 ${d2Value(strength.pivot?.price)}（发生 ${safe(formatDateTime(strength.pivot?.time))}、确认 ${safe(formatDateTime(strength.pivot?.confirmed_at))}）→ 5分钟收盘突破 ${d2Value(strength.breakout_price)}（${safe(formatDateTime(strength.confirmed_at))}）· 量比 ${d2Value(strength.volume_ratio,2)} · 扫描发现 ${safe(formatDateTime(strength.scan_discovered_at))}</small></div>`:`<small>路径B：${safe(strength['状态']||'未检测')}${strength.status==='unavailable'?`（${safe(strength['原因'])}）`:''}</small>`;
-    const idealText=idealGate?`<div class="d2-m30-alert"><b>替代过滤 · 30分钟理想MACD底背离</b><small>低点 ${safe(formatBarTime(ideal.low1?.time))} / ${d2Value(ideal.low1?.price)} → ${safe(formatBarTime(ideal.low2?.time))} / ${d2Value(ideal.low2?.price)}；背离确认 ${safe(formatDateTime(ideal.confirmed_at))}</small></div>`:'';
+    const idealText=idealGate?`<div class="d2-m30-alert"><b>替代过滤 · 30分钟理想MACD底背离</b><small>低点 ${safe(formatBarTime(ideal.low1?.time))} / ${d2Value(ideal.low1?.price)} → ${safe(formatBarTime(ideal.low2?.time))} / ${d2Value(ideal.low2?.price)}；${safe(d2IdealTimingText(ideal))}</small></div>`:'';
     const tracked=d2TrackingStatus(row.code,routeDate);
     const routing=tracked?`<span class="d2-routing-badge auto">已入跟踪池 · ${safe(tracked.status)}</span>`:manuallyApproved?'<span class="d2-routing-badge auto">人工筛选已通过 · 待核对入池</span>':d2AutoBuyEligible(row)?'<span class="d2-routing-badge auto">理想分支符合 · 尚无入池记录</span>':'<span class="d2-routing-badge manual">需人工筛选：仅KDJ分支</span>';
     const routingNote=tracked?'已确认入池；后续条件变化不会撤销该记录。':manuallyApproved?'已人工确认；是否成功入池和同步以实际记录为准。':autoPool?'满足自动池硬门槛；是否已入池以实际跟踪记录为准。':'30分钟底背离提醒不等待底分型；是否买入由你判断。';
@@ -2079,7 +2087,7 @@ function d2ArchivedConditionChecks(event,date){
                     {condition:'日线KDJ J≤20',passed:Number(kdj.j)<=20,actual:kdj.j});
     }
     const idealPassed=['ideal_m30_divergence','daily_kdj+ideal_m30_divergence'].includes(event.source);
-    const idealDetail=idealPassed?`确认 ${formatDateTime(ideal.confirmed_at||event.confirmed_at)}`:
+    const idealDetail=idealPassed?d2IdealTimingText(ideal,event.confirmed_at):
         ideal.reason||(ideal.low2&&ideal.confirmed_at?
             (String(ideal.confirmed_at).slice(0,10)===date?'未在当日新触发30分钟理想MACD底背离':'未在当日新触发30分钟理想MACD底背离'):
             '归档时未满足理想30分钟底背离分支');
@@ -2136,7 +2144,7 @@ function d2AlertPanel(state){
     const sectorRows=rows;
     const allCodes=new Set([...sectorRows.map(row=>row.code),...d2ArchivedStockGroups(archived).map(item=>item.row.code),...replayDays.flatMap(day=>(day.replay_rows||[]).map(row=>row.code))]);
     const options=`<option value="all"${selected==='all'?' selected':''}>全部历史 · ${allCodes.size}只</option><option value="latest"${selected==='latest'||selected===session?.date?' selected':''}>${formatDate(session?.date)} · 已确认提醒${sectorRows.length}只</option>`+dates.filter(date=>date!==session?.date).map(date=>{const groups=d2ArchivedStockGroups(archived.filter(item=>item.date===date)),replay=replayDays.find(day=>day.date===date),codes=new Set([...groups.map(g=>g.row.code),...(replay?.replay_rows||[]).map(r=>r.code)]);return `<option value="${safe(date)}"${selected===date?' selected':''}>${formatDate(date)} · 已确认提醒${codes.size}只</option>`}).join('');
-    const rule=idealOnly?'<strong>正式类二买＋当日理想30分钟MACD底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。30分钟底背离不等待底分型。本页包括同时满足日线KDJ的股票，已确认历史提醒保留。':'<strong>正式类二买 → 日线KDJ，或当日30分钟理想底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。仅满足日线KDJ的先进入“需人工筛选”，人工通过后按批准时间进入跟踪池；理想30分钟分支不等待底分型，是否买入由你判断。独立量化仅处理理想30分钟分支。已确认历史提醒保留，同股同日去重。';
+    const rule=idealOnly?'<strong>正式类二买＋当日理想30分钟MACD底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。30分钟底背离不等待底分型。本页包括同时满足日线KDJ的股票，已确认历史提醒保留。':'<strong>正式类二买 → 日线KDJ，或当日30分钟理想底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。仅满足日线KDJ的先进入“需人工筛选”，人工通过后按批准时间进入跟踪池；理想30分钟分支按相邻绿→红→绿比较：价格创新低、DIF和DEA均不创新低时盘中提醒，不等30分钟收盘、绿柱结束或底分型，是否买入由你判断。独立量化仅处理理想30分钟分支。已确认历史提醒保留，同股同日去重。';
     let html=`<section class="d2-alert-page${idealOnly?' d2-ideal-branch-page':''}">${d2InnerTabs(state)}<h2>${idealOnly?'理想30分钟分支':'D2第二回调双路径提醒'}</h2><details class="model-help" open><summary>规则与通知设置</summary><div class="d2-alert-rule">${rule}</div>${d2ManualExclusionManager()}<label class="d2-history-filter d2-sticky-history-filter">提醒日期 <select data-d2-alert-date>${options}</select></label>`;
     html+=publicCloudPage&&!publicStaticPage?'<p class="daily-note">桌面提醒由页面上方的云端提醒开关控制；提醒详情在腾讯云私密站查看。</p>':`<div class="d2-push-tools"><strong>理想30分钟桌面通知</strong>${d2NotificationButton()}<button type="button" class="d2-notification-test" data-d2-notification-test>测试 Windows 推送</button><span class="d2-push-status" data-d2-push-status aria-live="polite"></span></div><p class="daily-note">保持本页打开，新发布的理想30分钟提醒会推送到 Windows；关闭页面后停止。仅通知近45分钟的新提醒，历史回算不补发。</p>`;
     html+='</details>';
