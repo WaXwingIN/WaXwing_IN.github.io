@@ -840,6 +840,30 @@ function d2SnapshotNewer(incoming,current){
     const incomingDay=String(incoming.daily_date||'').slice(0,10),currentDay=String(current.daily_date||'').slice(0,10);
     return incomingDay!==currentDay?incomingDay>currentDay:String(incoming.generated_at||'')>=String(current.generated_at||'');
 }
+function mergeD2FrozenEvent(previous,incoming){
+    if(!previous)return incoming;
+    let earlier=String(incoming.first_observed_at||'~')<String(previous.first_observed_at||'~')?incoming:previous;
+    // The navigation archive deliberately omits structure and episode fields.
+    // A complete record of that same discovery supplies those omitted fields.
+    const indexOnly=event=>!Object.prototype.hasOwnProperty.call(event,'episode_id')&&!Object.prototype.hasOwnProperty.call(event,'structure')&&!Object.prototype.hasOwnProperty.call(event,'structure_reference');
+    const sameDiscovery=previous.event_key===incoming.event_key&&previous.confirmed_at===incoming.confirmed_at&&previous.first_observed_at===incoming.first_observed_at&&previous.center_similarity===incoming.center_similarity;
+    if(sameDiscovery&&indexOnly(previous)!==indexOnly(incoming))earlier=indexOnly(previous)?incoming:previous;
+    const other=earlier===previous?incoming:previous,value={...previous,...incoming};
+    for(const field of ['confirmed_at','source','rule_version','structure','episode_id','center_similarity','close_at_scan','daily_kdj','ideal_m30_divergence','pivot','breakout_price','volume_ratio','low1','low2','area_shrunk','gap_pct','alert_gate','structure_evidence','structure_reference','structure_reference_evidence']){
+        if(Object.prototype.hasOwnProperty.call(earlier,field))value[field]=earlier[field];else delete value[field];
+    }
+    const sameIdentity=other.event_key===earlier.event_key&&other.episode_id===earlier.episode_id&&other.center_similarity===earlier.center_similarity;
+    const evidence=other.structure_evidence||{},reference=other.structure_reference_evidence||{};
+    if(!value.structure&&other.structure&&sameIdentity&&evidence.verified_at_discovery===true&&/^[0-9a-f]{64}$/.test(evidence.source_sha256||'')&&String(evidence.captured_at||'').slice(0,19)===String(earlier.first_observed_at||'').slice(0,19)){
+        value.structure=other.structure;value.structure_evidence=evidence;
+        delete value.structure_reference;delete value.structure_reference_evidence;
+    }else if(!value.structure&&!value.structure_reference&&other.structure_reference&&sameIdentity&&reference.verified_original_geometry===true&&reference.original_event_key===earlier.event_key&&reference.original_episode_id===earlier.episode_id&&reference.original_center_similarity===earlier.center_similarity&&reference.original_observed_at===earlier.first_observed_at&&/^[0-9a-f]{64}$/.test(reference.source_sha256||'')){
+        value.structure_reference=other.structure_reference;value.structure_reference_evidence=reference;
+    }
+    value.first_observed_at=[previous.first_observed_at,incoming.first_observed_at].filter(Boolean).sort()[0];
+    value.last_observed_at=[previous.last_observed_at,incoming.last_observed_at].filter(Boolean).sort().reverse()[0];
+    return value;
+}
 function mergeD2History(current,incoming){
     if(!current)return incoming;
     if(!incoming)return current;
@@ -848,7 +872,7 @@ function mergeD2History(current,incoming){
         const previous=days.get(day.date),rows=new Map((previous?.rows||[]).map(row=>[row.code,row]));
         for(const row of day.rows||[]){
             const prior=rows.get(row.code),events=new Map((prior?.d2_alert_events||[]).map(event=>[event.event_key,event]));
-            for(const event of row.d2_alert_events||[])events.set(event.event_key,{...events.get(event.event_key),...event});
+            for(const event of row.d2_alert_events||[])events.set(event.event_key,mergeD2FrozenEvent(events.get(event.event_key),event));
             rows.set(row.code,{...prior,...row,d2_alert_events:[...events.values()]});
         }
         days.set(day.date,{...previous,...day,rows:[...rows.values()]});
@@ -1703,10 +1727,10 @@ function d2ManualApprovalButton(row,date){
 function d2DisplaySnapshot(){
     const snapshot=d2AlertSnapshot(),day=snapshot.session?.date,confirmed=dailyExtra.d2ConfirmedReminders;
     const rows=new Map(snapshot.rows.map(row=>[String(row.code).padStart(6,'0'),row]));
-    const archived=d2ArchivedStockGroups(d2ArchivedEvents().filter(item=>item.date===day));
+    const archivedEvents=d2ArchivedEvents().filter(item=>item.date===day),archived=d2ArchivedStockGroups(archivedEvents);
     const records=[...archived,...(confirmed&&confirmed.date===day?confirmed.records||[]:[]).map(record=>{
         if(record.event.structure)return record;
-        const match=archived.find(item=>String(item.row.code)===String(record.row.code)&&item.event.event_key&&item.event.event_key===record.event.event_key&&item.event.center_similarity===record.event.center_similarity);
+        const match=archivedEvents.find(item=>String(item.row.code)===String(record.row.code)&&item.event.event_key&&item.event.event_key===record.event.event_key&&item.event.center_similarity===record.event.center_similarity);
         return match?.event.structure?{...record,event:{...record.event,structure:match.event.structure,structure_evidence:match.event.structure_evidence}}:record;
     })];
     for(const record of records){
@@ -1809,8 +1833,8 @@ function d2ConditionList(checks,passed,code,date){
     const kdjActual=d&&j?`D ${value(d)} / J ${value(j)}`:value(combined),bottom=d2DailyBottomState(code,date);
     const autoEntry=ideal?.passed===true||d2ManuallyApproved(code,date);
     const finalDetail=passed?(autoEntry?'提醒条件已满足，不等待30分钟底分型；是否买入由你判断':'仅满足KDJ，触发人工筛选提醒；批准前不进入跟踪池'):'类二买池已入选，但两个提醒分支均未触发';
-    const row=(label,status,detail,final=false)=>`<tr${final?' class="d2-condition-final"':''}><th scope="row">${label}</th><td class="d2-condition-status">${status==='yes'?'✅ '+(final?'触发':'满足'):status==='no'?'❌ '+(final?'未触发':'不满足'):status==='missing'?'❔ 历史证据缺失':'❔ 待行情核验'}</td><td>${detail}</td></tr>`;
-    return `<div class="d2-condition-list"><b>买入提醒条件</b>${bottom.status==='yes'?`<small class="fractal-hint">⚠️ 日线底分型提示：${bottom.detail}（不参与买入触发）</small>`:''}<table class="d2-condition-table"><thead><tr><th>条件</th><th>状态</th><th>实际／说明</th></tr></thead><tbody>${row('正式类二买（D2＞D0，中枢评分≥73）',structure?.missing_frozen?'missing':structure?structure.passed===true?'yes':structure.passed===false?'no':'unknown':'missing',structure?value(structure):'未找到可追溯的发现时结构快照')}${row('日线KDJ（D≥49且J≤20）',kdjKnown?kdjPassed?'yes':'no':'unknown',kdjActual)}${row('30分钟理想MACD底背离',ideal?ideal.passed?'yes':'no':'unknown',value(ideal))}${row(autoEntry||!passed?'买入提醒':'人工筛选提醒',passed?'yes':'no',finalDetail,true)}</tbody></table></div>`;
+    const row=(label,status,detail,final=false)=>`<tr${final?' class="d2-condition-final"':''}><th scope="row">${label}</th><td class="d2-condition-status">${status==='yes'?'✅ '+(final?'触发':'满足'):status==='no'?'❌ '+(final?'未触发':'不满足'):status==='missing'?'❔ 历史证据缺失':status==='reference'?'原结构参考':'❔ 待行情核验'}</td><td>${detail}</td></tr>`;
+    return `<div class="d2-condition-list"><b>买入提醒条件</b>${bottom.status==='yes'?`<small class="fractal-hint">⚠️ 日线底分型提示：${bottom.detail}（不参与买入触发）</small>`:''}<table class="d2-condition-table"><thead><tr><th>条件</th><th>状态</th><th>实际／说明</th></tr></thead><tbody>${row('正式类二买（D2＞D0，中枢评分≥73）',structure?.reference_only?'reference':structure?.missing_frozen?'missing':structure?structure.passed===true?'yes':structure.passed===false?'no':'unknown':'missing',structure?value(structure):'未找到可追溯的发现时结构快照')}${row('日线KDJ（D≥49且J≤20）',kdjKnown?kdjPassed?'yes':'no':'unknown',kdjActual)}${row('30分钟理想MACD底背离',ideal?ideal.passed?'yes':'no':'unknown',value(ideal))}${row(autoEntry||!passed?'买入提醒':'人工筛选提醒',passed?'yes':'no',finalDetail,true)}</tbody></table></div>`;
 }
 function compareD2Rows(a,b){
     const aFirst=a.d2_first_strengthening?.status==='active',bFirst=b.d2_first_strengthening?.status==='active';
@@ -1955,14 +1979,15 @@ function d2ArchivedStockGroups(events){
         groups.get(key).events.push(item.event);
     }
     for(const group of groups.values()){
-        group.events.sort((a,b)=>String(b.confirmed_at).localeCompare(String(a.confirmed_at)));
+        group.events.sort((a,b)=>String(a.confirmed_at).localeCompare(String(b.confirmed_at)));
         group.event=group.events.find(event=>['ideal_m30_divergence','daily_kdj+ideal_m30_divergence'].includes(event.source))||group.events[0];
     }
     return [...groups.values()];
 }
 function d2ArchivedConditionChecks(event,date){
     const checks=[],kdj=event.daily_kdj||{},ideal=event.ideal_m30_divergence||{};
-    if(event.structure)checks.push({condition:'正式类二买且中枢评分≥73',passed:d2Eligible(event),actual:`D0 ${d2Value(event.structure.D0?.price)} / D1 ${d2Value(event.structure.D1?.price)} / D2 ${d2Value(event.structure.D2?.price)}；中枢评分 ${d2Value(event.center_similarity)}${event.structure_evidence?.captured_at?'；发现时快照 '+event.structure_evidence.captured_at:''}`});
+    if(event.structure)checks.push({condition:'正式类二买且中枢评分≥73',passed:d2Eligible(event),actual:`D0 ${d2Value(event.structure.D0?.price)} / D1 ${d2Value(event.structure.D1?.price)} / D2 ${d2Value(event.structure.D2?.price)}；中枢评分 ${d2Value(event.center_similarity)}${event.structure_evidence?.verified_at_discovery?'；发现时快照 '+event.structure_evidence.captured_at:''}`});
+    else if(event.structure_reference){const s=event.structure_reference;checks.push({condition:'正式类二买且中枢评分≥73',passed:null,reference_only:true,actual:`原归档模型：D0 ${d2Value(s.D0?.price)} / D1 ${d2Value(s.D1?.price)} / D2 ${d2Value(s.D2?.price)}；原评分 ${d2Value(event.center_similarity)}；结构编号核验一致，发现时盘中状态未留存，不据此判定满足条件`})}
     else checks.push({condition:'正式类二买且中枢评分≥73',passed:null,missing_frozen:true,actual:'未找到可追溯的发现时结构快照；保留原确认提醒，不用后续行情补写历史事实'});
     if(kdj.d!=null&&kdj.j!=null){
         checks.push({condition:'日线KDJ D≥49',passed:Number(kdj.d)>=49,actual:kdj.d},
@@ -2075,10 +2100,10 @@ function d2ArchivedEvents(){
     const records=days.filter(day=>day.date).flatMap(day=>(day.rows||[]).filter(row=>!d2ManuallyExcluded(row.code,day.date)).flatMap(row=>(row.d2_alert_events||[]).filter(event=>event.event_key&&String(event.first_observed_at||'').slice(0,10)===day.date&&String(event.confirmed_at||'').slice(0,10)===day.date).map(event=>({row,event,date:day.date}))));
     const unique=new Map();
     for(const item of records){
-        const key=`${item.date}|${item.row.code}|${item.event.source}|${String(item.event.confirmed_at).slice(0,19)}`,prior=unique.get(key);
+        const key=`${item.date}|${item.row.code}|${item.event.source}|${String(item.event.confirmed_at).slice(0,19)}|${item.event.episode_id||''}`,prior=unique.get(key);
         if(!prior){unique.set(key,item);continue}
-        const newer=String(item.event.last_observed_at)>String(prior.event.last_observed_at)?item:prior;
-        unique.set(key,{...newer,event:{...newer.event,first_observed_at:[prior.event.first_observed_at,item.event.first_observed_at].filter(Boolean).sort()[0],last_observed_at:[prior.event.last_observed_at,item.event.last_observed_at].filter(Boolean).sort().reverse()[0]}});
+        const original=String(item.event.first_observed_at)<String(prior.event.first_observed_at)?item:prior;
+        unique.set(key,{...original,event:{...original.event,first_observed_at:[prior.event.first_observed_at,item.event.first_observed_at].filter(Boolean).sort()[0],last_observed_at:[prior.event.last_observed_at,item.event.last_observed_at].filter(Boolean).sort().reverse()[0]}});
     }
     return [...unique.values()];
 }
