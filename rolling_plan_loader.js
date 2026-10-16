@@ -1,7 +1,7 @@
 /* Public, hash-verified browser assets; paper accounts never leave this browser. */
 (function () {
   'use strict';
-  const files = {"pyodide-lock.json":{"sha256":"9c45b916001a750f4102fc287494f3eab215909c7535c626a20db80fd6333e2c","size":112205},"pyodide.js":{"sha256":"b4cb23a53aba19c221659b9fb40a2f18281d685691dc06647fb0afd0681baf98","size":14913},"pyodide.asm.js":{"sha256":"6b4c90de5b7172873f04f21884d0e9d2274e305fe32116558fe3e4fbe3618d51","size":1255688,"gzip":"9954b33176491fb4265acd1a7e62cad1f48ac35360509d28ffb5ec90071d1341"},"pyodide.asm.wasm":{"sha256":"a50dd1843f805a0b7c45b61037ee0d7b26dfe85efe0e18ef95a34ad24e401f5f","size":10105545,"gzip":"a160dd4b8a73e020641c2c3b350151a27deea1f663e647d0a571bac861fe6f3d"},"python_stdlib.zip":{"sha256":"16611534726e5d8ac2bd8f926410b2dcb8d6f49aa24913463533b457a2115c16","size":2360737},"pandas-2.2.3-cp312-cp312-pyodide_2024_0_wasm32.whl":{"sha256":"5502f0f94f93a482b851d0b8ca43be692c1b8d20215a168313656847ff74d63a","size":5707178},"numpy-2.0.2-cp312-cp312-pyodide_2024_0_wasm32.whl":{"sha256":"ebb61241d962b98b21597d7ce43b67668a6d5bab3acec4fbe958657320d7cd08","size":3061133},"python_dateutil-2.9.0.post0-py2.py3-none-any.whl":{"sha256":"02811ea3714f6697d639c07dc5ec63f5774dc7a688e4e1cbbe9beb2f33c3e6c9","size":229892},"pytz-2024.1-py2.py3-none-any.whl":{"sha256":"fcfc168155da8d19057b17bee735fef71dc3a39f1dccd83514e16ecc6abaddc4","size":505474},"six-1.16.0-py2.py3-none-any.whl":{"sha256":"f61235bc3a15086f0369585e5071ae9ba0bd244a111d12b37f683862e6850c0a","size":11053}};
+  const files = {"pyodide-lock.json":{"sha256":"9c45b916001a750f4102fc287494f3eab215909c7535c626a20db80fd6333e2c","size":112205},"pyodide.js":{"sha256":"b4cb23a53aba19c221659b9fb40a2f18281d685691dc06647fb0afd0681baf98","size":14913},"pyodide.asm.js":{"sha256":"6b4c90de5b7172873f04f21884d0e9d2274e305fe32116558fe3e4fbe3618d51","size":1255688,"gzip":"0eadbe9df958acb8b2b6c628c8c75f73a448d66ae9febd80b6e3f52b6321e2da"},"pyodide.asm.wasm":{"sha256":"a50dd1843f805a0b7c45b61037ee0d7b26dfe85efe0e18ef95a34ad24e401f5f","size":10105545,"gzip":"eb4da3ce7f3d4aea84ef266a0c68dbf9491394967e7721ea13013972dd2713ab"},"python_stdlib.zip":{"sha256":"16611534726e5d8ac2bd8f926410b2dcb8d6f49aa24913463533b457a2115c16","size":2360737},"pandas-2.2.3-cp312-cp312-pyodide_2024_0_wasm32.whl":{"sha256":"5502f0f94f93a482b851d0b8ca43be692c1b8d20215a168313656847ff74d63a","size":5707178},"numpy-2.0.2-cp312-cp312-pyodide_2024_0_wasm32.whl":{"sha256":"ebb61241d962b98b21597d7ce43b67668a6d5bab3acec4fbe958657320d7cd08","size":3061133},"python_dateutil-2.9.0.post0-py2.py3-none-any.whl":{"sha256":"02811ea3714f6697d639c07dc5ec63f5774dc7a688e4e1cbbe9beb2f33c3e6c9","size":229892},"pytz-2024.1-py2.py3-none-any.whl":{"sha256":"fcfc168155da8d19057b17bee735fef71dc3a39f1dccd83514e16ecc6abaddc4","size":505474},"six-1.16.0-py2.py3-none-any.whl":{"sha256":"f61235bc3a15086f0369585e5071ae9ba0bd244a111d12b37f683862e6850c0a","size":11053}};
   const originalFetch = self.fetch.bind(self), base = new URL('./', self.location.href);
   const cacheName = 'waxwing-rolling-components-v1', inflight = new Map(), bytesLoaded = new Map();
   let enginePromise, report = () => {}, lastReport = 0;
@@ -35,16 +35,17 @@
   }
   async function candidate(item, expected, name, controller) {
     let idle;
-    const reset = () => { clearTimeout(idle); idle = setTimeout(() => controller.abort(), 15000); };
-    const deadline = setTimeout(() => controller.abort(), 45000);
+    const reset = () => { clearTimeout(idle); idle = setTimeout(() => controller.abort(), 10000); };
+    const deadline = setTimeout(() => controller.abort(), 75000);
     reset();
     try {
       const response = await originalFetch(item.url, {cache: 'force-cache', credentials: 'omit', signal: controller.signal});
       if (!response.ok) throw new Error('资源请求失败');
-      const reader = response.body.getReader(), chunks = []; let size = 0;
+      const reader = response.body.getReader(), chunks = [], started = Date.now(); let size = 0;
       for (;;) {
         const part = await reader.read(); if (part.done) break;
         reset(); chunks.push(part.value); size += part.value.byteLength; downloaded(name, size);
+        if (Date.now() - started > 8000 && size / ((Date.now() - started) / 1000) < 10240) { controller.abort(); throw new Error('当前下载线路过慢'); }
       }
       let raw = new Uint8Array(size), at = 0;
       for (const part of chunks) { raw.set(part, at); at += part.byteLength; }
@@ -62,19 +63,17 @@
     const promise = (async () => {
       const cached = expected && await cacheRead(name, expected);
       if (cached) return cached;
-      const controllers = sources.map(() => new AbortController()); let complete = false;
-      try {
-        const raw = await Promise.any(sources.map(async (item, index) => {
-          if (index) await new Promise(resolve => setTimeout(resolve, index * 400));
-          if (complete) throw new Error('已有可用资源');
-          return candidate(item, expected, name, controllers[index]);
-        }));
-        complete = true;
-        controllers.forEach(c => c.abort());
-        if (expected) await cacheWrite(name, expected, raw);
-        return raw;
-      } catch (_) { throw new Error('网页计算资源下载超时或校验失败，请点击“刷新数据”重试；本金和模拟记录已保留'); }
-      finally { complete = true; controllers.forEach(c => c.abort()); }
+      for (const item of sources) {
+        const controller = new AbortController();
+        try {
+          const raw = await candidate(item, expected, name, controller);
+          if (expected) await cacheWrite(name, expected, raw);
+          return raw;
+        } catch (_) {
+          report('当前下载线路响应较慢，正在重试；已完成的组件会继续保留…');
+        } finally { controller.abort(); }
+      }
+      throw new Error('网页计算资源下载超时或校验失败，请点击“刷新数据”重试；本金和模拟记录已保留');
     })();
     inflight.set(key, promise);
     try { return await promise; } finally { inflight.delete(key); }
@@ -105,15 +104,16 @@
     if (enginePromise) return enginePromise;
     enginePromise = (async () => {
       // Start packages during interpreter download, rather than after it.
-      const names = Object.keys(files); let next = 0;
+      const names = Object.keys(files); let next = 0, failed = false;
       const warm = Promise.all(Array.from({length: 4}, async () => {
-        while (next < names.length) await runtime(names[next++]);
+        try { while (!failed && next < names.length) await runtime(names[next++]); }
+        catch (error) { failed = true; throw error; }
       }));
       warm.catch(() => {});
       await script('pyodide.js'); await script('pyodide.asm.js');
       report('正在启动网页计算，行情与依赖继续在后台读取…');
       const value = await loadPyodide({indexURL: new URL('rolling-runtime/', base).href});
-      await value.loadPackage('pandas'); await warm;
+      await value.loadPackage('pandas');
       return value;
     })();
     try { return await enginePromise; } catch (error) { enginePromise = null; throw error; }
