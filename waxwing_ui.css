@@ -1,0 +1,39 @@
+/* Shared WaXwing typography, header rhythm and control sizing. */
+:root{
+ --wx-font:system-ui,"Microsoft YaHei",sans-serif;
+ --wx-bg:#f3f6fa;--wx-ink:#203247;--wx-muted:#64758a;
+ --wx-line:#dce5ee;--wx-blue:#2563eb;--wx-teal:#17645e;
+ --wx-page-padding:24px;--wx-title-size:28px;
+}
+body.waxwing-ui{margin:0;background:var(--wx-bg);color:var(--wx-ink);font:14px/1.7 var(--wx-font)}
+/* Override legacy generated .desktop-layout main rules, which use !important. */
+body.waxwing-ui main{box-sizing:border-box;width:100%!important;max-width:1440px!important;margin:0 auto!important;padding:var(--wx-page-padding)!important}
+body.waxwing-ui .brand,body.waxwing-ui .market-brand{margin:0;color:var(--wx-teal);font:400 14px/1.7 var(--wx-font);letter-spacing:1.5px}
+body.waxwing-ui .brand a{color:inherit}
+body.waxwing-ui main header h1,body.waxwing-ui main .market-title-row .market-page-title{margin:8px 0 12px;color:var(--wx-ink);font:700 var(--wx-title-size)/1.4 var(--wx-font);letter-spacing:0}
+body.waxwing-ui .market-title-row{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0}
+body.waxwing-ui .market-title-block{min-width:0}
+body.waxwing-ui main>header{align-items:flex-start;gap:18px}
+body.waxwing-ui main>header>.actions{margin-top:32px}
+body.waxwing-ui main #meta,body.waxwing-ui main #metadata{margin:0;padding:0;color:var(--wx-muted);font:400 12px/1.7 var(--wx-font);letter-spacing:0}
+body.waxwing-ui main #meta{margin-bottom:24px}
+body.waxwing-ui .metadata,body.waxwing-ui .muted,body.waxwing-ui footer{color:var(--wx-muted)}
+body.waxwing-ui main h2{margin:0 0 12px;color:var(--wx-ink);font:600 19px/1.5 var(--wx-font)}
+body.waxwing-ui main th{color:var(--wx-muted);font:500 13px/1.7 var(--wx-font)}
+body.waxwing-ui .daily-tabs,body.waxwing-ui .tabs{gap:8px}
+body.waxwing-ui .daily-tabs button[aria-selected=false],body.waxwing-ui .tabs button[aria-selected=false]{color:var(--wx-ink)}
+body.waxwing-ui button,body.waxwing-ui input,body.waxwing-ui select{box-sizing:border-box;font-family:var(--wx-font);font-size:14px;line-height:20px}
+body.waxwing-ui .actions button,body.waxwing-ui .tabs button,body.waxwing-ui .daily-tabs button,
+body.waxwing-ui .daily-quick-actions button,body.waxwing-ui .daily-quick-actions a,
+body.waxwing-ui .rolling-field input,body.waxwing-ui .rolling-field select,body.waxwing-ui .rolling-apply{height:36px;min-height:36px;border-radius:7px;padding:7px 12px;font:400 14px/20px var(--wx-font)}
+body.waxwing-ui .rolling-field label,body.waxwing-ui .daily-filters label{font:400 13px/1.7 var(--wx-font);color:var(--wx-muted)}
+body.waxwing-ui .daily-sticky-controls,body.waxwing-ui .d2-sticky-history-filter{background:var(--wx-bg)}
+body.waxwing-ui .market-rolling-plan-link{color:var(--wx-blue);font:400 14px/1.5 var(--wx-font)}
+body.waxwing-ui .daily-quick-actions a,body.waxwing-ui .daily-quick-actions button{color:var(--wx-blue)}
+body.waxwing-ui .callout{margin:24px 0;padding:14px 18px;color:var(--wx-teal);font:400 14px/1.7 var(--wx-font)}
+body.waxwing-ui .callout.error{color:#a33e38}
+@media(max-width:700px){
+ :root{--wx-page-padding:14px;--wx-title-size:25px}
+ body.waxwing-ui main{padding-top:20px!important}
+ body.waxwing-ui main>header>.actions{margin-top:0}
+}

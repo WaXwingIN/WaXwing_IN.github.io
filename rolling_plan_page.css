@@ -1,10 +1,106 @@
-:root{--bg:#f3f6fa;--ink:#203247;--muted:#64758a;--line:#dce5ee;--blue:#2563eb;--teal:#17645e}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.7 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1250px;margin:auto;padding:30px 28px}header{display:flex;justify-content:space-between;align-items:center;gap:18px}h1{font-size:28px;margin:4px 0}h2{font-size:19px;margin:0 0 12px}.brand{color:var(--teal);letter-spacing:1.5px}.metadata{font-size:12px;margin:4px 0}.muted,.metadata,footer{color:var(--muted)}button,input,select{font:inherit;color:inherit;border:1px solid #cbd7e4;border-radius:7px;padding:8px 12px;background:white}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #8eb7fa;outline-offset:2px}.primary,button.active{background:var(--blue);border-color:var(--blue);color:white}.actions{display:flex;gap:8px;flex-wrap:wrap}.callout{margin:18px 0;padding:14px 18px;color:var(--teal);background:#edf8f7;border-left:3px solid #58a39c;border-radius:6px}.callout.error{background:#fff3f2;color:#a33e38;border-color:#b4423c}section{padding:22px;margin:18px 0;background:white;border:1px solid var(--line);border-radius:12px}.controls{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px}.controls form{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.controls input{max-width:170px}nav,.tabs{display:flex;gap:10px;margin:12px 0}nav button{min-width:200px;text-align:left}nav small{display:block;opacity:.85}.tabs{position:sticky;top:0;background:var(--bg);z-index:2;padding:10px 0;margin:0}.tabs [aria-selected=true]{background:var(--blue);border-color:var(--blue);color:white}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.lead{font-size:17px;font-weight:600}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:14px 0}.metric{padding:15px 18px;border:1px solid var(--line);border-radius:8px}.metric span{display:block;color:var(--muted);font-size:13px}.metric strong{display:block;font-size:23px;margin-top:6px}.up{color:#c62828}.down{color:#16803e}.flat{color:#64758a}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;min-width:740px}th,td{padding:12px 10px;text-align:left;border-bottom:1px solid #e5ebf1;vertical-align:top}th{color:var(--muted);font-weight:500;font-size:13px}td small{display:block;color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:24px}.schedule{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.schedule p{color:var(--muted);margin:5px 0}details{margin-top:18px}summary{cursor:pointer;color:var(--blue)}.trade-form{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:15px}.trade-form label{display:flex;flex-direction:column;gap:5px}.trade-form input,.trade-form select{width:100%;min-width:0}.trade-form button{align-self:end}#tradeError{color:#a33e38}#historyDay{margin-left:10px}#chart svg{width:100%;height:auto;max-height:260px}footer{font-size:12px;margin:28px 0}.actions button{white-space:nowrap}[hidden]{display:none!important}@media(max-width:700px){main{padding:20px 14px}header,.controls{align-items:flex-start;flex-direction:column}h1{font-size:25px}section{padding:17px}.metrics{grid-template-columns:1fr;gap:8px}.metric{display:flex;align-items:center;justify-content:space-between}.metric strong{font-size:22px;margin:0}nav button{min-width:0;flex:1;padding:9px 10px}.schedule{grid-template-columns:1fr;gap:15px}.trade-form{grid-template-columns:repeat(2,1fr)}.section-head{align-items:flex-start}#marketBadge{white-space:nowrap}}
+:root{--bg:var(--wx-bg);--ink:var(--wx-ink);--muted:var(--wx-muted);--line:var(--wx-line);--blue:var(--wx-blue);--teal:var(--wx-teal)}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.7 system-ui,"Microsoft YaHei",sans-serif}header{display:flex;justify-content:space-between;align-items:center;gap:18px}.muted,.metadata,footer{color:var(--muted)}button,input,select{font:inherit;color:inherit;border:1px solid #cbd7e4;border-radius:7px;padding:8px 12px;background:white}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #8eb7fa;outline-offset:2px}.primary,button.active{background:var(--blue);border-color:var(--blue);color:white}.actions{display:flex;gap:8px;flex-wrap:wrap}.callout{margin:18px 0;padding:14px 18px;color:var(--teal);background:#edf8f7;border-left:3px solid #58a39c;border-radius:6px}.callout.error{background:#fff3f2;color:#a33e38;border-color:#b4423c}section{padding:22px;margin:18px 0;background:white;border:1px solid var(--line);border-radius:12px}.controls{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px}.controls form{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.controls input{max-width:170px}nav,.tabs{display:flex;gap:10px;margin:12px 0}nav button{min-width:200px;text-align:left}nav small{display:block;opacity:.85}.tabs{position:sticky;top:0;background:var(--bg);z-index:2;padding:10px 0;margin:0}.tabs [aria-selected=true]{background:var(--blue);border-color:var(--blue);color:white}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.lead{font-size:17px;font-weight:600}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:14px 0}.metric{padding:15px 18px;border:1px solid var(--line);border-radius:8px}.metric span{display:block;color:var(--muted);font-size:13px}.metric strong{display:block;font-size:23px;margin-top:6px}.up{color:#c62828}.down{color:#16803e}.flat{color:#64758a}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;min-width:740px}th,td{padding:12px 10px;text-align:left;border-bottom:1px solid #e5ebf1;vertical-align:top}th{color:var(--muted);font-weight:500;font-size:13px}td small{display:block;color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:24px}.schedule{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.schedule p{color:var(--muted);margin:5px 0}details{margin-top:18px}summary{cursor:pointer;color:var(--blue)}.trade-form{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:15px}.trade-form label{display:flex;flex-direction:column;gap:5px}.trade-form input,.trade-form select{width:100%;min-width:0}.trade-form button{align-self:end}#tradeError{color:#a33e38}#historyDay{margin-left:10px}#chart svg{width:100%;height:auto;max-height:260px}footer{font-size:12px;margin:28px 0}.actions button{white-space:nowrap}[hidden]{display:none!important}@media(max-width:700px){header,.controls{align-items:flex-start;flex-direction:column}section{padding:17px}.metrics{grid-template-columns:1fr;gap:8px}.metric{display:flex;align-items:center;justify-content:space-between}.metric strong{font-size:22px;margin:0}nav button{min-width:0;flex:1;padding:9px 10px}.schedule{grid-template-columns:1fr;gap:15px}.trade-form{grid-template-columns:repeat(2,1fr)}.section-head{align-items:flex-start}#marketBadge{white-space:nowrap}}
 
 .profit{white-space:nowrap;font-variant-numeric:tabular-nums}.profit small,td small .profit{color:inherit}.profit small{display:block}.return-chip{background:#fff;border-radius:3px;padding:0 4px}.metric .profit{font-size:20px}.metric .profit.up{color:#c62828}.metric .profit.down{color:#16803e}.metric .profit small{font-size:14px}.metrics{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}h3{font-size:16px;margin:24px 0 8px}#holdingRows td:nth-child(2){min-width:165px}#dailyRows td:nth-child(3){min-width:220px}
 /* Codes use the market page's inline text treatment; clicks never resize rows. */
 .stock-code-copy{display:inline;cursor:copy;white-space:nowrap;font:inherit;color:inherit;background:none;border:0;border-radius:0;padding:0;text-underline-offset:2px}
 .stock-code-copy:hover,.stock-code-copy:focus-visible{color:#1d4ed8;text-decoration:underline}
+.controls select{max-width:100%}
 th,td{vertical-align:top;font-variant-numeric:tabular-nums}td{line-height:1.7}th{white-space:nowrap}
 #simulationRows td:first-child,#simulationRows td:nth-child(2),#simulationRows td:nth-child(3),#simulationRows td:last-child{white-space:nowrap}
 #simulationRows td:nth-child(4),#simulationRows td:nth-child(5),#simulationRows td:nth-child(6){text-align:right;white-space:nowrap}
+#dailyRows td:first-child{white-space:nowrap}
+#dailyRows td:nth-child(2){min-width:230px}
+#dailyRows>tr>td{padding-top:8px;padding-bottom:8px}
+#dailyRows .daily-row--today>td{background:#f5f9ff}
+#dailyRows .daily-today-label{color:var(--blue);font-weight:600;margin-top:3px}
+.daily-action{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:2px 7px;padding:6px 8px;border-left:3px solid var(--blue);border-radius:5px;background:#edf4ff}
+.daily-action+.daily-action{margin-top:6px}
+.daily-action--sell{background:#fff5e8;border-left-color:#b66a0a}
+.daily-action--other{background:#edf8f7;border-left-color:var(--teal)}
+.daily-action-badge{display:inline-block;padding:1px 7px;border-radius:4px;background:#dbe9ff;color:#1d4ed8;font-size:12px;font-weight:600;line-height:1.7}
+.daily-action--sell .daily-action-badge{background:#ffe1b5;color:#854707}
+.daily-action--other .daily-action-badge{background:#d9eeeb;color:var(--teal)}
+.daily-action>.daily-action-badge{align-self:start;line-height:18px;padding:0 5px}
+.daily-action-stock{display:block;font-size:14px;line-height:20px;margin:0;color:var(--ink)}
+.daily-action-size{grid-column:1 / -1;margin:0;line-height:20px;white-space:nowrap}
+.daily-action-size strong{font-size:14px;font-weight:600;color:var(--ink)}
+.daily-action-size>span{font-size:13px;color:var(--muted)}
+.daily-action-reason{grid-column:1 / -1;font-size:12px;line-height:18px;margin:0;color:var(--ink)}
+.daily-action-meta{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:0 10px;font-size:12px;line-height:18px;margin:0;color:var(--muted)}
+.daily-action-meta>span{white-space:nowrap}
+.daily-position+.daily-position{margin-top:6px}
+.daily-position .profit small{display:inline;margin-left:5px}
+.trade-alert-dialog{width:min(900px,calc(100vw - 28px));max-width:none;max-height:calc(100dvh - 40px);padding:26px;border:1px solid var(--line);border-top:6px solid var(--blue);border-radius:14px;background:#fff;color:var(--ink);overflow:auto;box-shadow:0 22px 80px #0f172a50}
+.trade-alert-dialog::backdrop{background:#0f172aaa}
+.trade-alert-head{display:block;margin:0 0 18px}
+.trade-alert-kicker{color:var(--teal);font-size:13px;letter-spacing:1px}
+.trade-alert-head h2{margin:7px 0 8px;font-size:26px;line-height:1.4}
+.trade-alert-head p{margin:0;color:var(--muted)}
+.trade-alert-context{margin:0 0 10px;font-size:12px;color:var(--muted)}
+.trade-alert-group+.trade-alert-group{margin-top:18px}
+.trade-alert-item{padding:20px;border:1px solid #cbdcfa;border-left:5px solid var(--blue);border-radius:9px;background:#f5f9ff}
+.trade-alert-item+.trade-alert-item{margin-top:12px}
+.trade-alert-item--sell{background:#fff7ed;border-color:#f2d7b0;border-left-color:#b66a0a}
+.trade-alert-item--sell .daily-action-badge{background:#ffe1b5;color:#854707}
+.trade-alert-stock{margin:12px 0 6px;font-size:22px;line-height:1.5}
+.trade-alert-quantity{font-size:27px;font-weight:700;margin:0 0 10px}
+.trade-alert-quantity small{display:block;font-size:14px;font-weight:400;color:var(--muted)}
+.trade-alert-item>p:not(.trade-alert-quantity){margin:8px 0}
+.trade-alert-item dl{display:grid;grid-template-columns:112px minmax(0,1fr);gap:5px 12px;margin:14px 0 0;font-size:14px}
+.trade-alert-item dt{color:var(--muted)}
+.trade-alert-item dd{margin:0;overflow-wrap:anywhere}
+.trade-alert-footer{position:sticky;bottom:-26px;margin:18px 0 0;padding:16px 0 0;background:white;border-top:1px solid var(--line);text-align:right}
+.trade-alert-footer p{margin:0 0 12px;color:var(--muted);text-align:left}
+.trade-alert-footer button{min-height:44px;min-width:180px;font-size:16px;font-weight:600}
+.trade-alert-buttons{display:flex;justify-content:flex-end;gap:10px}
+#tradeAlertPushHint{font-size:12px}
+@media(max-width:700px){.trade-alert-dialog{padding:18px;max-height:calc(100dvh - 28px)}.trade-alert-head h2{font-size:24px}.trade-alert-item{padding:15px}.trade-alert-stock{font-size:20px}.trade-alert-item dl{grid-template-columns:96px minmax(0,1fr);font-size:13px;gap:5px 8px}.trade-alert-footer{bottom:-18px}.trade-alert-footer button{width:100%}}
+@media(max-width:700px){.trade-alert-buttons{flex-direction:column}.trade-alert-footer button{min-width:0}}
 table:has(#simulationRows) th:nth-child(4),table:has(#simulationRows) th:nth-child(5),table:has(#simulationRows) th:nth-child(6){text-align:right}
+
+/* Keep the plan's filters and navigation together while the account scrolls. */
+.rolling-sticky-controls{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
+.rolling-filter-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin:0}
+.rolling-field{display:flex;align-items:center;gap:8px;min-width:0}
+.rolling-field label{font-size:13px;white-space:nowrap;color:var(--muted)}
+.rolling-field select,.rolling-field input{min-width:0;max-width:100%;padding:7px 10px}
+.rolling-start-field select{width:205px}.rolling-model-field select{width:282px}.rolling-capital-field input{width:125px}
+.rolling-model-field{flex:1 1 400px}
+.rolling-model-field select{flex:1;min-width:180px;max-width:282px}
+.rolling-model-return{display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap}
+.rolling-model-return>span{font-size:12px}
+.rolling-model-return strong{font-weight:600;font-variant-numeric:tabular-nums}
+.rolling-apply{padding:7px 12px;white-space:nowrap}
+.rolling-scheme-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.rolling-action-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.rolling-action-row .rolling-apply{flex:none}
+.rolling-sticky-controls nav{display:flex;gap:8px;min-width:0;margin:0;overflow-x:auto;padding:1px 1px 5px}
+.rolling-sticky-controls nav button{display:flex;align-items:stretch;flex:none;min-width:190px;padding:0;text-align:left;background:white;color:var(--ink);border:1px solid var(--line);overflow:hidden}
+.rolling-sticky-controls nav button.active{border-color:var(--blue)}
+.scheme-choice{min-width:96px}.scheme-title{display:block;font-weight:600}
+.scheme-choice,.scheme-performance{display:grid;grid-template-rows:20px 16px;row-gap:2px;padding:8px 12px}
+.rolling-sticky-controls nav small{font-size:11px;line-height:16px;opacity:1;color:var(--muted)}
+.rolling-sticky-controls nav button.active .scheme-choice{background:var(--blue);color:white}
+.rolling-sticky-controls nav button.active .scheme-choice small{color:#e6eeff}
+.scheme-performance{background:white;flex:1;text-align:right}
+.rolling-sticky-controls .return-chip{background:none;border-radius:0;padding:0;font-weight:600;font-size:14px;line-height:20px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rolling-sticky-controls .tabs{position:static;flex:none;padding:0;margin:0;gap:8px}
+.rolling-sticky-controls .tabs button{padding:7px 12px;white-space:nowrap}
+.rolling-account-note{font-size:12px;margin:10px 0 0}
+@media(max-width:700px){
+ .rolling-sticky-controls{padding:10px 0 8px}
+ .rolling-filter-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 12px;align-items:end}
+ .rolling-field{display:flex;flex-direction:column;align-items:stretch;gap:3px}
+ .rolling-start-field{grid-column:1;grid-row:1}.rolling-capital-field{grid-column:2;grid-row:1}
+ .rolling-model-field{grid-column:1 / -1;grid-row:2}
+ .rolling-model-field{display:grid;grid-template-columns:minmax(0,1fr);gap:3px}
+ .rolling-model-field:has(.rolling-model-return:not([hidden])){grid-template-columns:minmax(0,1fr) auto;column-gap:8px}
+ .rolling-model-field>label{grid-column:1 / -1}
+ .rolling-model-field select{min-width:0;max-width:none}
+ .rolling-model-return{height:36px}
+ .rolling-field select,.rolling-field input{width:100%;font-size:13px;padding:6px 8px}
+ .rolling-scheme-row{display:block;margin-top:8px}
+ .rolling-sticky-controls nav{padding-bottom:6px}
+ .rolling-action-row{margin-top:8px}
+ .rolling-sticky-controls .tabs button{font-size:13px;padding:5px 10px}
+}

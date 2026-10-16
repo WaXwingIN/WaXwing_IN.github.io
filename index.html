@@ -16,7 +16,46 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f6f8fb;color:#172033;m
 .review-date-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.review-date-tabs button{display:flex;gap:7px;align-items:center;padding:9px 13px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#475569;font:inherit;cursor:pointer}.review-date-tabs button[aria-selected="true"]{border-color:#2563eb;background:#eff6ff;color:#1d4ed8;box-shadow:inset 0 0 0 1px #2563eb}.session-title{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px 0}.active-session{padding:0 12px 12px}@media(max-width:640px){.review-date-tabs button{flex:1 1 100%;justify-content:space-between}}
 .daily-ui-booting #content{min-height:320px}#ruleGate{display:none!important}.daily-loading{display:flex;align-items:center;gap:12px;min-height:100px;padding:20px;color:#64748b;background:#fff;border:1px solid #dce3ec;border-radius:10px;margin:16px 0;box-sizing:border-box}.daily-loading-spinner{display:inline-block;width:22px;height:22px;flex-shrink:0;border:3px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:daily-loading-spin .8s linear infinite}@keyframes daily-loading-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.daily-loading-spinner{animation:none}}</style><script data-browser-compat>
 (function(){try{new Function('var x={};return x?.a??0;');new Function('return async function(){};');if(!window.Promise||!Promise.any||!window.AbortController||!window.fetch)throw new Error('legacy');}catch(e){if(location.protocol!=='file:')location.replace('compat.html'+location.search+location.hash);}})();
-</script></head><body class="daily-ui-booting"><script>/* Shared ES5 controls for model, holding and history pages. */
+</script><style id="waxwingMarketPageStyle">/* Shared WaXwing typography, header rhythm and control sizing. */
+:root{
+ --wx-font:system-ui,"Microsoft YaHei",sans-serif;
+ --wx-bg:#f3f6fa;--wx-ink:#203247;--wx-muted:#64758a;
+ --wx-line:#dce5ee;--wx-blue:#2563eb;--wx-teal:#17645e;
+ --wx-page-padding:24px;--wx-title-size:28px;
+}
+body.waxwing-ui{margin:0;background:var(--wx-bg);color:var(--wx-ink);font:14px/1.7 var(--wx-font)}
+/* Override legacy generated .desktop-layout main rules, which use !important. */
+body.waxwing-ui main{box-sizing:border-box;width:100%!important;max-width:1440px!important;margin:0 auto!important;padding:var(--wx-page-padding)!important}
+body.waxwing-ui .brand,body.waxwing-ui .market-brand{margin:0;color:var(--wx-teal);font:400 14px/1.7 var(--wx-font);letter-spacing:1.5px}
+body.waxwing-ui .brand a{color:inherit}
+body.waxwing-ui main header h1,body.waxwing-ui main .market-title-row .market-page-title{margin:8px 0 12px;color:var(--wx-ink);font:700 var(--wx-title-size)/1.4 var(--wx-font);letter-spacing:0}
+body.waxwing-ui .market-title-row{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0}
+body.waxwing-ui .market-title-block{min-width:0}
+body.waxwing-ui main>header{align-items:flex-start;gap:18px}
+body.waxwing-ui main>header>.actions{margin-top:32px}
+body.waxwing-ui main #meta,body.waxwing-ui main #metadata{margin:0;padding:0;color:var(--wx-muted);font:400 12px/1.7 var(--wx-font);letter-spacing:0}
+body.waxwing-ui main #meta{margin-bottom:24px}
+body.waxwing-ui .metadata,body.waxwing-ui .muted,body.waxwing-ui footer{color:var(--wx-muted)}
+body.waxwing-ui main h2{margin:0 0 12px;color:var(--wx-ink);font:600 19px/1.5 var(--wx-font)}
+body.waxwing-ui main th{color:var(--wx-muted);font:500 13px/1.7 var(--wx-font)}
+body.waxwing-ui .daily-tabs,body.waxwing-ui .tabs{gap:8px}
+body.waxwing-ui .daily-tabs button[aria-selected=false],body.waxwing-ui .tabs button[aria-selected=false]{color:var(--wx-ink)}
+body.waxwing-ui button,body.waxwing-ui input,body.waxwing-ui select{box-sizing:border-box;font-family:var(--wx-font);font-size:14px;line-height:20px}
+body.waxwing-ui .actions button,body.waxwing-ui .tabs button,body.waxwing-ui .daily-tabs button,
+body.waxwing-ui .daily-quick-actions button,body.waxwing-ui .daily-quick-actions a,
+body.waxwing-ui .rolling-field input,body.waxwing-ui .rolling-field select,body.waxwing-ui .rolling-apply{height:36px;min-height:36px;border-radius:7px;padding:7px 12px;font:400 14px/20px var(--wx-font)}
+body.waxwing-ui .rolling-field label,body.waxwing-ui .daily-filters label{font:400 13px/1.7 var(--wx-font);color:var(--wx-muted)}
+body.waxwing-ui .daily-sticky-controls,body.waxwing-ui .d2-sticky-history-filter{background:var(--wx-bg)}
+body.waxwing-ui .market-rolling-plan-link{color:var(--wx-blue);font:400 14px/1.5 var(--wx-font)}
+body.waxwing-ui .daily-quick-actions a,body.waxwing-ui .daily-quick-actions button{color:var(--wx-blue)}
+body.waxwing-ui .callout{margin:24px 0;padding:14px 18px;color:var(--wx-teal);font:400 14px/1.7 var(--wx-font)}
+body.waxwing-ui .callout.error{color:#a33e38}
+@media(max-width:700px){
+ :root{--wx-page-padding:14px;--wx-title-size:25px}
+ body.waxwing-ui main{padding-top:20px!important}
+ body.waxwing-ui main>header>.actions{margin-top:0}
+}
+</style></head><body class="daily-ui-booting waxwing-ui"><script>/* Shared ES5 controls for model, holding and history pages. */
 (function () {
     if (window.__waxwingStockCodeCopy) return;
     window.__waxwingStockCodeCopy = true;
@@ -119,7 +158,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f6f8fb;color:#172033;m
         }).observe(document.body, {childList:true, subtree:true, characterData:true});
     } else window.setInterval(function () { if (document.body) enhance(document.body); }, 1000);
 }());
-</script><main><h1>WaXwing · 市场观察</h1><div id="meta" class="meta"></div><section id="focusWatch" class="focus-watch" aria-label="下一交易日重点盯盘" hidden></section><div class="review-bar"><button id="openPerformance" class="review-btn" type="button">历史命中复盘 <span id="performanceCount" class="review-count">0</span></button><span id="performanceBrief" class="review-brief">点击查看最近3个工作日</span></div><div id="performanceModal" class="modal hide" role="dialog" aria-modal="true" aria-labelledby="performanceTitle"><div class="modal-panel"><div class="modal-head"><h2 id="performanceTitle">历史命中复盘</h2><button id="closePerformance" class="modal-close" type="button" aria-label="关闭">×</button></div><div id="performance" class="modal-body"></div></div></div><div class="gate" id="ruleGate"><label for="rulePass">模型条件</label><input id="rulePass" type="password" inputmode="numeric" autocomplete="current-password" placeholder="输入口令"><button id="unlockRules" type="button">查看</button><span id="ruleMsg">条件已隐藏</span></div><div class="tabs"></div><div id="content"></div><script>
+</script><main><div class="market-title-row"><div class="market-title-block"><div class="market-brand">WaXwing / 行情模型</div><h1 class="market-page-title">市场观察</h1></div></div><div id="meta" class="meta"></div><section id="focusWatch" class="focus-watch" aria-label="下一交易日重点盯盘" hidden></section><div class="review-bar"><button id="openPerformance" class="review-btn" type="button">历史命中复盘 <span id="performanceCount" class="review-count">0</span></button><span id="performanceBrief" class="review-brief">点击查看最近3个工作日</span></div><div id="performanceModal" class="modal hide" role="dialog" aria-modal="true" aria-labelledby="performanceTitle"><div class="modal-panel"><div class="modal-head"><h2 id="performanceTitle">历史命中复盘</h2><button id="closePerformance" class="modal-close" type="button" aria-label="关闭">×</button></div><div id="performance" class="modal-body"></div></div></div><div class="gate" id="ruleGate"><label for="rulePass">模型条件</label><input id="rulePass" type="password" inputmode="numeric" autocomplete="current-password" placeholder="输入口令"><button id="unlockRules" type="button">查看</button><span id="ruleMsg">条件已隐藏</span></div><div class="tabs"></div><div id="content"></div><script>
 
 function drawFocus(payload){
     const box=document.getElementById('focusWatch'),f=payload.focus_watchlist;
@@ -901,9 +940,7 @@ async function loadD2ArchiveDate(stamp){
     if(!d2ArchiveDateRequests.has(stamp))d2ArchiveDateRequests.set(stamp,readPageAsset(name).then(payload=>{
         if(privateDataClosed)throw new Error('访问已退出');
         dailyExtra.d2History=mergeD2History(dailyExtra.d2History,payload.d2History);
-        const days=new Map((dailyExtra.d2Replay?.days||[]).map(item=>[item.date,item]));
-        for(const item of payload.d2Replay?.days||[])days.set(item.date,item);
-        dailyExtra.d2Replay={...dailyExtra.d2Replay,...payload.d2Replay,days:[...days.values()]};
+        dailyExtra.d2Replay=mergeD2Replay(payload.d2Replay,dailyExtra.d2Replay);
     }).catch(error=>{d2ArchiveDateRequests.delete(stamp);throw error}));
     return d2ArchiveDateRequests.get(stamp);
 }
@@ -1016,6 +1053,39 @@ function mergeMacdHistory(incoming,current){
     }
     return merged;
 }
+function mergeD2Replay(incoming,current){
+    if(!incoming)return current;
+    if(!current)return incoming;
+    const stamp=(payload,row)=>{
+        const raw=String(payload.outcomes_updated_at||payload.generated_at||'').replace(' ','T');
+        const time=Date.parse(raw&& !/(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw)?raw+'+08:00':raw)||0;
+        return [String(row?.outcomes_through||payload.available_through||''),time];
+    };
+    const newer=(a,b)=>a[0]===b[0]?a[1]>=b[1]:a[0]>b[0];
+    const rowKey=row=>JSON.stringify([String(row.code||'').padStart(6,'0'),row.confirmed_at||'',row.pair_key||row.event_key||'']);
+    const fields=['outcomes','outcomes_through','latest_date','latest_close','latest_return_pct'];
+    const days=new Map((current.days||[]).map(day=>[day.date,day]));
+    for(const day of incoming.days||[]){
+        const previous=days.get(day.date),merged={...previous,...day};
+        for(const kind of ['actual_rows','replay_rows','blocked_rows']){
+            const rows=new Map((previous?.[kind]||[]).map(row=>[rowKey(row),row]));
+            for(const row of day[kind]||[]){
+                const key=rowKey(row),prior=rows.get(key),next={...prior,...row};
+                // Compact navigation identities are not replacements for hydrated
+                // exit evidence. A genuinely newer full calculation still wins,
+                // including a newly unverified result; never manufacture "no exit".
+                if(prior?.outcomes&&(!row.outcomes||!newer(stamp(incoming,row),stamp(current,prior)))){
+                    for(const field of fields)if(prior[field]!==undefined)next[field]=prior[field];
+                }
+                rows.set(key,next);
+            }
+            merged[kind]=[...rows.values()];
+        }
+        days.set(day.date,merged);
+    }
+    const metadata=newer(stamp(incoming),stamp(current))?{...current,...incoming}:{...incoming,...current};
+    return {...metadata,days:[...days.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date)))};
+}
 function mergeDailyBundle(payload){
     const previous={...dailyExtra};
     payload={...(payload||{})};
@@ -1036,6 +1106,7 @@ function mergeDailyBundle(payload){
     if(previous.dailyCloseReminders&&!dailyCloseSnapshotNewer(dailyExtra.dailyCloseReminders,previous.dailyCloseReminders))dailyExtra.dailyCloseReminders=previous.dailyCloseReminders;
     if(previous.d2Proximity&&!d2SnapshotNewer(dailyExtra.d2Proximity,previous.d2Proximity))dailyExtra.d2Proximity=previous.d2Proximity;
     dailyExtra.d2History=mergeD2History(payload?.d2History,previous.d2History);
+    dailyExtra.d2Replay=mergeD2Replay(payload?.d2Replay,previous.d2Replay);
     for(const key of ['holdingPool','dailyConsolidationFirst','weeklyShortCycle','shortCycleAlertRates'])if(previous[key]&&String(previous[key].generated_at||'')>String(dailyExtra[key]?.generated_at||''))dailyExtra[key]=previous[key];
     dailyExtra.holdingPool=normalizeD2HoldingPool(dailyExtra.holdingPool);
 }
@@ -2103,7 +2174,7 @@ function d2ArchivedSignalDetail(event,code,name,date,includeBuy=true){
     const actual=day?.actual_rows?.find(matches),replay=day?.replay_rows?.find(matches);
     const settled=actual||replay;
     const combined={...settled,...event,code,name,outcomes:actual?.outcomes||event.outcomes||replay?.outcomes};
-    return `${includeBuy?d2ConditionList(d2ArchivedConditionChecks(event,date),true,code,date):''}${d2EvidenceButton(code,event.confirmed_at)}${d2SellConditionTable(combined,date)}<details class="d2-performance-help"><summary>提醒后表现</summary>${d2OutcomeTable(combined)}</details>`;
+    return `${includeBuy?d2ConditionList(d2ArchivedConditionChecks(event,date),true,code,date):''}${d2EvidenceButton(code,event.confirmed_at)}${d2SellConditionTable(combined,date)}<details class="d2-performance-help" open><summary>提醒后表现</summary>${d2OutcomeTable(combined)}</details>`;
 }
 function d2ArchivedCard({row,event,date,events=[event]}){
     const ideal=['ideal_m30_divergence','daily_kdj+ideal_m30_divergence'].includes(event.source),approved=d2ManuallyApproved(row.code,date);
@@ -4903,7 +4974,7 @@ async function refreshD2ReplayData(){
         if(!payload||!Array.isArray(payload.days))return;
         const signature=JSON.stringify(payload);
         if(signature===lastD2ReplaySignature)return;
-        dailyExtra.d2Replay=payload;
+        dailyExtra.d2Replay=mergeD2Replay(payload,dailyExtra.d2Replay);
         lastD2ReplaySignature=signature;
         if(activeDaily==='d2_alert')draw();
     }catch(_error){}
@@ -5263,6 +5334,56 @@ style.textContent+=`.daily-sticky-controls .holding-pool-tabs button[aria-select
 style.textContent+=`.return-summary{margin:0}.return-summary>h3{margin:0 0 14px;font-size:15px;font-weight:600;color:#334155}.return-summary>.wrap{border:1px solid #dce3ec;border-radius:8px;background:#fff}.return-summary-table tbody tr:last-child>*{border-bottom:0}.macd-history-summary{border:1px solid #dce3ec;border-radius:10px;background:#fff;margin:24px 0!important}.macd-history-summary>summary{padding:16px 18px;font-size:15px;font-weight:600}.macd-history-summary>summary span{display:block;margin:6px 0 0 18px;font-size:13px;font-weight:400;color:#64748b}.model-summary-content{padding:0 18px 18px}.model-summary-actions{display:flex;justify-content:flex-end;margin-top:16px}.model-summary-actions button{font-size:14px;font-weight:400;padding:8px 14px}.stock-lookup-form{margin:18px 0 24px}.stock-lookup-table{font-size:14px}.stock-lookup-table th,.stock-lookup-table td{padding:14px!important;line-height:1.6}`;
 
 style.textContent+=`.short-cycle-outcomes:has(>details):not(:has(>.wrap)){border:0!important;padding:0!important;margin:12px 0!important;background:transparent!important}.short-cycle-outcomes>details{margin:8px 0!important}.short-cycle-outcomes>details>summary{padding:8px 0!important}`;
+</script><script>(function () {
+    'use strict';
+    const host = location.hostname.toLowerCase();
+    if (!['localhost', '127.0.0.1', '[::1]', 'waxwingin.github.io'].includes(host)) return;
+    if (window.__waxwingLocalRollingPlanEntry) return;
+    window.__waxwingLocalRollingPlanEntry = true;
+    function mount() {
+        const title = [...document.querySelectorAll('h1')].find(node => /市场观察|行情模型/.test(node.textContent));
+        if (!title) return;
+        let row = title.closest('.market-title-row');
+        if (!row) {
+            row = document.createElement('div');
+            row.className = 'market-title-row';
+            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:24px 0 18px';
+            title.before(row);
+            row.append(title);
+        }
+        let heading = title.closest('.market-title-heading');
+        if (!heading) {
+            heading = document.createElement('div');
+            heading.className = 'market-title-heading';
+            title.before(heading);
+            heading.append(title);
+            if (!title.classList.contains('market-page-title')) title.style.margin = '0';
+        }
+        if (!document.getElementById('localRollingPlanEntry')) {
+            const link = document.createElement('a');
+            link.id = 'localRollingPlanEntry';
+            link.className = 'market-rolling-plan-link';
+            link.href = host === 'waxwingin.github.io' ? 'rolling-plan.html' : 'http://localhost:8016/rolling-plan.html';
+            link.target = '_blank';
+            link.rel = 'noopener';
+            link.textContent = '低波动滚动计划';
+            link.title = '打开低波动滚动计划';
+            heading.append(link);
+        }
+        if (!document.getElementById('localRollingPlanEntryStyle')) {
+            const style = document.createElement('style');
+            style.id = 'localRollingPlanEntryStyle';
+            style.textContent = '.market-title-heading{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;min-width:0}.market-rolling-plan-link{display:inline;padding:0;border:0;border-radius:0;background:none;color:#1d4ed8;font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}.market-rolling-plan-link:hover{color:#1e40af}.market-rolling-plan-link:focus-visible{outline:2px solid #2563eb;outline-offset:3px}@media(max-width:640px){.market-title-heading{gap:10px}}';
+            document.head.append(style);
+        }
+    }
+    function start() {
+        mount();
+        new MutationObserver(mount).observe(document.body, {childList:true, subtree:true});
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once:true});
+    else start();
+})();
 </script><script data-waxwing-signal-feed="1">/* Public observed reminders, independent of full Pages builds. No account writes. */
 (function () {
     'use strict';
@@ -5337,4 +5458,4 @@ style.textContent+=`.short-cycle-outcomes:has(>details):not(:has(>.wrap)){border
     setInterval(refresh, 15000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 })();
-</script><script src="rolling_plan_browser_entry.js"></script></body></html>
+</script></body></html>
