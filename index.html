@@ -74,6 +74,11 @@ body.waxwing-ui .sim-submit-row>button{margin-left:auto;flex:none}
 .d2-sector-overview td small{display:block;font-size:12px;color:var(--wx-muted)}
 .d2-sector-date-cell,.d2-sector-industry-cell{box-sizing:border-box;width:110px}
 .d2-sector-status-cell{box-sizing:border-box;width:160px}
+.d2-sector-overview th:nth-last-child(2){box-sizing:border-box;width:160px}
+.d2-sector-associations-cell{min-width:0}
+.d2-sector-associations{display:grid;gap:8px}
+.d2-sector-association{display:grid;grid-template-columns:160px minmax(0,1fr);align-items:start}
+.d2-sector-association-label{box-sizing:border-box;min-width:0;padding-right:12px;overflow-wrap:anywhere}
 .d2-sector-stock-links{display:flex;flex-wrap:wrap;gap:3px 12px;min-width:0;max-width:none}
 .d2-sector-stock-links>span{white-space:nowrap}
 .d2-sector-overview a{color:var(--wx-blue);text-decoration:underline}
@@ -84,7 +89,9 @@ body.waxwing-ui .sim-submit-row>button{margin-left:auto;flex:none}
  .d2-sector-overview tbody tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 12px;padding:8px 0;border-bottom:1px solid var(--wx-line)}
  .d2-sector-overview td{display:block;min-width:0;padding:3px 0;border:0;overflow-wrap:anywhere}
  .d2-sector-overview td::before{content:attr(data-label);display:block;margin-bottom:2px;color:var(--wx-muted);font-size:11px}
- .d2-sector-date-cell,.d2-sector-industry-cell,.d2-sector-status-cell,.d2-sector-stocks-cell{grid-column:1/-1;width:auto}
+ .d2-sector-date-cell,.d2-sector-industry-cell,.d2-sector-status-cell,.d2-sector-stocks-cell,.d2-sector-associations-cell{grid-column:1/-1;width:auto}
+ .d2-sector-association{grid-template-columns:minmax(0,1fr);gap:4px}
+ .d2-sector-association-label{padding-right:0}
  .d2-sector-stock-links{min-width:0;max-width:100%}
 }
 </style></head><body class="daily-ui-booting waxwing-ui"><script>/* Shared ES5 controls for model, holding and history pages. */
@@ -1956,15 +1963,19 @@ function d2SectorBoardEvidence(board,stock,day){
     if(!d2SectorPeriodLabel(period)||!/^BK\d{4,6}$/.test(board.code||''))return null;
     const stamp=value=>String(value||'').replace('T',' ').slice(0,19),full=value=>/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value);
     const checkedAt=stamp(board.checked_at||stock.checked_at),through=stamp(board.data_through),confirmed=stamp(board.confirmed_at);
-    const cutoffValid=full(through)&&full(checkedAt)&&checkedAt.slice(0,10)===day&&through<=checkedAt&&
+    const evaluatedAt=stamp(board.evaluation_as_of),late=board.phase==='historical_supplement'&&board.as_of_date===day&&board.membership_date===day&&
+        full(evaluatedAt)&&evaluatedAt.slice(0,10)===day&&through<=evaluatedAt&&evaluatedAt<checkedAt&&checkedAt.slice(0,10)>day&&
+        Date.parse(checkedAt.replace(' ','T')+'+08:00')<=Date.now();
+    const cutoffValid=full(through)&&full(checkedAt)&&(checkedAt.slice(0,10)===day||late)&&through<=checkedAt&&
         (period==='1d'?through.slice(0,10)<=day:through.slice(0,10)===day);
     const valid=cutoffValid&&(board.status!=='divergence'||full(confirmed)&&confirmed<=through);
     const status=valid&&['divergence','none'].includes(board.status)?board.status:'unknown';
-    return {...board,period,status,date:day,checked_at:checkedAt,data_through:through,confirmed_at:status==='divergence'?confirmed:'',phase:stock.phase,membership_date:board.membership_date||stock.membership_date||''};
+    return {...board,period,status,date:day,checked_at:checkedAt,data_through:through,confirmed_at:status==='divergence'?confirmed:'',phase:board.phase||stock.phase,membership_date:board.membership_date||stock.membership_date||''};
 }
-function d2SectorStockBoards(stock,day){
+function d2SectorStockBoards(stock,day,field='boards'){
     const records=new Map(),boards=new Map(),priority={divergence:0,none:1,unknown:2};
-    for(const raw of stock.boards||[]){
+    for(const raw of stock[field]||[]){
+        if(field==='associated_boards'&&raw.membership_date!==day)continue;
         const board=d2SectorBoardEvidence(raw,stock,day);if(!board)continue;
         boards.set(board.code,board);
         const key=`${board.code}|${board.period}`,prior=records.get(key);
@@ -1979,8 +1990,8 @@ function d2SectorStockBoards(stock,day){
 function d2SectorEvidenceTitle(boards,stock){
     const lines=[];
     if(stock)lines.push(`核验 ${formatDateTime(stock.checked_at)} · 归属快照 ${stock.membership_date||'待核验'} · ${stock.phase==='close_supplement'?'收盘补充':'盘中补充'}`);
-    for(const item of boards)lines.push(`${item.name}（${item.code?item.code+' · 东财一级行业':'一级行业指数待核验'}） · ${d2SectorPeriodLabel(item.period)}：${item.status==='divergence'?'存在底背离':item.status==='none'?'未见底背离':'待核验'}${item.missing_period?'（该周期尚无核验记录）':''}${item.confirmed_at?' · 条件确认 '+formatDateTime(item.confirmed_at):''}${item.data_through?' · 行情截至 '+formatDateTime(item.data_through):''}${!item.missing_period&&item.checked_at?' · 核验 '+formatDateTime(item.checked_at):''}${item.membership_date?' · 归属快照 '+item.membership_date:''}${item.checked_at?' · '+(item.phase==='close_supplement'?'收盘补充':'盘中补充'):''}`);
-    lines.push('来源：东方财富一级行业指数；仅核验与上方一级行业同名的真实一级行业指数，不以概念或细分行业代替。');
+    for(const item of boards)lines.push(`${item.name}（${item.code?item.code+' · 东财'+(item.kind==='concept'?'概念':Number(item.industry_level)===1?'一级行业':'细分行业'):'一级行业指数待核验'}） · ${d2SectorPeriodLabel(item.period)}：${item.status==='divergence'?'存在底背离':item.status==='none'?'未见底背离':'待核验'}${item.missing_period?'（该周期尚无核验记录）':''}${item.confirmed_at?' · 条件确认 '+formatDateTime(item.confirmed_at):''}${item.data_through?' · 行情截至 '+formatDateTime(item.data_through):''}${!item.missing_period&&item.checked_at?' · 核验 '+formatDateTime(item.checked_at):''}${item.membership_date?' · 归属快照 '+item.membership_date:''}${item.checked_at?' · '+(item.phase==='historical_supplement'?'事后核验':item.phase==='close_supplement'?'收盘补充':'盘中补充'):''}`);
+    lines.push('来源：东方财富板块指数；概念和细分行业仅关联其真实成分股，不代表所属一级行业指数也背离。');
     lines.push('板块独立判断，不要求D2；日线盘中使用最近已收盘交易日。补充信息不代表个股首次提醒时已知，也不参与买卖触发。');
     return lines.join('\n');
 }
@@ -1997,6 +2008,18 @@ function d2SectorIndustryEvidence(day,industry,extraContexts=[]){
     }
     return ['30m','60m','1d'].map(period=>records.get(period)||{name:industry,period,status:'unknown',missing_period:true});
 }
+function d2SectorAssociatedEvidence(day,code,extraContexts=[]){
+    const session=(dailyExtra.d2SectorContext?.days||[]).find(item=>item.date===day),records=new Map(),priority={divergence:0,none:1,unknown:2};
+    for(const stock of [session?.stocks?.[String(code).padStart(6,'0')],...extraContexts]){
+        if(!stock)continue;
+        for(const board of d2SectorStockBoards(stock,day,'associated_boards')){
+            if(board.membership_date!==day||!(board.kind==='concept'||board.kind==='industry'&&[2,3].includes(Number(board.industry_level))))continue;
+            const key=`${board.code}|${board.period}`,prior=records.get(key);
+            if(!prior||!board.missing_period&&(prior.missing_period||board.checked_at>prior.checked_at||board.checked_at===prior.checked_at&&priority[board.status]>priority[prior.status]))records.set(key,board);
+        }
+    }
+    return [...records.values()];
+}
 function d2SectorOverviewData(selected,latestDay,industry='all',cohort=[]){
     const last=String(latestDay||'').slice(0,10),wanted=selected==='latest'?last:selected,groups=new Map();
     for(const entry of cohort){
@@ -2005,18 +2028,32 @@ function d2SectorOverviewData(selected,latestDay,industry='all',cohort=[]){
         const name=stock.name||dailyExtra.stockNames?.[code]||'',stockIndustry=d2SectorIndustry(code,name);
         if(industry!=='all'&&stockIndustry!==industry)continue;
         const key=`${day}|${stockIndustry}`;
-        if(!groups.has(key))groups.set(key,{date:day,industry:stockIndustry,stocks:new Map(),contexts:[]});
+        if(!groups.has(key))groups.set(key,{date:day,industry:stockIndustry,stocks:new Map(),contexts:[],stockContexts:new Map()});
         const group=groups.get(key);group.stocks.set(code,{code,name,industry:stockIndustry});
-        if(stock.sector_context)group.contexts.push(stock.sector_context);
+        if(stock.sector_context){group.contexts.push(stock.sector_context);group.stockContexts.set(code,[...(group.stockContexts.get(code)||[]),stock.sector_context])}
     }
     const rows=[...groups.values()].sort((a,b)=>b.date.localeCompare(a.date)||b.stocks.size-a.stocks.size||a.industry.localeCompare(b.industry,'zh-CN'));
     for(const row of rows){
         row.checks=d2SectorIndustryEvidence(row.date,row.industry,row.contexts);
         row.periods=row.checks.filter(board=>board.status==='divergence');
         row.status=row.periods.length?'divergence':row.checks.some(board=>board.status==='unknown')?'unknown':'none';
-        delete row.contexts;
+        row.associations=row.periods.length?[{...row.periods[0],checks:row.checks,periods:row.periods,stocks:new Map(row.stocks)}]:[];
+        const linked=new Map(),priority={divergence:0,none:1,unknown:2};
+        for(const stock of row.stocks.values())for(const board of d2SectorAssociatedEvidence(row.date,stock.code,row.stockContexts.get(stock.code)||[])){
+            if(!linked.has(board.code))linked.set(board.code,{...board,checks:new Map(),stocks:new Map()});
+            const association=linked.get(board.code),prior=association.checks.get(board.period);
+            association.stocks.set(stock.code,stock);
+            if(!prior||!board.missing_period&&(prior.missing_period||board.checked_at>prior.checked_at||board.checked_at===prior.checked_at&&priority[board.status]>priority[prior.status]))association.checks.set(board.period,board);
+        }
+        for(const association of linked.values()){
+            association.checks=[...association.checks.values()].sort((a,b)=>['30m','60m','1d'].indexOf(a.period)-['30m','60m','1d'].indexOf(b.period));
+            association.periods=association.checks.filter(board=>board.status==='divergence');
+            if(association.periods.length)row.associations.push(association);
+        }
+        row.associations.sort((a,b)=>(Number(a.industry_level)===1?0:1)-(Number(b.industry_level)===1?0:1)||a.name.localeCompare(b.name,'zh-CN'));
+        delete row.contexts;delete row.stockContexts;
     }
-    const hits=rows.filter(row=>row.status==='divergence'),sessions=[...new Set(rows.map(row=>row.date))].map(date=>({date}));
+    const hits=rows.filter(row=>row.associations.length),sessions=[...new Set(rows.map(row=>row.date))].map(date=>({date}));
     return {sessions,rows,hits,tested:rows.reduce((n,row)=>n+row.checks.filter(board=>board.status!=='unknown').length,0),pending:rows.filter(row=>row.checks.some(board=>board.status==='unknown')).length,boards:hits.length};
 }
 function d2SectorOverview(selected,latestDay,industry='all',cohort=[]){
@@ -2024,19 +2061,25 @@ function d2SectorOverview(selected,latestDay,industry='all',cohort=[]){
     const range=dates.length?dates[0]===dates.at(-1)?formatDate(dates[0]):`${formatDate(dates[0])}—${formatDate(dates.at(-1))}`:
         selected==='all'?'全部已核验历史':formatDate(selected==='latest'?latestDay:selected);
     const link=(stock,date,label)=>`<a href="#d2-alert" data-stock-lookup-target="d2_alert" data-stock-lookup-code="${safe(stock.code)}" data-stock-lookup-date="${safe(date)}" data-stock-lookup-source="板块背离">${safe(label||stock.name||'查看个股')}</a>`;
-    const table=data.hits.length?`<div class="wrap d2-sector-overview-scroll"><table><thead><tr>${selected==='all'?'<th>日期</th>':''}<th>一级行业</th><th>底背离周期</th><th>关联D2提醒个股</th></tr></thead><tbody>${data.hits.map(board=>{
-        const stocks=[...board.stocks.values()].sort((a,b)=>a.code.localeCompare(b.code)),first=stocks[0];
-        const title=`申万一级：${board.industry}\n${d2SectorEvidenceTitle(board.checks)}`;
-        return `<tr>${selected==='all'?`<td class="d2-sector-date-cell" data-label="日期">${safe(formatDate(board.date))}</td>`:''}<td class="d2-sector-industry-cell" data-label="一级行业">${link(first,board.date,board.industry)} · ${stocks.length}只</td><td class="d2-sector-status-cell" data-label="底背离周期" title="${safe(title)}">${board.periods.map(item=>d2SectorPeriodLabel(item.period)).join('、')}</td><td class="d2-sector-stocks-cell" data-label="关联D2提醒个股"><div class="d2-sector-stock-links">${stocks.map(stock=>`<span>${link(stock,board.date)} <span>${safe(stock.code)}</span></span>`).join('')}</div></td></tr>`;
-    }).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已确认的底背离行业。</p>';
-    return `<div class="d2-sector-overview"><h3>底背离行业</h3><p class="daily-note">${safe(range)} · 东财一级行业${data.pending?' · 部分行业待核验':''}</p>${table}</div>`;
+    const table=data.hits.length?`<div class="wrap d2-sector-overview-scroll"><table><thead><tr>${selected==='all'?'<th>日期</th>':''}<th>一级行业</th><th>底背离板块及周期</th><th>关联D2提醒个股</th></tr></thead><tbody>${data.hits.map(group=>{
+        const first=group.associations[0].stocks.values().next().value;
+        const associations=group.associations.map(board=>{
+            const stocks=[...board.stocks.values()].sort((a,b)=>a.code.localeCompare(b.code));
+            return `<div class="d2-sector-association"><div class="d2-sector-association-label" title="${safe(d2SectorEvidenceTitle(board.checks))}">${safe(board.name)} · ${board.periods.map(item=>d2SectorPeriodLabel(item.period)).join('、')}</div><div class="d2-sector-stock-links">${stocks.map(stock=>`<span>${link(stock,group.date)} <span>${safe(stock.code)}</span></span>`).join('')}</div></div>`;
+        }).join('');
+        return `<tr>${selected==='all'?`<td class="d2-sector-date-cell" data-label="日期">${safe(formatDate(group.date))}</td>`:''}<td class="d2-sector-industry-cell" data-label="一级行业">${link(first,group.date,group.industry)}</td><td class="d2-sector-associations-cell" colspan="2"><div class="d2-sector-associations">${associations}</div></td></tr>`;
+    }).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已确认的底背离板块。</p>';
+    return `<div class="d2-sector-overview"><h3>底背离板块</h3><p class="daily-note">${safe(range)} · 东财板块 · 按一级行业归类${data.pending?' · 部分板块待核验':''}</p>${table}</div>`;
 }
 function d2SectorHint(row,date){
     const day=String(date||'').slice(0,10);
     const industry=d2SectorIndustry(row?.code,row?.name||'');
     const boards=d2SectorIndustryEvidence(day,industry,[row?.sector_context]),hits=boards.filter(item=>item.status==='divergence'),unknown=boards.some(item=>item.status==='unknown');
-    const summary=`${safe(industry)} · ${hits.length?'行业底背离：'+hits.map(item=>d2SectorPeriodLabel(item.period)).join('、'):unknown?'行业背离待核验':'未见行业底背离'}`;
-    return `<div class="d2-sector-context"><small class="d2-sector-hint${hits.length?' d2-sector-match':''}" title="${safe('申万一级：'+industry+'\n'+d2SectorEvidenceTitle(boards))}">${summary}</small></div>`;
+    const associated=d2SectorAssociatedEvidence(day,row?.code,[row?.sector_context]).filter(item=>item.status==='divergence'),linked=new Map();
+    if(hits.length)linked.set(industry,hits);
+    for(const board of associated){if(!linked.has(board.name))linked.set(board.name,[]);linked.get(board.name).push(board)}
+    const summary=`${safe(industry)} · ${linked.size?'关联底背离：'+[...linked].map(([name,periods])=>safe(name)+'（'+[...new Set(periods.map(item=>d2SectorPeriodLabel(item.period)))].join('、')+'）').join('；'):unknown?'行业背离待核验':'未见行业底背离'}`;
+    return `<div class="d2-sector-context"><small class="d2-sector-hint${linked.size?' d2-sector-match':''}" title="${safe('申万一级：'+industry+'\n'+d2SectorEvidenceTitle([...boards,...associated]))}">${summary}</small></div>`;
 }
 function d2DisplayCard(row,snapshot){
     if(!row._confirmedRecord)return d2Card(row,snapshot.scanAt,true,snapshot.offline,snapshot.session?.date);
