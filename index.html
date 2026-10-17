@@ -2024,12 +2024,12 @@ function d2SectorOverview(selected,latestDay,industry='all',cohort=[]){
     const range=dates.length?dates[0]===dates.at(-1)?formatDate(dates[0]):`${formatDate(dates[0])}—${formatDate(dates.at(-1))}`:
         selected==='all'?'全部已核验历史':formatDate(selected==='latest'?latestDay:selected);
     const link=(stock,date,label)=>`<a href="#d2-alert" data-stock-lookup-target="d2_alert" data-stock-lookup-code="${safe(stock.code)}" data-stock-lookup-date="${safe(date)}" data-stock-lookup-source="板块背离">${safe(label||stock.name||'查看个股')}</a>`;
-    const table=data.rows.length?`<div class="wrap d2-sector-overview-scroll"><table><thead><tr>${selected==='all'?'<th>日期</th>':''}<th>一级行业</th><th>底背离周期</th><th>关联D2提醒个股</th></tr></thead><tbody>${data.rows.map(board=>{
+    const table=data.hits.length?`<div class="wrap d2-sector-overview-scroll"><table><thead><tr>${selected==='all'?'<th>日期</th>':''}<th>一级行业</th><th>底背离周期</th><th>关联D2提醒个股</th></tr></thead><tbody>${data.hits.map(board=>{
         const stocks=[...board.stocks.values()].sort((a,b)=>a.code.localeCompare(b.code)),first=stocks[0];
         const title=`申万一级：${board.industry}\n${d2SectorEvidenceTitle(board.checks)}`;
-        return `<tr>${selected==='all'?`<td class="d2-sector-date-cell" data-label="日期">${safe(formatDate(board.date))}</td>`:''}<td class="d2-sector-industry-cell" data-label="一级行业">${link(first,board.date,board.industry)} · ${stocks.length}只</td><td class="d2-sector-status-cell" data-label="底背离周期" title="${safe(title)}">${board.periods.length?board.periods.map(item=>d2SectorPeriodLabel(item.period)).join('、'):board.status==='none'?'未见底背离':'待核验'}</td><td class="d2-sector-stocks-cell" data-label="关联D2提醒个股"><div class="d2-sector-stock-links">${stocks.map(stock=>`<span>${link(stock,board.date)} <span>${safe(stock.code)}</span></span>`).join('')}</div></td></tr>`;
-    }).join('')}</tbody></table></div>`:'<p class="daily-note">当前没有D2提醒个股。</p>';
-    return `<div class="d2-sector-overview"><h3>行业背离参考</h3><p class="daily-note">${safe(range)} · 东财一级行业${data.pending?' · 部分行业待核验':''}</p>${table}</div>`;
+        return `<tr>${selected==='all'?`<td class="d2-sector-date-cell" data-label="日期">${safe(formatDate(board.date))}</td>`:''}<td class="d2-sector-industry-cell" data-label="一级行业">${link(first,board.date,board.industry)} · ${stocks.length}只</td><td class="d2-sector-status-cell" data-label="底背离周期" title="${safe(title)}">${board.periods.map(item=>d2SectorPeriodLabel(item.period)).join('、')}</td><td class="d2-sector-stocks-cell" data-label="关联D2提醒个股"><div class="d2-sector-stock-links">${stocks.map(stock=>`<span>${link(stock,board.date)} <span>${safe(stock.code)}</span></span>`).join('')}</div></td></tr>`;
+    }).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已确认的底背离行业。</p>';
+    return `<div class="d2-sector-overview"><h3>底背离行业</h3><p class="daily-note">${safe(range)} · 东财一级行业${data.pending?' · 部分行业待核验':''}</p>${table}</div>`;
 }
 function d2SectorHint(row,date){
     const day=String(date||'').slice(0,10);
