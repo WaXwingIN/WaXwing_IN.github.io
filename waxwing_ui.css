@@ -55,8 +55,7 @@ body.waxwing-ui .sim-submit-row>button{margin-left:auto;flex:none}
 .d2-sector-overview th{font-weight:500;color:var(--wx-muted);background:var(--wx-bg)}
 .d2-sector-overview td small{display:block;font-size:12px;color:var(--wx-muted)}
 .d2-sector-date-cell,.d2-sector-industry-cell{box-sizing:border-box;width:110px}
-.d2-sector-board-cell{box-sizing:border-box;width:220px}
-.d2-sector-overview .d2-sector-board-kind{display:inline;white-space:nowrap}
+.d2-sector-status-cell{box-sizing:border-box;width:160px}
 .d2-sector-stock-links{display:flex;flex-wrap:wrap;gap:3px 12px;min-width:0;max-width:none}
 .d2-sector-stock-links>span{white-space:nowrap}
 .d2-sector-overview a{color:var(--wx-blue);text-decoration:underline}
@@ -67,6 +66,6 @@ body.waxwing-ui .sim-submit-row>button{margin-left:auto;flex:none}
  .d2-sector-overview tbody tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 12px;padding:8px 0;border-bottom:1px solid var(--wx-line)}
  .d2-sector-overview td{display:block;min-width:0;padding:3px 0;border:0;overflow-wrap:anywhere}
  .d2-sector-overview td::before{content:attr(data-label);display:block;margin-bottom:2px;color:var(--wx-muted);font-size:11px}
- .d2-sector-date-cell,.d2-sector-industry-cell,.d2-sector-board-cell,.d2-sector-stocks-cell{grid-column:1/-1;width:auto}
+ .d2-sector-date-cell,.d2-sector-industry-cell,.d2-sector-status-cell,.d2-sector-stocks-cell{grid-column:1/-1;width:auto}
  .d2-sector-stock-links{min-width:0;max-width:100%}
 }
