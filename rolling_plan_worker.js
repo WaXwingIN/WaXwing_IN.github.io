@@ -94,10 +94,19 @@ async function prepare(books, selectedRelease, route, payload) {
 self.onmessage = ({data}) => { queue = queue.catch(() => {}).then(async () => {
   try {
     await prepare(data.books,data.release,data.route,data.payload);
+    if(data.payload.model==='weekly_low_2_stress'&&data.payload.execution_policy){
+      const policy=await engine.runPythonAsync("getattr(__import__('rolling_plan_models'), 'WEEKLY_EXECUTION_POLICY', None)");
+      if(policy!==data.payload.execution_policy)
+        throw new Error('周线规则版本未更新，请更新网页计算资源后重试；模拟记录保留');
+    }
     progress(data.route === 'history' ? '正在按本金核算历史股数、费用和收益…' : '正在核算模拟计划与逐日记录…');
     engine.globals.set('request_route', data.route);
     engine.globals.set('request_payload', JSON.stringify({...data.payload, market_date: marketDate}));
     const result = JSON.parse(await engine.runPythonAsync('bridge.handle(request_route, request_payload)'));
+    if(data.payload.model==='weekly_low_2_stress'&&data.payload.execution_policy&&
+       result.value.execution_policy!==data.payload.execution_policy){
+      throw new Error('周线规则版本未更新，请更新网页计算资源后重试；模拟记录保留');
+    }
     self.postMessage({id: data.id, ...result});
   } catch (error) {
     const message = String(error.message || error).trim().split('\n').at(-1).replace(/^(?:ValueError|RuntimeError):\s*/, '');

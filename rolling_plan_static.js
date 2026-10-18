@@ -48,6 +48,7 @@
     if (!worker) createWorker();
     if (route.searchParams.has('capital')) payload.capital = Number(route.searchParams.get('capital'));
     if (route.searchParams.has('model')) payload.model = route.searchParams.get('model');
+    if (route.searchParams.has('execution_policy')) payload.execution_policy = route.searchParams.get('execution_policy');
     const id = ++sequence;
     return new Promise((resolve, reject) => { pending.set(id, {resolve, reject,route:route.pathname.split('/').at(-1)});
       worker.postMessage({id, route: route.pathname.split('/').at(-1), payload,
