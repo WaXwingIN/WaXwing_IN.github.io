@@ -51,23 +51,16 @@
     }
     return result;
   }
-  function afternoonRows(plan, prices={}) {
-    const batch=plan?.afternoon;
-    if(plan?.model!=='weekly_low_2_stress'||batch?.state!=='ready'||!plan.complete||plan.market.allow_buy!==true)return [];
-    let cash=batch.available_cash;
-    return batch.candidates.map(row=>{
-      const price=prices[row.code]??row.evaluation_price;
-      const limit=/^(688|689)/.test(row.code) ? .20 : .10;
-      const blocked=price>=row.reference_price*(1+limit-.002);
-      const size=blocked?{qty:0,cost:0}:sizePurchase(price,Math.min(cash,batch.budget),row.code);
-      cash-=size.cost;
-      return {...row,...size,evaluation_price:price,blocked};
-    });
+  function afternoonRows() {
+    return [];
   }
-  function afternoonReason(plan) {
-    if(plan?.afternoon?.state==='missed' && plan.market?.allow_buy===false)
-      return '最新补仓试算：13:00补仓0只；沿用前一交易日大盘判断，急跌暂停新买';
-    return plan?.afternoon?.reason || '等待午盘行情核验';
+  function afternoonReason() {
+    return '周线仅09:30开盘买入，盘中空位等待下一交易日';
+  }
+  function activePendingAlerts(events) {
+    return (events||[]).map(event=>({...event,rows:(event.rows||[]).filter(row=>
+      row.recorded||row.side!=='模拟买入'||row.execution_at?.slice(11,16)==='09:30')}))
+      .filter(event=>event.rows.length);
   }
   function newestFirst(rows, field='day') {
     return [...(rows||[])].sort((a,b)=>String(b[field]||'').localeCompare(String(a[field]||'')));
@@ -101,32 +94,21 @@
         body:summary+'；请核对实际价格、预算与买入条件',requiresConfirmation:true,
         alertRows:buys.map(r=>({...r,side:'模拟买入',execution_at:clock.day+' 09:30',price:r.evaluation_price}))});
     }
-    const batch=plan.afternoon;
-    const stamp=String(plan.generated_at||'').slice(0,19).replace('T',' ');
-    const age=(Date.parse(clock.day+'T'+clock.time+':00+08:00')-Date.parse(stamp.replace(' ','T')+'+08:00'))/1000;
-    if(plan.model==='weekly_low_2_stress'&&cap===2&&clock.day===plan.trade_date&&
-       clock.time>='11:30'&&clock.time<'13:05'&&batch?.day===clock.day&&batch.state==='ready'&&
-       batch.known_at===clock.day+' 11:30:00'&&batch.prepared_at?.slice(0,19)<clock.day+'T13:00:00'&&
-       age>=-60&&age<=90&&plan.complete&&plan.market.allow_buy===true){
-      const rows=afternoonRows(plan).filter(r=>r.qty>0);
-      if(rows.length)events.push({id:`afternoon:${cap}:${clock.day}:${clock.time<'13:00'?'ready':'due'}`,
-        title:clock.time<'13:00'?'周线计划：13:00补仓名单已就绪':'周线计划：13:00补仓时段已到',requiresConfirmation:clock.time>='13:00',
-        alertRows:rows.map(r=>({...r,side:'模拟买入',execution_at:clock.day+' 13:00',price:r.evaluation_price})),
-        body:rows.map(r=>`${r.code} ${r.name||''}（参考${r.qty}股）`).join('、')+'；沿用收盘判断，13:00按实际价格评估，卖出未成交则不占用其资金和空位'});
-    }
     const completed=todayActions(plan,clock).filter(e=>e.side==='模拟卖出');
     for (const row of plan.positions) {
       const sell = row.sell;
-      if (!sell || !book.positions.some(p => p.code === row.code) || !sell.execution_at) continue;
+      const holding=book.positions.find(p=>p.code===row.code&&p.entry_day===row.entry_day&&
+        (p.entry_price==null||p.entry_price===row.entry_price));
+      if (!sell || !holding || !/^\d{4}-\d{2}-\d{2}$/.test(holding.entry_day||'') || !sell.execution_at || clock.day<=holding.entry_day ||
+          sell.confirmed_at<holding.entry_day+' 09:30:00') continue;
       if(completed.some(e=>e.code===row.code&&e.confirmed_at===sell.confirmed_at))continue;
-      if(plan.simulation?.created_at && sell.confirmed_at < plan.simulation.created_at.slice(0,19).replace('T',' '))continue;
-      const pendingToday = sell.execution_at.slice(0, 10) === clock.day;
-      const newToday = sell.confirmed_at.slice(0, 10) === clock.day;
-      const fresh = row.quote_fresh !== false && (row.last_bar?.slice(0, 10) === clock.day || (pendingToday && clock.time < '09:35' && row.last_bar >= sell.confirmed_at));
-      if ((!newToday && !pendingToday) || !fresh) continue;
-      const due = pendingToday && clock.time >= sell.execution_at.slice(11, 16);
-      const signalAge=(chinaTimestamp(clock.day+' '+clock.time+':00')-chinaTimestamp(due?sell.execution_at:sell.confirmed_at))/1000;
-      if(signalAge < -60 || signalAge>(due?45*60:90))continue;
+      const now=chinaTimestamp(clock.day+' '+clock.time+':00');
+      const confirmed=chinaTimestamp(sell.confirmed_at),execution=chinaTimestamp(sell.execution_at);
+      const due=Number.isFinite(execution)&&execution<=now;
+      const fresh = row.quote_fresh !== false && row.last_bar>=sell.confirmed_at &&
+        (row.last_bar?.slice(0,10)===clock.day ||
+          (due&&clock.time>='09:30'&&clock.time<'09:35'&&sell.execution_at.slice(0,10)===clock.day));
+      if (!fresh||!Number.isFinite(confirmed)||!Number.isFinite(execution)||confirmed>now)continue;
       events.push({id: `sell:${cap}:${row.code}:${sell.confirmed_at}:${due ? 'due' : 'confirmed'}`,
         title: due ? '模拟卖出时段已到' : '模拟持仓：严格卖出信号已确认',
         requiresConfirmation:due,alertRows:[{...row,side:'模拟卖出',execution_at:sell.execution_at,confirmed_at:sell.confirmed_at,reason:sell.reason}],
@@ -209,7 +191,7 @@
     const html=`<p><strong>大盘判断依据</strong> · ${escapeText(basis)}</p><p><strong>暂停条件：</strong>${rule}</p><p><strong>本次结论：</strong>${escapeText(summary)}。</p>${rows?`<ul>${rows}</ul>`:''}<p>${weekly?'近5日涨跌=信号日收盘÷5个交易日前收盘−1。':'主板宽度按已核验的主板样本统计'+(Number.isInteger(market.members)?`（${market.members}只）`:'')+'；均线5日变化=信号日MA20÷5个交易日前MA20−1。'}大盘暂停只限制新买，已有持仓继续按原严格卖出条件管理。</p>`;
     return {summary,html};
   }
-  const api = {sizePurchase, account, buyPlan, afternoonRows, afternoonReason, newestFirst, todayActions, todayActionNotice, reminderEvents, historicalTradeTimes, profitMarkup, stockCode, returnTone, marketDecision};
+  const api = {sizePurchase, account, buyPlan, afternoonRows, afternoonReason, activePendingAlerts, newestFirst, todayActions, todayActionNotice, reminderEvents, historicalTradeTimes, profitMarkup, stockCode, returnTone, marketDecision};
   if (typeof module !== 'undefined') module.exports = api;
   if (typeof document === 'undefined') return;
 
@@ -222,7 +204,8 @@
   const defaultRule=$('modelRule').textContent, defaultHistoryRule=$('historyRule').textContent, defaultPriceNote=$('buyPriceNote').textContent;
   const modelPrefix=()=>state.model===defaultModel?'':state.model+':';
   const bookKey=()=>`${modelPrefix()}${state.capital}:${state.cap}:${state.startDate}`;
-  const priceKey=()=>`${modelPrefix()}${state.startDate}:${state.cap}:${plan?.trade_date}${state.model===weeklyModel&&plan?.trade_date===chinaClock().day&&chinaClock().time>='11:30'?':13:00':''}`;
+  const executionPolicy='weekly-open-only-20261018-v2';
+  const priceKey=()=>`${modelPrefix()}${state.startDate}:${state.cap}:${plan?.trade_date}`;
   let state = {capital:50000, cap:2, model:defaultModel, desktop:false, seen:[],alertSeen:[],pendingAlerts:[],startMode:'latest',startDate:null};
   try { const value = JSON.parse(localStorage.getItem(key)||localStorage.getItem('waxwing_position_plan_v1')); if (value && Number.isFinite(value.capital) && value.capital >= 100) state = {capital:value.capital,cap:value.cap,model:value.model===weeklyModel?weeklyModel:defaultModel,desktop:Boolean(value.desktop),seen:Array.isArray(value.seen)?value.seen:[],alertSeen:Array.isArray(value.alertSeen)?value.alertSeen:[],pendingAlerts:Array.isArray(value.pendingAlerts)?value.pendingAlerts:[],startMode:value.startMode==='manual'?'manual':'latest',startDate:value.startDate||null}; } catch (_) {}
   const entryPolicy='active-models-20261016-v1';
@@ -232,6 +215,13 @@
       state.pendingAlerts=[];localStorage.setItem('waxwing_rolling_entry_policy',entryPolicy);
     }
   }catch(_){}
+  try {
+    if(localStorage.getItem('waxwing_rolling_execution_policy')!==executionPolicy){
+      for(let i=localStorage.length-1;i>=0;i--){const name=localStorage.key(i);if(name?.startsWith('waxwing_plan_view_v1:'+weeklyModel+':'))localStorage.removeItem(name);}
+      localStorage.setItem('waxwing_rolling_execution_policy',executionPolicy);
+    }
+  }catch(_){}
+  state.pendingAlerts=activePendingAlerts(state.pendingAlerts);
   if(state.model===weeklyModel)state.cap=2;
   let historyData, plan, busy = false, lastRequest = 0, tab = 'plan', priceInputs={}, paperBooks={};
   function currentPrices(){return priceInputs[priceKey()]||{};}
@@ -339,10 +329,9 @@
     $('modelReturnValue').className=cls(modelReturn);
     $('modelReturn').title=weekly&&historyData?`${historyData.from}—${historyData.through} · ${historyData.results[state.cap].curve.length}个交易日 · 本金${money(state.capital)} · 累计净收益`:'';
     $('schemeRow').hidden=weekly||!historyData;
-    $('modelRule').textContent=weekly?'选股：仅周线模型的当日已确认买入提醒，排除创业板（300、301），ATR14/收盘价≤6%，波动从低到高。最多2只，每笔预算为前收盘资产的1/2；至少两只宽基近5个交易日跌幅超过3%时暂停新买。全天沿用前一日收盘判断，09:30及13:00考察同一前两名；午盘数据未齐或名单未及时准备则跳过下午批次，已有持仓按原严格卖出管理。':defaultRule;
+    $('modelRule').textContent=weekly?'选股：仅周线模型的当日已确认买入提醒，排除创业板（300、301），ATR14/收盘价≤6%，波动从低到高。最多2只，每笔预算为前收盘资产的1/2；至少两只宽基近5个交易日跌幅超过3%时暂停新买。沿用前一日收盘判断，仅09:30开盘考察原前两名，盘中空位等待下一交易日；严格卖出信号保留至下一个可执行时点，不设信号超时，仍须遵守T+1及行情核验。':defaultRule;
     $('historyTitle').textContent=weekly?'历史推算 · 周线低波动两只':'历史推算 · 收益前二与三只方案';
-    $('historyRule').textContent=weekly?'排除创业板，最多2只，保留收盘判断，增加13:00补仓；未卖持仓浮盈亏、费用及滑点均已计入。历史试算假定数据及时就绪，已有模拟流水保留，过去日期不补发提醒。':defaultHistoryRule;
-    $('afternoonSchedule').hidden=!weekly;
+    $('historyRule').textContent=weekly?'排除创业板，最多2只，按前一日收盘判断仅09:30开盘买入，严格卖出在下一个可执行时点处理。未卖持仓浮盈亏、费用及滑点均已计入；已有模拟流水保留，过去日期不补发提醒。':defaultHistoryRule;
     $('accountNote').textContent = `起点 ${state.startDate||'待读取'} · ${state.model===weeklyModel?'周线低波动 · ':''}当前${state.cap}只方案 · 模拟本金${money(state.capital)}`;
     $('schemes').innerHTML = historyData&&!weekly ? historyData.selected_caps.map(cap => `<button data-cap="${cap}" class="${state.cap===cap?'active':''}" aria-pressed="${state.cap===cap}"><span class="scheme-choice"><span class="scheme-title">最多${cap}只</span><small>${historyData.top_two.includes(cap)?'历史前二':'保留方案'}</small></span><span class="scheme-performance"><span class="return-chip ${cls(historyData.results[cap].net_pct)}">${pct(historyData.results[cap].net_pct)}</span><small>历史累计</small></span></button>`).join('') : '';
     $('accountNote').textContent = `起点 ${state.startDate||'待读取'} · ${state.model===weeklyModel?'周线低波动 · ':''}当前${state.cap}只方案 · 模拟本金${money(state.capital)}`;
@@ -357,16 +346,16 @@
       metric('参考资产'+(valuedDay?' · '+valuedDay:''),equity==null?'待行情核验':money(equity))+
       `<div class="metric"><span>当日收益 · ${summary?.day||chinaClock().day}</span><strong>${profitMarkup(summary?.daily_pnl,summary?.daily_pct)}</strong></div>`+
       `<div class="metric"><span>累计收益${valued?' · '+valued.day:''}</span><strong>${profitMarkup(valued?.total_pnl,valued?.total_pct)}</strong></div>`;
-    const clock=chinaClock(), afternoon=weekly&&plan?.trade_date===clock.day&&clock.time>='11:30';
-    const rows = afternoon ? afternoonRows(plan,currentPrices()) : buyPlan(plan,state.cap,b,currentPrices());
-    $('buyPriceNote').textContent=afternoon?'评估价默认取11:30收盘价，可输入13:00实际价格重算股数。接近涨停、买入前已确认卖出或行情不可核验时跳过；卖出未成交则不使用其资金和空位。参考股数不代表成交。':defaultPriceNote;
-    $('planTitle').textContent = plan ? `${state.startDate} 起 · ${afternoon?'13:00补仓计划':'买入计划'}` : '买入计划';
+    const clock=chinaClock();
+    const rows = buyPlan(plan,state.cap,b,currentPrices());
+    $('buyPriceNote').textContent=defaultPriceNote;
+    $('planTitle').textContent = plan ? `${state.startDate} 起 · 买入计划` : '买入计划';
     $('marketBadge').textContent = plan ? `当前大盘：${plan.market.state}` : '';
     const decision=marketDecision(plan);
     $('marketDecision').hidden=!plan;$('marketDecision').innerHTML=decision.html;
-    $('planReason').textContent = !plan ? '数据尚未核验，暂停新增模拟买入。' : afternoon ? afternoonReason(plan) : plan.no_buy_reason || (plan.simulation?.opened_days?.includes(plan.trade_date)?weekly?'本日开盘模拟已完成，午休核验13:00补仓机会':'本日开盘模拟已完成，盘中空位等待下一交易日':!priced?'模拟持仓行情未核验，暂停新买预算计算':!rows.length?'没有可新增的空位或当日新提醒':'开盘按下列顺序评估模拟新买');
+    $('planReason').textContent = !plan ? '数据尚未核验，暂停新增模拟买入。' : plan.no_buy_reason || (plan.simulation?.opened_days?.includes(plan.trade_date)?'本日开盘模拟已完成，盘中空位等待下一交易日':!priced?'模拟持仓行情未核验，暂停新买预算计算':!rows.length?'没有可新增的空位或当日新提醒':'09:30开盘按下列顺序评估模拟新买');
     $('buyBasis').textContent = plan ? `当前计划交易日 ${plan.trade_date} · 信号日 ${plan.signal_date} · 最多考察排序前${state.cap}名 · 每笔预算为前收盘参考资产的1/${state.cap}` : '';
-    $('simulationBasis').textContent = `从 ${state.startDate||'所选交易日'} 以零持仓和设定本金开始，按前一交易日信号模拟买入，随后滚动到最新行情。${weekly?'周线增加13:00补空位，已有流水保留；13:30完成K线到达后核验下午开盘模拟价。':''}过去日期不补发旧提醒，模拟持仓不代表实际成交。`;
+    $('simulationBasis').textContent = `从 ${state.startDate||'所选交易日'} 以零持仓和设定本金开始，按前一交易日信号仅09:30开盘模拟买入，随后滚动到最新行情。${weekly?'已有模拟流水保留，旧午盘待执行批次已取消。':''}过去日期不补发旧提醒，模拟持仓不代表实际成交。`;
     const firstBuys=(b.ledger||[]).filter(e=>e.side==='模拟买入'&&e.at.slice(0,10)===state.startDate);
     $('startPurchases').hidden=state.startDate===chinaClock().day||b.unloaded;
     $('startPurchasesTitle').textContent=`起点当日模拟买入 · ${state.startDate}`;
@@ -415,8 +404,9 @@
     $('applyPlan').disabled=true;
     const capital=state.capital,model=state.model;
     try {
-      const value=await request('/api/history?capital='+encodeURIComponent(capital)+(model===defaultModel?'':'&model='+encodeURIComponent(model)));
+      const value=await request('/api/history?capital='+encodeURIComponent(capital)+(model===defaultModel?'':'&model='+encodeURIComponent(model)+'&execution_policy='+encodeURIComponent(executionPolicy)));
       if(capital!==state.capital||model!==state.model)return;
+      if(model===weeklyModel&&value.execution_policy!==executionPolicy)throw new Error('周线规则版本未更新，请更新网页计算资源后重试；模拟记录保留');
       historyData=value;
       const oldCap=state.cap;
       if(!historyData.selected_caps.includes(state.cap))state.cap=historyData.selected_caps[0];
@@ -440,8 +430,9 @@
     $('refresh').disabled=true;
     try {
       await loadStartOptions();startDate=state.startDate;if(id!==lastRequest)return;
-      const value=await request('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({capital,cap,model,start_date:startDate})});
+      const value=await request('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({capital,cap,model,start_date:startDate,...(model===weeklyModel?{execution_policy:executionPolicy}:{})})});
       if(id!==lastRequest||cap!==state.cap||capital!==state.capital||model!==state.model||startDate!==state.startDate)return;
+      if(model===weeklyModel&&value.execution_policy!==executionPolicy)throw new Error('周线规则版本未更新，请更新网页计算资源后重试；模拟记录保留');
       plan=value;if(plan.simulation)paperBooks[`${model===defaultModel?'':model+':'}${capital}:${cap}:${startDate}`]=plan.simulation;rememberView();draw();
       const current=chinaClock();
       if(plan.trade_date<current.day){plan=readOnlyView(plan,'计划已过期，显示已有模拟记录，等待完整的最新收盘数据。');draw();showNotice(plan.no_buy_reason,true);return;}
