@@ -2086,6 +2086,17 @@ function d2SectorHint(row,date){
     const summary=`${safe(industry)} · ${linked.size?'关联底背离：'+[...linked].map(([name,periods])=>safe(name)+'（'+[...new Set(periods.map(item=>d2SectorPeriodLabel(item.period)))].join('、')+'）').join('；'):unknown?'行业背离待核验':'未见行业底背离'}`;
     return `<div class="d2-sector-context"><small class="d2-sector-hint${linked.size?' d2-sector-match':''}" title="${safe('申万一级：'+industry+'\n'+d2SectorEvidenceTitle([...boards,...associated]))}">${summary}</small></div>`;
 }
+function d2SourceSummary(row,date,event=null,events=null){
+    const labels={'daily_kdj':'日线KDJ','ideal_m30_divergence':'30分钟理想MACD底背离','daily_kdj+ideal_m30_divergence':'日线KDJ＋30分钟理想底背离'};
+    const kdj=!event&&d2KdjEligible(row),ideal=!event&&d2IdealM30Eligible(row);
+    const source=event?(labels[event.source]||'未归档'):labels[kdj&&ideal?'daily_kdj+ideal_m30_divergence':ideal?'ideal_m30_divergence':kdj?'daily_kdj':'']||'尚未触发提醒';
+    // A confirmed discovery uses its frozen price, never a later row's quote.
+    const price=event?event.close_at_scan:row.close;
+    const priceText=price!=null&&price!==''&&Number.isFinite(Number(price))&&Number(price)>0?d2Value(price):event?'未归档':'待行情核验';
+    const archived=events||d2ArchivedEvents().filter(item=>item.date===String(date||'').slice(0,10)&&String(item.row.code).padStart(6,'0')===String(row.code).padStart(6,'0')).map(item=>item.event);
+    const count=new Set([...archived,...(event?[event]:[])].map(item=>item.event_key||`${item.source}|${item.confirmed_at}`)).size;
+    return `<small class="d2-source-summary"><strong>来源：</strong>${source} · 扫描参考价 ${priceText} · ${count?`归档 ${count} 次`:'尚未归档'}</small>`;
+}
 function d2DisplayCard(row,snapshot){
     if(!row._confirmedRecord)return d2Card(row,snapshot.scanAt,true,snapshot.offline,snapshot.session?.date);
     const record=row._confirmedRecord,live=snapshot.candidates.find(item=>String(item.code)===String(row.code));
@@ -2094,7 +2105,7 @@ function d2DisplayCard(row,snapshot){
     const state=snapshot.payload?.feed_only?'<p class="daily-note">已同步当日确认提醒；完整候选扫描状态待页面数据更新。</p>':`<details><summary>最新扫描状态</summary><small>${latest?'最新扫描仍符合该分支条件。':'最新扫描条件已变化；当日已确认提醒保留。'} 扫描 ${safe(formatDateTime(snapshot.scanAt))}</small></details>`;
     const approval=live&&!row._historicalIdeal&&d2ManualReviewEligible(live,record.date)?d2ManualApprovalButton(live,record.date):'';
     const tracked=d2TrackingStatus(row.code,record.date),badge=tracked?`已入跟踪池 · ${safe(tracked.status)}`:row._historicalIdeal?'已确认买入提醒':'需人工筛选';
-    return `<div class="d2-proximity-item">${d2ManualDeleteButton(row.code,row.name,record.date)}${approval}<span class="d2-routing-badge ${row._historicalIdeal?'auto':'manual'}">${badge}</span><b class="d2-stock-title">${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(centerSimilarity)}）</b><small>提醒确认 ${safe(formatDateTime(record.event.confirmed_at))}</small>${typeof d2SectorHint==='function'?d2SectorHint(row,record.date):''}${d2ConditionList(d2ArchivedConditionChecks(record.event,record.date),true,row.code,record.date)}${state}${d2ArchivedSignalDetail(record.event,row.code,row.name,record.date,false)}</div>`;
+    return `<div class="d2-proximity-item">${d2ManualDeleteButton(row.code,row.name,record.date)}${approval}<span class="d2-routing-badge ${row._historicalIdeal?'auto':'manual'}">${badge}</span><b class="d2-stock-title">${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(centerSimilarity)}）</b>${d2SourceSummary(row,record.date,record.event,record.events)}<small>提醒确认 ${safe(formatDateTime(record.event.confirmed_at))}</small>${typeof d2SectorHint==='function'?d2SectorHint(row,record.date):''}${d2ConditionList(d2ArchivedConditionChecks(record.event,record.date),true,row.code,record.date)}${state}${d2ArchivedSignalDetail(record.event,row.code,row.name,record.date,false)}</div>`;
 }
 function d2SelectedScope(state){return state[state.d2Section==='manual'?'manualDate':state.d2Section==='ideal'?'idealDate':'alertDate']||'latest'}
 function d2BeijingDate(now=new Date()){
@@ -2204,7 +2215,7 @@ function d2Card(row,scanAt,detailed=false,offline=false,filterDate=''){
     const routing=tracked?`<span class="d2-routing-badge auto">已入跟踪池 · ${safe(tracked.status)}</span>`:manuallyApproved?'<span class="d2-routing-badge auto">人工筛选已通过 · 待核对入池</span>':d2AutoBuyEligible(row)?'<span class="d2-routing-badge auto">理想分支符合 · 尚无入池记录</span>':'<span class="d2-routing-badge manual">需人工筛选：仅KDJ分支</span>';
     const routingNote=tracked?'已确认入池；后续条件变化不会撤销该记录。':manuallyApproved?'已人工确认；是否成功入池和同步以实际记录为准。':autoPool?'满足自动池硬门槛；是否已入池以实际跟踪记录为准。':'30分钟底背离提醒不等待底分型；是否买入由你判断。';
     const approvalAction=d2AlertGateEligible(row)&&!d2AutoBuyEligible(row)?(offline?'<span class="d2-manual-approved">休市回算不可补入自动池</span>':d2ManualApprovalButton(row,routeDate)):'';
-    return `<div class="d2-proximity-item">${d2ManualDeleteButton(row.code,row.name,routeDate)}${approvalAction}${routing}${idealText}<b class="d2-stock-title">${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(d2CenterSimilarity(row.code,routeDate,row))}）</b>${d2SectorHint(row,routeDate)}${details}${d2ConditionList(currentChecks,gate,row.code,routeDate)}${times}<details><summary>A/B旧观察项（不参与提醒）</summary>${minute}${first}</details><small>${row.d2_above_d1_preferred?'D2高于D1优选 · ':''}${offline?'缓存回算，不代表通知送达；':''}${routingNote}</small></div>`;
+    return `<div class="d2-proximity-item">${d2ManualDeleteButton(row.code,row.name,routeDate)}${approvalAction}${routing}${idealText}<b class="d2-stock-title">${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(d2CenterSimilarity(row.code,routeDate,row))}）</b>${d2SourceSummary(row,routeDate)}${typeof d2SectorHint==='function'?d2SectorHint(row,routeDate):''}${details}${d2ConditionList(currentChecks,gate,row.code,routeDate)}${times}<details><summary>A/B旧观察项（不参与提醒）</summary>${minute}${first}</details><small>${row.d2_above_d1_preferred?'D2高于D1优选 · ':''}${offline?'缓存回算，不代表通知送达；':''}${routingNote}</small></div>`;
 }
 function d2ProximityModal(rows,signature,scanAt,filterDate='',newOnly=true){
     const title=`D2第二回调双路径提醒 · ${newOnly?'本轮新提醒':'当前全部'}：${rows.length}只`;
@@ -2354,8 +2365,7 @@ function d2ArchivedSignalDetail(event,code,name,date,includeBuy=true){
 function d2ArchivedCard({row,event,date,events=[event]}){
     const ideal=['ideal_m30_divergence','daily_kdj+ideal_m30_divergence'].includes(event.source),approved=d2ManuallyApproved(row.code,date);
     const tracked=d2TrackingStatus(row.code,date);
-    const source=event.source==='daily_kdj+ideal_m30_divergence'?'日线KDJ＋30分钟理想底背离':ideal?'30分钟理想MACD底背离':'日线KDJ';
-    return `<div class="d2-history-minute-card">${d2ManualDeleteButton(row.code,row.name,date)}<span class="d2-routing-badge ${ideal||approved?'auto':'manual'}">${tracked?`已入跟踪池 · ${safe(tracked.status)}`:ideal?'理想分支曾触发 · 未找到入池记录':approved?'已人工通过 · 待核对入池':'需人工筛选'}</span><b>${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(d2CenterSimilarity(row.code,date,event,row))}）</b><small><strong>来源：</strong>${source} · 扫描参考价 ${d2Value(event.close_at_scan)} · 归档 ${events.length} 次</small>${d2SectorHint(row,date)}${d2ArchivedSignalDetail(event,row.code,row.name,date)}${events.length>1?`<details><summary>查看其他 ${events.length-1} 次归档信号</summary>${events.filter(other=>other!==event).map(other=>`<div class="d2-archived-earlier"><small>归档来源 ${safe(other.source)}</small>${d2ArchivedSignalDetail(other,row.code,row.name,date)}</div>`).join('')}</details>`:''}<small>归档条件用于复核；历史记录不可补单，不代表通知已送达。</small></div>`;
+    return `<div class="d2-history-minute-card">${d2ManualDeleteButton(row.code,row.name,date)}<span class="d2-routing-badge ${ideal||approved?'auto':'manual'}">${tracked?`已入跟踪池 · ${safe(tracked.status)}`:ideal?'理想分支曾触发 · 未找到入池记录':approved?'已人工通过 · 待核对入池':'需人工筛选'}</span><b>${safe(row.name)} ${safe(row.code)}（中枢评分 ${d2Value(d2CenterSimilarity(row.code,date,event,row))}）</b>${d2SourceSummary(row,date,event,events)}${typeof d2SectorHint==='function'?d2SectorHint(row,date):''}${d2ArchivedSignalDetail(event,row.code,row.name,date)}${events.length>1?`<details><summary>查看其他 ${events.length-1} 次归档信号</summary>${events.filter(other=>other!==event).map(other=>`<div class="d2-archived-earlier"><small>归档来源 ${safe(other.source)}</small>${d2ArchivedSignalDetail(other,row.code,row.name,date)}</div>`).join('')}</details>`:''}<small>归档条件用于复核；历史记录不可补单，不代表通知已送达。</small></div>`;
 }
 function d2TrackingStatus(code,date){return (dailyExtra.d2TrackingLedger?.positions||[]).find(row=>String(row.code).padStart(6,'0')===String(code).padStart(6,'0')&&String(row.buy_at||row.buy_date||'').slice(0,10)===String(date||'').slice(0,10))}
 function d2CountReconciliation(snapshot,date){
