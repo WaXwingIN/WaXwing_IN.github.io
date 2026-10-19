@@ -953,6 +953,10 @@ async function hydratePageDetails(code,record=null){
         const model=dailyExtra.weeklyFirst||{};
         find((model.pools?.[String(state.lookback||model.default_lookback||120)]?.[Number(state.zeroTolerance||model.default_zero_tolerance||.4).toFixed(2)]||[]).find(row=>String(row.code).padStart(6,'0')===normalized));
     }else if(activeDaily==='weekly_consolidation_first')find((dailyExtra.weeklyConsolidationFirst?.rows||[]).find(row=>String(row.code).padStart(6,'0')===normalized));
+    else if(activeDaily==='monthly_consolidation_first'){
+        find((dailyExtra.monthlyConsolidationFirst?.rows||[]).filter(row=>String(row.code).padStart(6,'0')===normalized));
+        find((dailyExtra.monthlyConsolidationFirst?.events||[]).filter(row=>String(row.code).padStart(6,'0')===normalized));
+    }
     else if(activeDaily==='daily_consolidation_first'){
         const view=dailyConsolidationDateRecords(),selected=view.dates.includes(state.date)?state.date:view.dates[0];
         find(view.recordsOnDate(selected).map(item=>item.row).find(row=>String(row['代码']).padStart(6,'0')===normalized));
@@ -987,11 +991,11 @@ async function loadD2ArchiveDate(stamp){
     return d2ArchiveDateRequests.get(stamp);
 }
 document.addEventListener('click',async event=>{
-    const button=event.target.closest?.('[data-m30-detail],[data-daily-first-detail],[data-daily-consolidation-open],[data-weekly-pullback-open],[data-weekly-consolidation-open]');
+    const button=event.target.closest?.('[data-m30-detail],[data-daily-first-detail],[data-daily-consolidation-open],[data-weekly-pullback-open],[data-weekly-consolidation-open],[data-monthly-open]');
     if(!button||button.dataset.pageHydrated==='yes')return;
     event.preventDefault();event.stopImmediatePropagation();
     button.disabled=true;
-    try{await hydratePageDetails(button.dataset.m30Detail||button.dataset.dailyFirstDetail||button.dataset.dailyConsolidationOpen||button.dataset.weeklyPullbackOpen||button.dataset.weeklyConsolidationOpen,button.dataset.m30Record||null);button.dataset.pageHydrated='yes';button.disabled=false;button.click()}
+    try{await hydratePageDetails(button.dataset.m30Detail||button.dataset.dailyFirstDetail||button.dataset.dailyConsolidationOpen||button.dataset.weeklyPullbackOpen||button.dataset.weeklyConsolidationOpen||button.dataset.monthlyOpen,button.dataset.m30Record||null);button.dataset.pageHydrated='yes';button.disabled=false;button.click()}
     catch(error){button.disabled=false;button.title='详情加载失败，请点击重试';console.warn('Detail load failed',error)}
 },true);
 function d2SnapshotNewer(incoming,current){
@@ -1531,7 +1535,7 @@ function initializeD2DataInBackground(){
 }
 let dailySecondIntraday=null; // Retired model: keep archived render helpers inert.
 try{localStorage.removeItem('waxwing_trade_manager_v1')}catch(_error){}
-const dailyModels=[['d2_alert','D2第二回调双路径提醒'],['holding_pool','持有跟踪池'],['stock_lookup','股票检索'],['second','类二买'],['legacy_history','已停用模型历史'],['sixty_minute_macd','60分钟MACD底背离选股法'],['daily_macd','日线MACD底背离选股法'],['weekly_first','周线类二买'],['weekly_consolidation_first','周线盘整背驰一买'],['two_centers','日线趋势一买']];
+const dailyModels=[['d2_alert','D2第二回调双路径提醒'],['holding_pool','持有跟踪池'],['stock_lookup','股票检索'],['second','类二买'],['legacy_history','已停用模型历史'],['sixty_minute_macd','60分钟MACD底背离选股法'],['daily_macd','日线MACD底背离选股法'],['weekly_first','周线类二买'],['weekly_consolidation_first','周线盘整背驰一买'],['monthly_consolidation_first','月线盘整背驰一买'],['two_centers','日线趋势一买']];
 const SECOND_CENTER_MIN=73;
 const dailyState=new Map();
 const dailyNav=document.querySelector('main > .tabs');
@@ -1546,6 +1550,7 @@ if(location.hash==='#legacy-model-history')activeDaily='legacy_history';
 if(location.hash==='#stock-lookup')activeDaily='stock_lookup';
 if(location.hash==='#weekly-first-buy')activeDaily='weekly_first';
 if(location.hash==='#weekly-consolidation-first')activeDaily='weekly_consolidation_first';
+if(location.hash==='#monthly-consolidation-first')activeDaily='monthly_consolidation_first';
 let initialD2RouteChecked=false;
 try{const initialUrl=new URL(location.href);if(initialUrl.searchParams.has('model')){initialUrl.searchParams.delete('model');history.replaceState(null,'',initialUrl)}}catch(_error){}
 const modelName=()=> '首踩10日线';
@@ -1684,7 +1689,7 @@ else window.addEventListener('resize',syncDailyStickyOffset);
 requestAnimationFrame(syncDailyStickyOffset);
 function selectDaily(id){
     activeDaily=id;
-    const routes={d2_alert:'d2-alert',holding_pool:'holding-pool',stock_lookup:'stock-lookup',second:'class-ii',legacy_history:'legacy-model-history',daily_macd:'daily-macd',sixty_minute_macd:'sixty-minute-macd',weekly_first:'weekly-first-buy',weekly_consolidation_first:'weekly-consolidation-first',two_centers:'daily-first-buy'};
+    const routes={d2_alert:'d2-alert',holding_pool:'holding-pool',stock_lookup:'stock-lookup',second:'class-ii',legacy_history:'legacy-model-history',daily_macd:'daily-macd',sixty_minute_macd:'sixty-minute-macd',weekly_first:'weekly-first-buy',weekly_consolidation_first:'weekly-consolidation-first',monthly_consolidation_first:'monthly-consolidation-first',two_centers:'daily-first-buy'};
     if(routes[id])history.replaceState(null,'','#'+routes[id]);
     showDailyLoading(id);ensureDailyData(id);document.getElementById('daily-'+id)?.focus()
 }
@@ -3171,13 +3176,27 @@ function weeklyConsolidationChart(row,kind,weeks){
     if(price){
         drawing+=closes.map((value,i)=>{if(![opens[i],highs[i],lows[i],value].every(Number.isFinite))return '';const color=value>=opens[i]?'#dc2626':'#16a34a',top=Math.min(y(value),y(opens[i]));return `<line x1="${x(i)}" x2="${x(i)}" y1="${y(highs[i])}" y2="${y(lows[i])}" stroke="${color}"/><rect x="${x(i)-2}" y="${top}" width="4" height="${Math.max(1,Math.abs(y(value)-y(opens[i])))}" fill="${color}"/>`}).join('')+polyline(ma55,'#16a34a',2);
         const ai=at(a.low_date),ci=at(c.low_date);if(ai>=0&&ci>=0)drawing+=`<line x1="${x(ai)}" y1="${y(Number(a.price_low))}" x2="${x(ci)}" y2="${y(Number(c.price_low))}" stroke="#7c3aed" stroke-width="3"/><circle cx="${x(ai)}" cy="${y(Number(a.price_low))}" r="5" fill="#7c3aed"/><circle cx="${x(ci)}" cy="${y(Number(c.price_low))}" r="5" fill="#7c3aed"/>`;
-        for(const [label,index,value] of [['前绿低点',ai,a.price_low],['新低',ci,c.price_low],['周线顶分型',at(row.top_fractal?.date),row.top_fractal?.price]])if(index>=0)drawing+=`<text x="${x(index)+4}" y="${Math.max(14,y(Number(value))-8)}" fill="#6d28d9" font-size="16" font-weight="bold">${label}</text>`;
+        for(const [label,index,value] of [['前绿低点',ai,a.price_low],['新低',ci,c.price_low],[row.period==='月线'?'月线顶分型':'周线顶分型',at(row.top_fractal?.date),row.top_fractal?.price]])if(index>=0)drawing+=`<text x="${x(index)+4}" y="${Math.max(14,y(Number(value))-8)}" fill="#6d28d9" font-size="16" font-weight="bold">${label}</text>`;
     }else{
         const zero=y(0);drawing+=`<line x1="45" x2="1155" y1="${zero}" y2="${zero}" stroke="#94a3b8" stroke-dasharray="5 4"/>`;
         drawing+=hist.map((value,i)=>Number.isFinite(value)?`<line x1="${x(i)}" x2="${x(i)}" y1="${zero}" y2="${y(value)}" stroke="${value<0?'#16a34a':'#ef4444'}" stroke-width="3"/>`:'').join('')+polyline(dif,'#2563eb',2.5)+polyline(dea,'#d97706',2);
         for(const [key,color,metric] of [['dif','#7c3aed','dif_min'],['dea','#d97706','dea_min']]){const ai=at(a[`${key}_date`]),ci=at(c[`${key}_date`]);if(ai<0||ci<0)continue;drawing+=`<line x1="${x(ai)}" y1="${y(Number(a[metric]))}" x2="${x(ci)}" y2="${y(Number(c[metric]))}" stroke="${color}" stroke-width="3" stroke-dasharray="${key==='dea'?'6 3':'none'}"/><circle cx="${x(ai)}" cy="${y(Number(a[metric]))}" r="4" fill="${color}"/><circle cx="${x(ci)}" cy="${y(Number(c[metric]))}" r="4" fill="${color}"/>`}
     }
-    return `<div class="macd-chart-panel"><strong>${price?'周K / 完整参考前低 / 价格新低':'MACD(12,26,9) / 绿→红→绿 / DIF与DEA最低值'}</strong><div class="macd-chart-scroll"><svg viewBox="0 0 ${width} ${height}" style="width:${width}px;height:${height}px" role="img" aria-label="${price?'周线顶分型和价格新低':'前后绿柱的DIF、DEA背驰'}">${drawing}<text x="45" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[0]))}</text><text x="1040" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[n-1]))}</text></svg></div></div>`;
+    return `<div class="macd-chart-panel"><strong>${price?`${row.period==='月线'?'月K':'周K'} / 完整参考前低 / 价格新低`:'MACD(12,26,9) / 绿→红→绿 / DIF与DEA最低值'}</strong><div class="macd-chart-scroll"><svg viewBox="0 0 ${width} ${height}" style="width:${width}px;height:${height}px" role="img" aria-label="${price?`${row.period==='月线'?'月线':'周线'}顶分型和价格新低`:'前后绿柱的DIF、DEA背驰'}">${drawing}<text x="45" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[0]))}</text><text x="1040" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[n-1]))}</text></svg></div></div>`;
+}
+function monthlyConsolidationFirstPanel(state){
+    const model=dailyExtra.monthlyConsolidationFirst;
+    if(!model||model.version!=='monthly-consolidation-divergence-v1')return '<p class="daily-error">月线盘整背驰数据尚未生成，请等待收盘扫描完成。</p>';
+    const events=model.events||[],date=state.monthlySignalDate||'latest',status=state.monthlyStatus||'all';
+    const distinct=rows=>new Set(rows.map(r=>String(r.code))).size;
+    const days=[...new Set(events.map(e=>e.date))].sort().reverse();
+    const options=`<option value="latest" ${date==='latest'?'selected':''}>当前候选 · ${distinct(model.rows||[])}只</option><option value="all" ${date==='all'?'selected':''}>全部历史 · ${distinct(events)}只</option>`+days.map(day=>`<option value="${safe(day)}" ${date===day?'selected':''}>${safe(formatDate(day))} · ${distinct(events.filter(e=>e.date===day))}只</option>`).join('');
+    const selected=date==='latest'?(model.rows||[]):events.filter(e=>date==='all'||e.date===date).map(e=>({...e.structure_snapshot,confirmed_event:e}));
+    const rows=selected.filter(r=>status==='all'||(status==='confirmed'?r.bottom_confirmed:!r.bottom_confirmed));
+    const detail=rows.find(r=>String(r.code)===String(state.monthlyDetailCode||''));
+    const body=rows.map(row=>`<tr><td>${safe(row.rank||'--')}</td><td><b>${safe(row.name)}</b><br>${safe(row.code)}</td><td>前低 ${safe(row.previous_price_low)} → 新低 ${safe(row.c?.price_low)}<br><small>DIF ${safe(row.a?.dif_min)} → ${safe(row.c?.dif_min)}<br>DEA ${safe(row.a?.dea_min)} → ${safe(row.c?.dea_min)}</small></td><td>${safe(row.status)}${row.confirmed_event?`<br><small>${safe(row.confirmed_event.origin)} · 首次核验 ${safe(formatDateTime(row.confirmed_event.discovered_at))}</small>`:''}</td><td>${row.daily_bottom_fractal?safe(formatDateTime(row.daily_bottom_fractal.confirmed_at)):'等待右侧日K收盘确认'}<br><small>月线新低日 ${safe(formatDate(row.daily_price_low_date||row.c?.low_date))}</small></td><td><button type="button" class="m30-detail-open" data-monthly-open="${safe(row.code)}">查看月线与背离依据</button></td></tr>`).join('');
+    const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-monthly-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="monthlyConsolidationTitle"><header class="second-detail-head"><div><h3 id="monthlyConsolidationTitle">${safe(detail.name)} ${safe(detail.code)} · 月线盘整背驰一买</h3><p>${safe(detail.status)} · 最近30根月K内已确认月线顶分型 · 完整参考前低 ${safe(detail.previous_price_low)}</p></div><button type="button" class="second-detail-close" data-monthly-close aria-label="关闭弹窗">×</button></header>${combinedAnnotatedCharts(weeklyConsolidationChart(detail,'价格',150),weeklyConsolidationChart(detail,'MACD',150))}<p class="macd-shape-note">完整前后绿段DIF、DEA均不创新低，价格严格创新低；日线底分型的低点实际日不得早于月线新低日，右侧日K收盘确认后提醒。</p></section></div>`:'';
+    return `<section><div class="two-center-hero"><h2>月线盘整背驰一买</h2><p>30根月K内已确认月线顶分型 → 月线零轴下绿→红→绿 → 价格创新低、DIF与DEA均不创新低 → 日线底分型收盘确认。</p></div><label class="macd-lookback">提醒日期 <select id="monthlySignalDate">${options}</select></label><label class="macd-lookback">确认状态 <select id="monthlyStatus"><option value="all" ${status==='all'?'selected':''}>全部</option><option value="confirmed" ${status==='confirmed'?'selected':''}>日线已确认</option><option value="waiting" ${status==='waiting'?'selected':''}>待日线底分型</option></select></label>${model.current_month_complete===false?'<p class="preclose-warning">当月月K尚未收定：按截至行情日的实际日线计算，后续变化可能使候选失效；月线顶分型的右侧月K必须已收定。</p>':''}<p class="daily-note">行情截止 ${safe(formatDate(model.daily_date))} · 当前符合形态 ${safe(model.eligible)}只，其中日线已确认 ${distinct((model.rows||[]).filter(r=>r.bottom_confirmed))}只。历史核验保留原日线确认时间，不补发过去的提醒。</p><details class="daily-rules" open><summary>模型条件与计算口径</summary><p>${safe(model.rules)}</p><p>${safe(model.implementation)}</p></details>${rows.length?`<div class="wrap"><table class="two-center-table"><thead><tr><th>排名</th><th>股票</th><th>月线背离依据</th><th>当前状态</th><th>日线确认时间</th><th>看图核验</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">当前筛选下暂无符合条件的股票。</p>'}${modal}</section>`;
 }
 function weeklyConsolidationFirstPanel(state){
     state.displayedAlertCount=0;
@@ -3935,6 +3954,7 @@ function thirtyMinuteFirstPanel(){
 }
 const M30_RESEARCH_MAIN_MODE='directional|valley_lift';
 function currentEffectiveAlertCount(modelId){
+    if(modelId==='monthly_consolidation_first'){const m=dailyExtra.monthlyConsolidationFirst;if(m?.version==='monthly-consolidation-divergence-v1')return new Set((m.rows||[]).filter(r=>r.bottom_confirmed).map(r=>r.code)).size;return Number(dailyExtra.navigationSignals?.counts?.[modelId]||0)}
     if(modelId==='second')return dailyExtra.classIiTracking?.archived_current_count??dailyExtra.classIiTracking?.stocks?.filter(row=>row.status==='当前有效').length??dailyExtra.navigationSignals?.counts?.second??0;
     if(modelId==='m30_first')return 0;
     const globalCounts=dailyExtra.navigationSignals?.counts;
@@ -4109,6 +4129,8 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
             String(event.origin||'').includes('回放')?'回放推定提醒':'提醒触发',
             event.origin||'提醒归档',event.event_id||'');
     }
+    for(const row of extra.monthlyConsolidationFirst?.rows||[])add('月线盘整背驰一买',row,extra.monthlyConsolidationFirst.daily_date,row.status,'模型当日展示','');
+    for(const event of extra.monthlyConsolidationFirst?.events||[])add('月线盘整背驰一买',event,event.triggered_at,'日线底分型已确认',event.origin,event.event_id);
     for(const field of ['events','replay_events','recent_replay_events'])for(const event of extra.macdModelHistory?.[field]||[])add(event.model,event,event.triggered_at,'买入条件已确认','模型扫描',event.event_id);
     for(const record of extra.modelPoolFunnels?.rows||[]){
         const event=record.event;
@@ -4151,7 +4173,7 @@ function stockLookupExitDetail(item){
     return `<header class="second-detail-head"><h3>${safe(item.name)} ${safe(item.code)} · 卖出依据</h3><button type="button" class="second-detail-close" data-stock-trigger-close aria-label="关闭">×</button></header><p>${safe(item.model)} · ${safe(item.source)}。</p><div class="wrap"><table><tbody><tr><th>原买入信号确认</th><td>${safe(formatDateTime(item.buySignal))}</td></tr><tr><th>模型买入生效日</th><td>${safe(formatDate(item.entryDate||''))}</td></tr><tr><th>卖出信号确认</th><td>${safe(formatDateTime(item.time))}</td></tr><tr><th>前高</th><td>${safe(first.time||'—')} · 价格 ${safe(first.price??'—')} · DIF ${safe(first.dif??'—')}</td></tr><tr><th>后高</th><td>${safe(second.time||'—')} · 价格 ${safe(second.price??'—')} · DIF ${safe(second.dif??'—')}</td></tr></tbody></table></div><p>${safe(exit.confirmation||'30分钟严格MACD顶背离确认')}；${safe(exit.protection||'沿用原严格卖出规则')}。</p><p class="daily-note">模型规则记录用于核对信号，不代表当时收到通知或发生真实成交。</p>`;
 }
 function stockLookupTargetId(model){
-    return ({'类二买':'second','周线盘整背驰一买':'weekly_consolidation_first','日线趋势一买':'two_centers','D2第二回调双路径提醒':'d2_alert','日线MACD底背离选股法':'daily_macd','60分钟MACD底背离选股法':'sixty_minute_macd','周线类二买':'weekly_first'})[model]||(dailyExtra.legacyModelHistory?.models?.[model]?'legacy_history':'');
+    return ({'类二买':'second','周线盘整背驰一买':'weekly_consolidation_first','月线盘整背驰一买':'monthly_consolidation_first','日线趋势一买':'two_centers','D2第二回调双路径提醒':'d2_alert','日线MACD底背离选股法':'daily_macd','60分钟MACD底背离选股法':'sixty_minute_macd','周线类二买':'weekly_first'})[model]||(dailyExtra.legacyModelHistory?.models?.[model]?'legacy_history':'');
 }
 function configureStockLookupTarget(target,code,date,origin=''){
     const state=stateFor(target),day=dateKey(date),iso=day.length===8?`${day.slice(0,4)}-${day.slice(4,6)}-${day.slice(6,8)}`:'';
@@ -4165,6 +4187,7 @@ function configureStockLookupTarget(target,code,date,origin=''){
     if(target==='legacy_history')Object.assign(state,{legacyQuery:String(code),legacyDate:iso,legacyModel:'all',legacyDetail:null});
     if(target==='m30_first')state.m30SignalDate=iso;
     if(['weekly_first','weekly_consolidation_first'].includes(target))state.weeklySignalDate=iso;
+    if(target==='monthly_consolidation_first'){state.monthlySignalDate=iso===dailyExtra.monthlyConsolidationFirst?.daily_date?'latest':iso;state.monthlyDetailCode=null}
     if(target==='two_centers')state.signalDate=day===dateKey(data.daily_date)?'latest':iso;
     if(['daily_macd','sixty_minute_macd'].includes(target)){
         state.macdDate=iso;state.macdQuery=String(code);
@@ -4922,6 +4945,7 @@ draw=function(){
         else if(location.hash==='#stock-lookup')activeDaily='stock_lookup';
         else if(location.hash==='#weekly-first-buy')activeDaily='weekly_first';
         else if(location.hash==='#weekly-consolidation-first')activeDaily='weekly_consolidation_first';
+        else if(location.hash==='#monthly-consolidation-first')activeDaily='monthly_consolidation_first';
         else if(location.hash==='#holding-pool')activeDaily='holding_pool';
         else if(location.hash==='#macd-strategy'||location.hash==='#daily-first-buy')activeDaily='two_centers';
         else if(location.hash==='#m30-first-buy')activeDaily='d2_alert';
@@ -5010,6 +5034,7 @@ draw=function(){
     else if(id==='daily_macd'||id==='sixty_minute_macd'){content.innerHTML=integratedMacdPanel(id,state)}
     else if(id==='weekly_first'){content.innerHTML=weeklyFirstBuyPanel(state)}
     else if(id==='weekly_consolidation_first'){content.innerHTML=weeklyConsolidationFirstPanel(state)}
+    else if(id==='monthly_consolidation_first'){content.innerHTML=monthlyConsolidationFirstPanel(state)}
     else if(id==='legacy_history'){content.innerHTML=legacyModelsPanel(state)}
     else{content.innerHTML=patternPanel(id,state)}
     if(['second','sixty_minute_macd','daily_macd','weekly_first','weekly_consolidation_first','two_centers'].includes(id)){
@@ -5202,10 +5227,16 @@ draw=function(){
     if(dailyConsolidationModal){const close=()=>{const code=stateFor('daily_consolidation_first').detailCode;stateFor('daily_consolidation_first').detailCode=null;draw();content.querySelector(`[data-daily-consolidation-open="${code}"]`)?.focus({preventScroll:true})};dailyConsolidationModal.onclick=event=>{if(event.target===dailyConsolidationModal)close()};dailyConsolidationModal.querySelector('[data-daily-consolidation-close]')?.addEventListener('click',close)}
     const weeklyPullbackModal=content.querySelector('[data-weekly-pullback-modal]');
     if(weeklyPullbackModal){const close=()=>{const code=stateFor('weekly_first').detailCode;stateFor('weekly_first').detailCode=null;draw();content.querySelector(`[data-weekly-pullback-open="${code}"]`)?.focus({preventScroll:true})};weeklyPullbackModal.onclick=event=>{if(event.target===weeklyPullbackModal)close()};weeklyPullbackModal.querySelector('[data-weekly-pullback-close]')?.addEventListener('click',close)}
+    const monthlyDate=content.querySelector('#monthlySignalDate'),monthlyStatus=content.querySelector('#monthlyStatus');
+    if(monthlyDate)monthlyDate.onchange=()=>{state.monthlySignalDate=monthlyDate.value;state.monthlyDetailCode=null;draw()};
+    if(monthlyStatus)monthlyStatus.onchange=()=>{state.monthlyStatus=monthlyStatus.value;state.monthlyDetailCode=null;draw()};
+    content.querySelectorAll('[data-monthly-open]').forEach(button=>button.onclick=()=>{state.monthlyDetailCode=button.dataset.monthlyOpen;draw()});
+    const monthlyModal=content.querySelector('[data-monthly-modal]');
+    if(monthlyModal){const close=()=>{state.monthlyDetailCode=null;draw()};monthlyModal.querySelector('[data-monthly-close]').onclick=close;monthlyModal.onclick=event=>{if(event.target===monthlyModal)close()};}
     const weeklyConsolidationModal=content.querySelector('[data-weekly-consolidation-modal]');
     if(weeklyConsolidationModal){const close=()=>{const code=stateFor('weekly_consolidation_first').detailCode;stateFor('weekly_consolidation_first').detailCode=null;draw();content.querySelector(`[data-weekly-consolidation-open="${code}"]`)?.focus({preventScroll:true})};weeklyConsolidationModal.onclick=event=>{if(event.target===weeklyConsolidationModal)close()};weeklyConsolidationModal.querySelector('[data-weekly-consolidation-close]')?.addEventListener('click',close)}
     content.querySelectorAll('.m30-detail-dialog,details.daily-rules').forEach(syncChartTimeAxes);
-    document.body.classList.toggle('second-modal-open',Boolean(secondModal||proximityModal||m30Modal||dailyFirstModal||dailyConsolidationModal||weeklyPullbackModal||weeklyConsolidationModal));
+    document.body.classList.toggle('second-modal-open',Boolean(monthlyModal||secondModal||proximityModal||m30Modal||dailyFirstModal||dailyConsolidationModal||weeklyPullbackModal||weeklyConsolidationModal));
     sendD2M30DesktopNotification();
     enhanceStockCodeCopy(document);
     enhanceWideTables(content);
@@ -5358,7 +5389,7 @@ function pageDateLabel(){
         const through=snapshot.data_through||snapshot.asof||history.data_through;
         return dateLabel(shortCycleDate(through||reportDate));
     }
-    const model={weekly_first:dailyExtra.weeklyFirst,weekly_consolidation_first:dailyExtra.weeklyConsolidationFirst,two_centers:data?.models?.['日线趋势一买']}[activeDaily];
+    const model={weekly_first:dailyExtra.weeklyFirst,weekly_consolidation_first:dailyExtra.weeklyConsolidationFirst,monthly_consolidation_first:dailyExtra.monthlyConsolidationFirst,two_centers:data?.models?.['日线趋势一买']}[activeDaily];
     if(model)return dateLabel(model.daily_date||reportDate);
     if(activeDaily==='d2_alert'&&dailyExtra.d2Proximity?.daily_date)
         return dateLabel(dailyExtra.d2Proximity.daily_date);
@@ -5367,12 +5398,12 @@ function pageDateLabel(){
 function updatePageMeta(){
     const meta=document.getElementById('meta');
     if(!meta||!data)return;
-    const pageKey={d2_alert:'d2',holding_pool:'holding-pool',second:'second',daily_macd:'daily-macd.html',sixty_minute_macd:'sixty-minute-macd.html',weekly_first:'weekly-first',weekly_consolidation_first:'weekly-consolidation'}[activeDaily];
+    const pageKey={d2_alert:'d2',holding_pool:'holding-pool',second:'second',daily_macd:'daily-macd.html',sixty_minute_macd:'sixty-minute-macd.html',weekly_first:'weekly-first',weekly_consolidation_first:'weekly-consolidation',monthly_consolidation_first:'monthly-consolidation'}[activeDaily];
     window.__waxwingActiveModel=activeDaily;
     const version=window.__waxwingDataVersionInfo||{},verified=version.models?.[pageKey];
     const snapshot={d2_alert:dailyExtra.d2Proximity,second:dailyExtra.classIiTracking,holding_pool:publicCloudPage?dailyExtra.modelSimulation:dailyExtra.holdingPool,
         daily_macd:dailyExtra.macdSnapshots?.daily_macd,sixty_minute_macd:dailyExtra.macdSnapshots?.sixty_minute_macd,
-        weekly_first:dailyExtra.weeklyFirst,weekly_consolidation_first:dailyExtra.weeklyConsolidationFirst}[activeDaily];
+        weekly_first:dailyExtra.weeklyFirst,weekly_consolidation_first:dailyExtra.weeklyConsolidationFirst,monthly_consolidation_first:dailyExtra.monthlyConsolidationFirst}[activeDaily];
     const scanAt=snapshot?.generated_at||verified?.generated_at||(activeDaily==='two_centers'?data.generated_at:'');
     const dateLabel=activeDaily==='d2_alert'&&dailyExtra.d2Proximity?.daily_date?'行情日：'+formatDate(dailyExtra.d2Proximity.daily_date):pageDateLabel();
     const source=publicCloudPage?(publicStaticPage?'静态数据':'腾讯云数据'):privatePage()?'腾讯云数据':'本地数据';
