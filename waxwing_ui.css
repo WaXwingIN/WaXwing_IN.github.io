@@ -41,6 +41,9 @@ body.waxwing-ui .callout.error{color:#a33e38}
 body.waxwing-ui .daily-quick-actions button[aria-pressed="true"]{background:var(--wx-blue);border-color:var(--wx-blue);color:#fff}
 body.waxwing-ui .sim-submit-row{justify-content:space-between}
 body.waxwing-ui .sim-submit-row>button{margin-left:auto;flex:none}
+body.waxwing-ui .wrap th .rank-sort-button{display:inline-flex;align-items:center;gap:3px;height:auto;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;white-space:nowrap;cursor:pointer}
+body.waxwing-ui .wrap th .rank-sort-button.active{color:var(--wx-blue)}
+body.waxwing-ui .wrap th .rank-sort-button:focus-visible{outline:2px solid var(--wx-blue);outline-offset:3px}
 .d2-sector-context{margin:6px 0;color:#64758a;font-size:12px}
 .d2-sector-context .d2-sector-hint{display:block;font-size:12px}
 .d2-sector-context .d2-sector-match{color:#17645e;font-weight:600}

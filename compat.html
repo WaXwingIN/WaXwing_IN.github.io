@@ -59,6 +59,9 @@ body.waxwing-ui .callout.error{color:#a33e38}
 body.waxwing-ui .daily-quick-actions button[aria-pressed="true"]{background:var(--wx-blue);border-color:var(--wx-blue);color:#fff}
 body.waxwing-ui .sim-submit-row{justify-content:space-between}
 body.waxwing-ui .sim-submit-row>button{margin-left:auto;flex:none}
+body.waxwing-ui .wrap th .rank-sort-button{display:inline-flex;align-items:center;gap:3px;height:auto;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;white-space:nowrap;cursor:pointer}
+body.waxwing-ui .wrap th .rank-sort-button.active{color:var(--wx-blue)}
+body.waxwing-ui .wrap th .rank-sort-button:focus-visible{outline:2px solid var(--wx-blue);outline-offset:3px}
 .d2-sector-context{margin:6px 0;color:#64758a;font-size:12px}
 .d2-sector-context .d2-sector-hint{display:block;font-size:12px}
 .d2-sector-context .d2-sector-match{color:#17645e;font-weight:600}
@@ -1855,12 +1858,12 @@ function d2WithinRange(row){const d0=Number(row?.structure?.D0?.price),d2=Number
 function secondCenterEligible(row){const similarity=Number(row?.center_similarity);return row?.center_similarity!=null&&Number.isFinite(similarity)&&similarity>=SECOND_CENTER_MIN}
 function d2Eligible(row){const s=row?.structure||{},d0=Number(s.D0?.price),d1=Number(s.D1?.price),d2=Number(s.D2?.price),g2=Number(s.G2?.price),g2Day=String(s.G2?.date||'').slice(0,10),d2Day=String(s.D2?.date||'').slice(0,10);return !row?.alert_extension_only&&!row?.observation_only&&!row?.diagnostic_only&&!s.observation_only&&secondCenterEligible(row)&&[d0,d1,d2,g2].every(Number.isFinite)&&0<d0&&d0<d1&&d0<d2&&d2<g2&&g2Day.length===10&&d2Day.length===10&&g2Day<d2Day}
 function d2KdjEligible(row){return row?.d2_kdj_alert_eligible===true&&Number(row?.daily_kdj?.d)>=49&&Number(row?.daily_kdj?.j)<=20}
-const D2_IDEAL_M30_RULE='d2-green-red-green-price-dif-dea-intrabar-v10';
+const D2_IDEAL_M30_RULE='d2-green-red-green-price-dif-dea-intrabar-v11';
 const D2_PREVIOUS_IDEAL_M30_RULE='d2-adjacent-double-bottom-divergence-no-fractal-v9';
 const D2_LEGACY_IDEAL_M30_RULE='adjacent-double-bottom-divergence-then-m30-fractal-v8';
 function sameTradingDay(left,right){return String(left||'').slice(0,10)===String(right||'').slice(0,10)}
 function divergenceFractalOrderValid(divergenceAt,fractal={}){const pivot=fractal['发生时间'],confirmed=fractal['确认时间'];return !!divergenceAt&&!!pivot&&!!confirmed&&String(pivot)<String(confirmed)&&(sameTradingDay(divergenceAt,pivot)||String(divergenceAt)<String(pivot))}
-function d2IdealM30Eligible(row){const signal=row?.d2_ideal_m30_divergence||{},low=signal.low2||{},first=signal.low1||{},fractal=signal.bottom_fractal||{},numeric=[first.price,first.dif,first.dea,low.price,low.dif,low.dea].every(value=>value!=null&&Number.isFinite(Number(value))),current=signal.rule_version===D2_IDEAL_M30_RULE&&numeric&&Number(low.price)<Number(first.price)&&Number(low.dif)>=Number(first.dif)-1e-12&&Number(low.dea)>=Number(first.dea)-1e-12;return signal.status==='active'&&signal.triggered_on_scan_date===true&&!!signal.confirmed_at&&(current||signal.rule_version===D2_PREVIOUS_IDEAL_M30_RULE||(signal.rule_version===D2_LEGACY_IDEAL_M30_RULE&&divergenceFractalOrderValid(low.confirm_time,fractal)))}
+function d2IdealM30Eligible(row){const signal=row?.d2_ideal_m30_divergence||{},low=signal.low2||{},first=signal.low1||{},fractal=signal.bottom_fractal||{},numeric=[first.price,first.dif,first.dea,low.price,low.dif,low.dea].every(value=>value!=null&&Number.isFinite(Number(value))),current=[D2_IDEAL_M30_RULE,'d2-green-red-green-price-dif-dea-intrabar-v10'].includes(signal.rule_version)&&numeric&&Number(low.price)<Number(first.price)&&Number(low.dif)>=Number(first.dif)&&Number(low.dea)>=Number(first.dea);return signal.status==='active'&&signal.triggered_on_scan_date===true&&!!signal.confirmed_at&&(current||signal.rule_version===D2_PREVIOUS_IDEAL_M30_RULE||(signal.rule_version===D2_LEGACY_IDEAL_M30_RULE&&divergenceFractalOrderValid(low.confirm_time,fractal)))}
 function d2AlertGateEligible(row){return d2Eligible(row)&&(d2KdjEligible(row)||d2IdealM30Eligible(row))}
 function d2AutoBuyEligible(row){return d2Eligible(row)&&d2IdealM30Eligible(row)}
 function d2IdealTimingText(ideal={},fallbackAt=''){
@@ -2204,7 +2207,7 @@ function d2Card(row,scanAt,detailed=false,offline=false,filterDate=''){
     const details=`<div class="d2-card-grid"><small>D0：<b>${d2Value(s.D0?.price)}</b></small><small>D1：<b>${d2Value(s.D1?.price)}</b></small><small>D2：<b>${d2Value(s.D2?.price)}</b></small><small>D2 距 D1：<b>${d2Signed(d2Gap(row))}</b></small><small>D2 日期：<b>${safe(s.D2?.date||'--')}</b></small><small>当前价：<b>${d2Value(row.close)}</b></small><small>日线 KDJ：<b>D ${d2Value(row.daily_kdj?.d,2)} / J ${d2Value(row.daily_kdj?.j,2)}</b></small></div>`;
     const times=detailed?`<small>首次进入D2候选 ${d2TriggerLabel(row,scanAt)}</small>`:'';
     const signal=row.d2_30m_divergence||{},strength=row.d2_first_strengthening||{},ideal=row.d2_ideal_m30_divergence||{};
-    const aActive=signal.status==='active'&&signal.rule_version==='d2-g2-m30-price-dif-v4',bActive=strength.status==='active'&&strength.rule_version==='d2-g2-m30-pivot-m5-break-volume-v1',kdjGate=d2KdjEligible(row),idealGate=d2IdealM30Eligible(row),gate=d2AlertGateEligible(row);
+    const aActive=signal.status==='active'&&signal.rule_version==='d2-g2-m30-price-dif-dea-v5',bActive=strength.status==='active'&&strength.rule_version==='d2-g2-m30-pivot-m5-break-volume-v1',kdjGate=d2KdjEligible(row),idealGate=d2IdealM30Eligible(row),gate=d2AlertGateEligible(row);
     const currentChecks=[
         {condition:'正式类二买且中枢评分≥73',passed:d2Eligible(row),actual:`D1 ${d2Value(s.D1?.price)} / D2 ${d2Value(s.D2?.price)}；中枢评分 ${d2Value(row.center_similarity)}`},
         {condition:'过滤条件①：日线KDJ同时满足D≥49、J≤20',passed:kdjGate,actual:`D ${d2Value(row.daily_kdj?.d,2)} / J ${d2Value(row.daily_kdj?.j,2)}`},
@@ -2412,7 +2415,7 @@ function d2AlertPanel(state){
     const sectorRows=rows;
     const allCodes=new Set([...sectorRows.map(row=>row.code),...d2ArchivedStockGroups(archived).map(item=>item.row.code),...replayDays.flatMap(day=>(day.replay_rows||[]).map(row=>row.code))]);
     const options=`<option value="all"${selected==='all'?' selected':''}>全部历史 · ${allCodes.size}只</option><option value="latest"${selected==='latest'||selected===session?.date?' selected':''}>${formatDate(session?.date)} · 已确认提醒${sectorRows.length}只</option>`+dates.filter(date=>date!==session?.date).map(date=>{const groups=d2ArchivedStockGroups(archived.filter(item=>item.date===date)),replay=replayDays.find(day=>day.date===date),codes=new Set([...groups.map(g=>g.row.code),...(replay?.replay_rows||[]).map(r=>r.code)]);return `<option value="${safe(date)}"${selected===date?' selected':''}>${formatDate(date)} · 已确认提醒${codes.size}只</option>`}).join('');
-    const rule=idealOnly?'<strong>正式类二买＋当日理想30分钟MACD底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。30分钟底背离不等待底分型。本页包括同时满足日线KDJ的股票，已确认历史提醒保留。':'<strong>正式类二买 → 日线KDJ，或当日30分钟理想底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。仅满足日线KDJ的先进入“需人工筛选”，人工通过后按批准时间进入跟踪池；理想30分钟分支按相邻绿→红→绿比较：价格创新低、DIF和DEA均不创新低时盘中提醒，不等30分钟收盘、绿柱结束或底分型，是否买入由你判断。独立量化仅处理理想30分钟分支。已确认历史提醒保留，同股同日去重。';
+    const rule=idealOnly?'<strong>正式类二买＋当日理想30分钟MACD底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。30分钟底背离不等待底分型。本页包括同时满足日线KDJ的股票，已确认历史提醒保留。':'<strong>正式类二买 → 日线KDJ，或当日30分钟理想底背离。</strong>结构须满足 D2＞D0、中枢评分≥73；不接入扩展候选或未完成观察结构。仅满足日线KDJ的先进入“需人工筛选”，人工通过后按批准时间进入跟踪池；理想30分钟分支按相邻绿→红→绿比较：价格跌破完整参考前低、DIF和DEA均不创新低时盘中提醒，不等30分钟收盘、绿柱结束或底分型，是否买入由你判断。独立量化仅处理理想30分钟分支。已确认历史提醒保留，同股同日去重。';
     let html=`<section class="d2-alert-page${idealOnly?' d2-ideal-branch-page':''}">${d2InnerTabs(state)}<h2>${idealOnly?'理想30分钟分支':'D2第二回调双路径提醒'}</h2><details class="model-help" open><summary>规则与通知设置</summary><div class="d2-alert-rule">${rule}</div>${d2ManualExclusionManager()}<label class="d2-history-filter d2-sticky-history-filter">提醒日期 <select data-d2-alert-date>${options}</select></label>`;
     html+=publicCloudPage&&!publicStaticPage?'<p class="daily-note">桌面提醒由页面上方的云端提醒开关控制；提醒详情在腾讯云私密站查看。</p>':`<div class="d2-push-tools"><strong>D2桌面通知</strong>${d2NotificationButton()}<button type="button" class="d2-notification-test" data-d2-notification-test>测试 Windows 推送</button><span class="d2-push-status" data-d2-push-status aria-live="polite"></span></div><p class="daily-note">保持本页打开，理想30分钟和日线KDJ人工筛选的新提醒都会推送到 Windows，并标明所属分支；关闭页面后停止。仅通知近45分钟的新提醒，历史回算不补发。</p>`;
     html+='</details>';
@@ -2731,9 +2734,9 @@ function dailyClosePolicyActive(policy){
 }
 function weeklyShortCycleEvidence(modelName,code,start,end){
     const close=dailyExtra.navigationSignals?.dailyCloseReminders||dailyExtra.dailyCloseReminders;
-    if(modelName==='周线盘整背驰一买'&&dailyExtra.weeklyConsolidationFirst?.version==='weekly-consolidation-divergence-v3'){
+    if(modelName==='周线盘整背驰一买'&&dailyExtra.weeklyConsolidationFirst?.version==='weekly-consolidation-divergence-v4'){
         const evidence=close?.signals?.[`${modelName}|${String(code).padStart(6,'0')}`];
-        if(dailyClosePolicyActive(close)&&close.daily_date===dailyExtra.weeklyConsolidationFirst.daily_date&&evidence?.['提醒']?.model_rule_version==='weekly-consolidation-divergence-v3')return evidence;
+        if(dailyClosePolicyActive(close)&&close.daily_date===dailyExtra.weeklyConsolidationFirst.daily_date&&evidence?.['提醒']?.model_rule_version==='weekly-consolidation-divergence-v4')return evidence;
         return {模型:modelName,代码:String(code).padStart(6,'0'),提醒:{规则版本:'model-daily-bottom-close-v1',提醒条件满足:false,提醒状态:'待新规则日线底分型收盘确认'}};
     }
     const selected=typeof stateFor==='function'?stateFor(activeDaily).weeklySignalDate||stateFor(activeDaily).signalDate||'latest':'latest';
@@ -2748,7 +2751,7 @@ function shortCycleMatchedFractal(item,period=''){
     if(!item)return {};
     const matched=period||item['周期']||item['底分型周期']||'';
     if(matched&&item[`${matched}底分型`])return item[`${matched}底分型`];
-    if(item['规则版本']==='structure-divergence-fractal-date-order-v11'&&['30分钟','60分钟'].includes(matched))return {};
+    if(item['规则版本']==='structure-divergence-fractal-date-order-v12'&&['30分钟','60分钟'].includes(matched))return {};
     return item['触发底分型']||item['30分钟底分型']||{};
 }
 function reminderStockCount(rows){
@@ -2774,9 +2777,9 @@ function shortCycleConditionState(evidence){
     const daily=evidence?.['提醒']||evidence?.['短周期提醒']||{};
     if(daily['规则版本']==='model-daily-bottom-close-v1'){const appeared=daily['提醒条件满足']===true;return {dailyClose:true,appeared,signal:daily,one:{},two:{},fractal:daily['触发底分型']||{},m30:'不适用',m60:'不适用',bottom:appeared?'是':'否'}}
     const rawSignal=evidence?.['提醒']||evidence?.['短周期提醒']||{},rawOne=evidence?.['30分钟']||evidence?.['30分钟提醒']||{},rawTwo=evidence?.['60分钟']||evidence?.['60分钟提醒']||{};
-    const structureDayRule='structure-divergence-fractal-date-order-v11';
+    const structureDayRule='structure-divergence-fractal-date-order-v12';
     const day=value=>String(value||'').slice(0,10);
-    const supportedRule=item=>[structureDayRule,'trend-repeat-price-dif-area-then-m30-fractal-v1'].includes(item?.['规则版本']);
+    const supportedRule=item=>[structureDayRule,'trend-repeat-price-dif-dea-then-m30-fractal-v2'].includes(item?.['规则版本']);
     const legacyEvidence=[rawSignal,rawOne,rawTwo].some(item=>item?.['规则版本']&&!supportedRule(item));
     const legacyTrigger=rawSignal?.['提醒条件满足']===true&&Boolean(rawSignal?.['规则版本'])&&!supportedRule(rawSignal);
     const structureAt=evidence?.['结构首次可见时间']||evidence?.['首次记录时间']||rawSignal?.['结构首次可见时间']||'';
@@ -2921,7 +2924,7 @@ function weeklyShortCycleCell(modelName,code,start,end,date){return shortCycleCo
 function shortCycleReminderView(signal={}){
     if(signal['规则版本']==='model-daily-bottom-close-v1')return {live:signal['提醒条件满足']===true,text:signal['状态']||'待日线底分型',fractal:signal['触发底分型']||{}};
     const low=signal['低点2']||{},fractal=shortCycleMatchedFractal(signal);
-    const validRule=['structure-divergence-fractal-date-order-v11','trend-repeat-price-dif-area-then-m30-fractal-v1'].includes(signal['规则版本'])&&
+    const validRule=['structure-divergence-fractal-date-order-v12','trend-repeat-price-dif-dea-then-m30-fractal-v2'].includes(signal['规则版本'])&&
         signal['提醒条件满足']===true&&low.time&&low.confirm_time&&fractal['发生时间']&&fractal['确认时间']&&
         String(fractal['发生时间'])<String(fractal['确认时间'])&&
         String(low.confirm_time).slice(0,10)<=String(fractal['发生时间']).slice(0,10);
@@ -3180,7 +3183,7 @@ function weeklyConsolidationFirstPanel(state){
     state.displayedAlertCount=0;
     const historyView=weeklyReminderHistory('周线盘整背驰一买',state);if(historyView.html!==null)return historyView.html;
     const model=dailyExtra.weeklyConsolidationFirst||{};
-    if(model.version!=='weekly-consolidation-divergence-v3')return '<section class="two-center-hero"><h2>周线盘整背驰一买</h2><p>尚无新规则的收盘扫描结果；收盘流水线完成后显示。</p></section>';
+    if(model.version!=='weekly-consolidation-divergence-v4')return '<section class="two-center-hero"><h2>周线盘整背驰一买</h2><p>尚无新规则的收盘扫描结果；收盘流水线完成后显示。</p></section>';
     const age=state.cMaxAge==null?'all':state.cMaxAge,ageLimit=age==='all'?Infinity:Number(age),chartWeeks=Number(state.chartWeeks||model.default_chart_weeks||150);
     const focusCode=String(state.focusCode||'').padStart(6,'0'),focusRow=(model.rows||[]).find(row=>String(row.code).padStart(6,'0')===focusCode);
     const defaultRows=(model.rows||[]).filter(row=>Number(row.c_age_weeks)<=ageLimit);
@@ -3525,7 +3528,7 @@ function trendReminderHistory(outcomes,rates,close){
 }
 function twoCenterPanel(){
     const model=data.models?.['日线趋势一买']||data.models?.['日线一买']||{};
-    if(model.ranking_version!=='daily-trend-exhaustion-v1')return '<section class="two-center-hero"><h2>日线趋势一买</h2><p>新趋势背驰规则待日线重算；旧双中枢名单已隐藏。</p></section>';
+    if(model.ranking_version!=='daily-trend-exhaustion-v2')return '<section class="two-center-hero"><h2>日线趋势一买</h2><p>新趋势背驰规则待日线重算；旧双中枢名单已隐藏。</p></section>';
     const state=stateFor('two_centers'),lookback=Number(state.lookback||model.default_lookback||240),bAge=Number(state.bMaxAge||model.default_b_max_age||15);
     const currentRows=(model.max_b_age_pools?.[String(lookback)]||[]).filter(row=>Number(row['B距今天数'])<=bAge);
     const focusCode=String(state.focusCode||'').padStart(6,'0'),focusDate=dateKey(state.focusDate);
@@ -3565,7 +3568,7 @@ function twoCenterPanel(){
     const preview=data.is_intraday_preview?'<p class="preclose-warning"><strong>盘中预览：</strong>当日日K尚未收盘，最终形态以收盘扫描为准，不发正式通知。</p>':'';
     const focusRow=rows.find(row=>row._lookupFocus),focusNotice=focusRow?`<p class="stock-lookup-focus"><strong>股票检索定位：</strong>${safe(focusRow['名称'])} ${safe(focusRow['代码'])} · 记录日期 ${safe(formatDate(state.focusDate||data.daily_date))}；已在当前日线趋势一买列表中定位。</p>`:'';
     const dateForRow=row=>selectedDate==='latest'?data.daily_date:selectedDate==='all'?shortCycleDate(row._trendOutcome?.triggered_at||data.daily_date):selectedDate;
-    const body=rows.map((row,index)=>{const outcome=outcomeOf(row),focused=row===focusRow,rowDate=dateForRow(row);return `<tr${focused?' class="stock-lookup-focus-row" data-stock-lookup-focus-row':''}><td>${index+1}${focused?'<br><small>检索定位</small>':''}</td><td><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td>${shortCycleConditionCell(evidenceOf(row),'日线趋势一买',row['代码'],rowDate)}<td class="focus-reason"><b>D5价格低于D3，但DIF、绿柱和下跌力度均弱于D3</b><small>D3 ${safe(formatDate(row['A日期']))} → D5 ${safe(formatDate(row['B日期']))}</small></td><td><span class="two-center-status${row['状态']==='背驰形成中'?' alert':''}">${safe(row['状态'])}</span></td><td><button type="button" class="m30-detail-open" data-daily-first-detail="${safe(row['代码'])}">▶ 查看日线D3/D5</button></td><td>${safe(formatDate(row['B日期']))}<br>${safe(row['Price_B'])}<br><small>${selectedDate==='latest'?`距今${safe(row['B距今天数'])}日`:'当时结构快照'}</small></td><td>${outcome?safe(formatDateTime(outcome.triggered_at)):'未触发'}</td><td>${safe(outcome?.origin||'未归档')}</td><td>${operationLatestReturnCell('日线趋势一买',row['代码'],outcome,Boolean(outcome))}</td>${EXIT_RETURN_HORIZONS.map(h=>`<td>${returnCell(outcome,h)}</td>`).join('')}<td class="sell-condition-cell">${strictM30ExitReturnCell('日线趋势一买',row,evidenceOf(row),rowDate)}</td></tr>`}).join('');
+    const body=rows.map((row,index)=>{const outcome=outcomeOf(row),focused=row===focusRow,rowDate=dateForRow(row);return `<tr${focused?' class="stock-lookup-focus-row" data-stock-lookup-focus-row':''}><td>${index+1}${focused?'<br><small>检索定位</small>':''}</td><td><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td>${shortCycleConditionCell(evidenceOf(row),'日线趋势一买',row['代码'],rowDate)}<td class="focus-reason"><b>价格跌破完整参考前低，DIF、DEA均不创新低</b><small>D3 ${safe(formatDate(row['A日期']))} → D5 ${safe(formatDate(row['B日期']))}</small></td><td><span class="two-center-status${row['状态']==='背驰形成中'?' alert':''}">${safe(row['状态'])}</span></td><td><button type="button" class="m30-detail-open" data-daily-first-detail="${safe(row['代码'])}">▶ 查看日线D3/D5</button></td><td>${safe(formatDate(row['B日期']))}<br>${safe(row['Price_B'])}<br><small>${selectedDate==='latest'?`距今${safe(row['B距今天数'])}日`:'当时结构快照'}</small></td><td>${outcome?safe(formatDateTime(outcome.triggered_at)):'未触发'}</td><td>${safe(outcome?.origin||'未归档')}</td><td>${operationLatestReturnCell('日线趋势一买',row['代码'],outcome,Boolean(outcome))}</td>${EXIT_RETURN_HORIZONS.map(h=>`<td>${returnCell(outcome,h)}</td>`).join('')}<td class="sell-condition-cell">${strictM30ExitReturnCell('日线趋势一买',row,evidenceOf(row),rowDate)}</td></tr>`}).join('');
     const selectedDetail=rows.find(row=>String(row['代码'])===String(state.detailCode||'')),currentDetail=currentRows.find(row=>String(row['代码'])===String(state.detailCode||''));
     const detail=selectedDetail||null;
     const chartDates=detail?.['形态图']?.['日期']||[];
@@ -3861,7 +3864,7 @@ function dailyConsolidationSelection(state,view,close){
 function dailyConsolidationPanel(state){
     state.displayedAlertCount=0;
     const {session,model,recordsOnDate,dates}=dailyConsolidationDateRecords();
-    if(model.ranking_version!=='daily-bi-consolidation-divergence-v1')return '<section class="two-center-hero"><h2>日线盘整背驰一买</h2><p>等待交易日收盘后的日线结构与底分型扫描。</p></section>';
+    if(model.ranking_version!=='daily-bi-consolidation-divergence-v2')return '<section class="two-center-hero"><h2>日线盘整背驰一买</h2><p>等待交易日收盘后的日线结构与底分型扫描。</p></section>';
     const {closingLatest,selectedDate,allRows,awaitingClose}=dailyConsolidationSelection(state,{model,dates,recordsOnDate},dailyExtra.dailyCloseReminders);
     const evidenceOf=row=>row,rows=shortCycleFilteredRows(state,allRows,evidenceOf);
     recordDisplayedReminders(state,rows,evidenceOf);
@@ -3924,7 +3927,7 @@ function thirtyMinuteFirstPanel(){
     const ageChoices=(model.b_age_options||[5,10,15]).map(bars=>`<option value="${bars}" ${bAge===Number(bars)?'selected':''}>最近${bars}根30分钟K</option>`).join('');
     const partial=Number(coverage.fresh||0)<Number(coverage.universe||0)?`<p class="preclose-warning"><strong>行情覆盖：</strong>已获取最新完成30分钟K线 ${safe(coverage.fresh||0)}/${safe(coverage.universe||0)} 只；其余 ${safe(coverage.failed||0)} 只未覆盖，不应视为未命中。</p>`:'';
     const preview=(model.is_intraday_preview||data.is_intraday_preview)?'<p class="preclose-warning"><strong>盘中预览：</strong>只使用已完成的30分钟K线；下一根K线可能改变“形成中”状态。</p>':'';
-    const body=rows.map((row,index)=>{const alertEvent=m30FirstAlertEvent(row),appeared=Boolean(alertEvent)||historical&&row['买入提醒']?.['状态']==='已触发';return `<tr><td>${index+1}</td><td><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td><td class="focus-reason"><b>${row._archiveOnly?'原买入提醒已归档':'D5价格低于D3，但DIF、绿柱和下跌力度均弱于D3'}</b><small>D3 ${safe(formatBarTime(row['A日期']))} → D5 ${safe(formatBarTime(row['B日期']))}</small></td><td class="short-cycle-condition">${m30FirstBuyConditionCell(row,alertEvent)}</td><td><span class="two-center-status${row['状态']==='背驰形成中'?' alert':''}">${safe(row['状态'])}</span></td><td><button type="button" class="m30-detail-open" data-m30-detail="${safe(row['代码'])}" data-m30-record="${safe(alertEvent?.event_id||'')}">▶ ${row._archiveOnly?'查看提醒依据':'查看30分钟D3/D5'}</button></td><td>${safe(formatBarTime(row['B日期']))}<br>${safe(row['Price_B'])}<br>${historical?'':`<small>距今${safe(row['B距今K数'])}根K</small>`}</td><td>${operationLatestReturnCell('30分钟一买',row['代码'],alertEvent,appeared)}</td>${EXIT_RETURN_HORIZONS.map(h=>`<td>${shortCycleFixedReturnCell(alertEvent,appeared,h)}</td>`).join('')}<td class="sell-condition-cell">${m30FirstSellConditionCell(alertEvent)}</td></tr>`}).join('');
+    const body=rows.map((row,index)=>{const alertEvent=m30FirstAlertEvent(row),appeared=Boolean(alertEvent)||historical&&row['买入提醒']?.['状态']==='已触发';return `<tr><td>${index+1}</td><td><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td><td class="focus-reason"><b>${row._archiveOnly?'原买入提醒已归档':'价格跌破完整参考前低，DIF、DEA均不创新低'}</b><small>D3 ${safe(formatBarTime(row['A日期']))} → D5 ${safe(formatBarTime(row['B日期']))}</small></td><td class="short-cycle-condition">${m30FirstBuyConditionCell(row,alertEvent)}</td><td><span class="two-center-status${row['状态']==='背驰形成中'?' alert':''}">${safe(row['状态'])}</span></td><td><button type="button" class="m30-detail-open" data-m30-detail="${safe(row['代码'])}" data-m30-record="${safe(alertEvent?.event_id||'')}">▶ ${row._archiveOnly?'查看提醒依据':'查看30分钟D3/D5'}</button></td><td>${safe(formatBarTime(row['B日期']))}<br>${safe(row['Price_B'])}<br>${historical?'':`<small>距今${safe(row['B距今K数'])}根K</small>`}</td><td>${operationLatestReturnCell('30分钟一买',row['代码'],alertEvent,appeared)}</td>${EXIT_RETURN_HORIZONS.map(h=>`<td>${shortCycleFixedReturnCell(alertEvent,appeared,h)}</td>`).join('')}<td class="sell-condition-cell">${m30FirstSellConditionCell(alertEvent)}</td></tr>`}).join('');
     const detail=rows.find(row=>String(row['代码'])===String(state.detailCode||'')&&(!state.detailKey||m30FirstAlertEvent(row)?.event_id===state.detailKey));
     const chartDates=detail?.['形态图']?.['日期']||[];
     const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-m30-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="m30DetailTitle"><header class="second-detail-head"><div><h3 id="m30DetailTitle">${safe(detail['名称'])} ${safe(detail['代码'])} · 30分钟D3/D5</h3><p>${historical?`提醒日期 ${safe(formatDate(selected))} · 原始结构快照`:`当前选择：回溯${lookback}根30分钟K · B距今≤${bAge}根`} · 实际展示${chartDates.length}根</p><p>图表区间：${safe(formatBarTime(chartDates[0]))} — ${safe(formatBarTime(chartDates[chartDates.length-1]))}</p></div><button type="button" class="second-detail-close" data-m30-close aria-label="关闭弹窗">×</button></header><label class="macd-zoom">横轴拉伸 <input type="range" min="820" max="2200" step="140" value="1100" data-macd-zoom></label>${detail._archiveOnly?`<p class="daily-note">此条仅保留原始提醒记录，完整D3/D5图表未归档。</p>${m30FirstBuyConditionCell(detail,m30FirstAlertEvent(detail))}`:`${macdValleyCombinedChart(detail)}`}<p class="macd-shape-note">D3/D5价格低点 ${safe(formatBarTime(detail['Price_A日期']))} → ${safe(formatBarTime(detail['Price_B日期']))}；两个修复峰 ${safe(formatBarTime(detail['第一修复峰日期']))} → ${safe(formatBarTime(detail['第二修复峰日期']))}。</p></section></div>`:'';
@@ -3959,7 +3962,7 @@ function currentEffectiveAlertCount(modelId){
     const closeNames={daily_consolidation_first:'日线盘整背驰一买',two_centers:'日线趋势一买',weekly_first:'周线类二买',weekly_consolidation_first:'周线盘整背驰一买'};
     if(modelId==='weekly_consolidation_first'){
         const model=dailyExtra.weeklyConsolidationFirst||dailyExtra.navigationSignals?.weeklyConsolidationFirst;
-        if(model?.version!=='weekly-consolidation-divergence-v3'||!dailyClosePolicyActive(close)||close.daily_date!==model.daily_date)return 0;
+        if(model?.version!=='weekly-consolidation-divergence-v4'||!dailyClosePolicyActive(close)||close.daily_date!==model.daily_date)return 0;
         return reminderStockCount(Object.values(close.signals||{}).filter(item=>item['模型']==='周线盘整背驰一买'&&item['提醒']?.model_rule_version===model.version&&item['提醒']?.['提醒条件满足']===true));
     }
     if(['daily_consolidation_first','two_centers','weekly_first'].includes(modelId)){
@@ -4009,7 +4012,7 @@ table=function(rows,emptyText,id=''){
             });
         }
         const divergenceHead=[...header.cells].find(cell=>cell.textContent.trim()==='15/30/60分钟MACD底背离');
-        if(divergenceHead)divergenceHead.insertAdjacentHTML('beforeend',tableHelp('分别复核15、30、60分钟K线；任一周期G1后最近两处已确认底分型满足后低价创新低、DIF与MACD负柱同时抬高，即列重点提示。只作提示，不改日线排名。'));
+        if(divergenceHead)divergenceHead.insertAdjacentHTML('beforeend',tableHelp('分别复核15、30、60分钟K线；任一周期G1后最近两处已确认底分型满足价格跌破完整参考前低，DIF、DEA整段最低值均不创新低，即列重点提示。只作提示，不改日线排名。'));
         const th=document.createElement('th');th.innerHTML=`是否继续持有 ${tableHelp(secondHelpTips.holding)}`;header.append(th);
         const heads=[...header.cells].map(cell=>cell.textContent.trim());
         const codeIndex=heads.indexOf('代码');
@@ -4113,7 +4116,7 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
         const model=event.model||record.model,key=event.event_id||record.key;
         const buyEntry=add(model,event,event.triggered_at,'提醒归档',event.origin||'模型池归档',key);
         const exit=event.strict_m30_top_divergence_exit;
-        if(exit?.status!=='已触发'||exit.rule_version!=='strict-m30-macd-top-divergence-exit-v2'||!exit.confirmed_at)continue;
+        if(exit?.status!=='已触发'||!['strict-m30-macd-top-divergence-exit-v3','strict-m30-macd-top-divergence-exit-v2','strict-m30-macd-top-divergence-exit-v1'].includes(exit.rule_version)||!exit.confirmed_at)continue;
         const exitDay=dateKey(exit.confirmed_at),signalDay=dateKey(event.triggered_at);
         const through=dateKey(extra.historyWindow?.through||dailyExtra.historyWindow?.through);
         if(exitDay.length!==8||signalDay.length!==8||exitDay<=signalDay||(through&&exitDay>through))continue;
@@ -5410,7 +5413,7 @@ async function refreshWeeklyConsolidationData(){
         const response=publicCloudPage?await publicCloudFetch('weekly_consolidation_first_latest.json'):await fetch(`data/weekly_consolidation_first_latest.json?v=${Date.now()}`,{cache:'no-store'});
         if(!response.ok)return;
         const payload=await response.json();
-        if(!payload||payload.version!=='weekly-consolidation-divergence-v3'||String(payload.generated_at||'')<=String(lastWeeklyConsolidationRefresh||''))return;
+        if(!payload||payload.version!=='weekly-consolidation-divergence-v4'||String(payload.generated_at||'')<=String(lastWeeklyConsolidationRefresh||''))return;
         dailyExtra.weeklyConsolidationFirst=payload;
         lastWeeklyConsolidationRefresh=payload.generated_at||'';
         if(activeDaily==='weekly_consolidation_first')draw();
@@ -5432,7 +5435,7 @@ async function refreshDailyConsolidationData(){
     if(!data||location.protocol==='file:')return;
     try{
         const {payload,fallback}=await fetchLiveJson('daily_consolidation_first_latest.json');
-        if(payload?.version!=='daily-bi-consolidation-divergence-v1'||!payload.model||
+        if(payload?.version!=='daily-bi-consolidation-divergence-v2'||!payload.model||
            String(payload.generated_at||'')<=String(lastDailyConsolidationRefresh||''))return;
         dailyExtra.dailyConsolidationFirst=payload;
         lastDailyConsolidationRefresh=payload.generated_at||'';
