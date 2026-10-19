@@ -417,11 +417,13 @@ const historicalBuyConditions=(()=>{
         '日线盘整背驰一买':'三笔重叠盘整后向下离开；D3创新低且两段MACD面积、单位K面积减弱，DIF抬高',
         '日线趋势一买':'D3主跌后修复、D5再跌；D5价格创新低，DIF、绿柱及MACD面积弱于D3',
         '周线类二买':'长期零轴下，DIF上穿零轴且价格上穿MA55；首涨、首次回抽、再扩张、第二次回抽',
-        '周线盘整背驰一买':'55周内严格周线顶分型后下跌；DIF、DEA均在零轴下呈绿→红→绿；价格创新低而DIF、DEA未创新低'
+        '周线盘整背驰一买':'55周内严格周线顶分型后下跌；DIF、DEA均在零轴下呈绿→红→绿；价格创新低而DIF、DEA未创新低',
+        '月线盘整背驰一买':'最近30根月K内已确认月线顶分型，右侧月K已收定；月线零轴下相邻绿→红→绿，价格严格跌破完整前绿段及同轮负轴前低，完整前后绿段DIF、DEA最低值均不创新低；月线新低日同日或之后的日线底分型右侧日K收盘确认'
     };
     const brief={
         '日线盘整背驰一买':'日线盘整背驰＋日线底分型', '日线趋势一买':'日线趋势背驰＋日线底分型',
-        '周线类二买':'周线MACD双回抽零轴＋日线底分型', '周线盘整背驰一买':'周线零轴下绿红绿背驰＋日线底分型'
+        '周线类二买':'周线MACD双回抽零轴＋日线底分型', '周线盘整背驰一买':'周线零轴下绿红绿背驰＋日线底分型',
+        '月线盘整背驰一买':'月线完整底背离＋日线底分型'
     };
     function render(model,event={},snapshot={},signal={},options={}){
         const saved=event.structure_snapshot||snapshot||{};
@@ -431,6 +433,7 @@ const historicalBuyConditions=(()=>{
         const archivedVersions=event.rule_version?[event.rule_version]:(event.rule_versions||[]).filter(Boolean);
         const confirmationVersions=archivedVersions.length?archivedVersions:versions;
         const dailyMacdRed=model==='周线盘整背驰一买'&&confirmationVersions.includes('model-weekly-daily-macd-red-close-v1');
+        const monthly=model==='月线盘整背驰一买'&&confirmationVersions.includes('monthly-consolidation-divergence-v1');
         const daily=dailyMacdRed||confirmationVersions.includes('model-daily-bottom-close-v1');
         const macd=['日线MACD底背离选股法','60分钟MACD底背离选股法'].includes(model);
         const trigger=event.triggered_at||buy['提醒确认时间']||event.buy_at||'';
@@ -454,7 +457,7 @@ const historicalBuyConditions=(()=>{
             row(isDaily?'日线底分型右侧收盘确认':'60分钟底分型右侧收盘确认',time(bottom.confirmed_at));
             row('触发时间口径',esc(event.trigger_basis||'全部条件在该回放时点已通过；不冒充当时实际推送'));
             row('扫描发现时间',time(event.discovered_at));
-        }else if(daily||(event.structure_snapshot&&descriptions[model])){
+        }else if(monthly||daily||(event.structure_snapshot&&descriptions[model]&&model!=='月线盘整背驰一买')){
             row('模型入选条件',esc(dailyMacdRed?'周线零轴下相邻绿→红→绿；价格严格跌破完整前绿段及同轮负轴前低，完整前后绿段DIF、DEA各自最低值均不创新低；已收盘日线MACD红柱确认':descriptions[model]||model));
             const structureAt=event.structure_available_at||evidence['结构首次可见时间']||saved['结构首次可见时间']||buy['结构首次可见时间'];
             row('结构入选时间',structureAt?time(structureAt):`首次满足时点未留档${trigger?`；本条使用截至 ${time(trigger)} 的历史结构快照`:''}`);
@@ -465,10 +468,11 @@ const historicalBuyConditions=(()=>{
                     row(label,`${time(m.date)} · DIF ${number(m.dif)} · 收盘 ${number(m.close)}<small>结构关键周K日期，非买入确认时间</small>`);
                 }
                 row('回抽参数',`回溯 ${number(saved.lookback_weeks)} 周；零轴容差 ${saved.zero_tolerance==null?'未留档':number(Number(saved.zero_tolerance)*100)+'%'}；E距快照 ${number(saved.e_age_weeks)} 周`);
-            }else if(model==='周线盘整背驰一买'){
+            }else if(model==='周线盘整背驰一买'||monthly){
                 const top=saved.top_fractal||{},a=saved.a||{},b=saved.b||{},c=saved.c||{};
-                if(!dailyMacdRed)row('周线顶分型',`中心周 ${time(top.date)}；右侧确认 ${time(top.confirmed_at)}`);
-                if(dailyMacdRed)row('同轮负轴参考起点',time(saved.price_reference_start_date||saved.axis_check_start_date));
+                if(monthly)row('月线顶分型（最近30根月K）',`中心月 ${time(top.date)}；已收定右侧月K确认 ${time(top.confirmed_at)}`);
+                else if(!dailyMacdRed)row('周线顶分型',`中心周 ${time(top.date)}；右侧确认 ${time(top.confirmed_at)}`);
+                if(dailyMacdRed||monthly)row('同轮负轴参考起点',time(saved.price_reference_start_date||saved.axis_check_start_date));
                 for(const [label,leg] of [['前段绿柱',a],['中间红柱',b],['后段绿柱',c]])row(label,`${time(leg.start_date)} → ${time(leg.end_date)}`);
                 row('价格新低',`${time(saved.daily_price_low_date||c.low_date)}：${number(c.price_low)}；此前最低 ${number(saved.previous_price_low)}`);
                 row('DIF／DEA未创新低',`DIF ${number(a.dif_min)} → ${number(c.dif_min)}；DEA ${number(a.dea_min)} → ${number(c.dea_min)}`);
@@ -482,14 +486,15 @@ const historicalBuyConditions=(()=>{
                 row('D3／D5价格低点',`${time(saved['Price_A日期'])}／${number(saved.Price_A)} → ${time(saved['Price_B日期']||saved['B日期'])}／${number(saved.Price_B)}`);
                 row('背驰力度',`DIF ${number(saved.DIF_A)} → ${number(saved.DIF_B)}；MACD柱 ${number(saved.Hist_A)} → ${number(saved.Hist_B)}；面积 ${number(saved.Area_A)} → ${number(saved.Area_B)}`);
             }
-            const fractal=event.fractal||{},bottom=buy['触发底分型']||evidence.bottom_fractal||{};
+            const fractal=event.fractal||(monthly?saved.daily_bottom_fractal:null)||{},bottom=buy['触发底分型']||evidence.bottom_fractal||{};
             if(dailyMacdRed){
                 const confirmation=event.daily_macd_confirmation||buy['日线MACD确认']||saved.daily_macd_confirmation||{};
                 row('日线MACD红柱收盘确认',time(confirmation.confirmed_at||buy['提醒确认时间']));
                 row('已收盘日线MACD',`DIF ${number(confirmation.dif)}；DEA ${number(confirmation.dea)}；MACD ${number(confirmation.macd)}`);
-            }else if(daily){
+            }else if(daily||monthly){
                 row('日线底分型中心K',time(fractal.fractal_date||bottom['发生时间']));
                 row('日线底分型右侧收盘确认',time(fractal.confirmed_at||bottom['确认时间']));
+                if(monthly)row('扫描发现时间',time(event.discovered_at));
             }else{
                 row('短周期底背离两低点',`${time(evidence.low1?.time)} → ${time(evidence.low2?.time)}`);
                 row('短周期底分型中心K',time(bottom['发生时间']));
@@ -517,7 +522,7 @@ const historicalBuyConditions=(()=>{
         if(event.baseline_date||event.baseline_close!=null)row('收益基准',`${time(event.baseline_date)} 收盘 ${event.baseline_status?esc(event.baseline_status):number(event.baseline_close)}`);
         if(event.buy_effective_date)row('跟踪池买入生效日',time(event.buy_effective_date));
         row('记录来源',esc(origin||'来源未留档')+(replay?'；历史回放不代表当时实际推送':''));
-        return `<div class="historical-buy-condition" data-buy-event="${esc(event.event_id||'')}" data-buy-model="${esc(model)}" data-buy-rule="${dailyMacdRed?'model-weekly-daily-macd-red-close-v1':daily?'model-daily-bottom-close-v1':esc(versions.join('|'))}" data-buy-trigger="${esc(trigger)}"><div class="m30-condition-result ${passed?'is-triggered':'is-pending'}">${passed?'✅ 买入提醒 '+time(trigger):dailyMacdRed?'待日线MACD红柱收盘确认':'待日线底分型收盘确认'}</div><small>${esc(dailyMacdRed?'周线完整底背离＋日线MACD红柱':daily?brief[model]||'模型入选＋日线底分型':'按原归档规则')} · ${replay?'历史回放':esc(origin||'依据见下方')}</small><details class="m30-condition-detail"${options.detailsOpen?' open':''}><summary>买入条件与时间点</summary><table class="reminder-condition-table"><thead><tr><th>买入条件／关键点</th><th>归档依据／时间</th></tr></thead><tbody>${rows.join('')}</tbody></table><small>结构关键K线日期、确认时间、买入提醒触发时间分别列示；提醒时间不是实际成交时间。</small></details></div>`;
+        return `<div class="historical-buy-condition" data-buy-event="${esc(event.event_id||'')}" data-buy-model="${esc(model)}" data-buy-rule="${dailyMacdRed?'model-weekly-daily-macd-red-close-v1':monthly?'monthly-consolidation-divergence-v1':daily?'model-daily-bottom-close-v1':esc(versions.join('|'))}" data-buy-trigger="${esc(trigger)}"><div class="m30-condition-result ${passed?'is-triggered':'is-pending'}">${passed?'✅ 买入提醒 '+time(trigger):dailyMacdRed?'待日线MACD红柱收盘确认':'待日线底分型收盘确认'}</div><small>${esc(dailyMacdRed?'周线完整底背离＋日线MACD红柱':daily||monthly?brief[model]||'模型入选＋日线底分型':'按原归档规则')}${monthly?'':` · ${replay?'历史回放':esc(origin||'依据见下方')}`}</small><details class="m30-condition-detail"${options.detailsOpen?' open':''}><summary>${monthly?'查看买入条件':'买入条件与时间点'}</summary><table class="reminder-condition-table"><thead><tr><th>买入条件／关键点</th><th>归档依据／时间</th></tr></thead><tbody>${rows.join('')}</tbody></table><small>结构关键K线日期、确认时间、买入提醒触发时间分别列示；提醒时间不是实际成交时间。</small></details></div>`;
     }
     return {render};
 })();
@@ -3023,14 +3028,18 @@ function m30FirstBuyConditionCell(row,event){
     const historical=beforeStructure?`<tr class="reminder-hint-row"><th scope="row">结构前历史记录</th><td>❌ ${shortCycleCompactTime(divergenceAt)} · 早于本次结构入选 ${shortCycleCompactTime(structureAt)}，单独归档，不计入本次买入</td></tr>`:'';
     return `<div class="m30-condition-result ${triggered?'is-triggered':'is-pending'}">${reminder}</div><div class="m30-condition-flags">结构${structureAt?'✓':'…'} · 背离${!beforeStructure&&divergenceAt?'✓':beforeStructure?'×':'…'} · 底分型${eligibleFractal?'✓':'…'}</div><details class="m30-condition-detail"><summary>查看买入条件</summary><table class="reminder-condition-table"><thead><tr><th>买入条件</th><th>结果／确认时间</th></tr></thead><tbody><tr><th scope="row">结构入选</th><td>${structure}</td></tr><tr><th scope="row">30分钟MACD底背离</th><td>${divergence}</td></tr><tr><th scope="row">同日或之后30分钟底分型</th><td>${bottom}</td></tr>${historical}<tr class="reminder-final-row"><th scope="row">买入提醒</th><td>${reminder}</td></tr></tbody></table></details>`;
 }
-function m30FirstSellConditionCell(event){
-    const exit=event?.strict_m30_top_divergence_exit||{},triggered=exit.status==='已触发';
+function m30FirstSellConditionCell(event,{requireEvidence=false}={}){
+    const exit=event?.strict_m30_top_divergence_exit||{};
     const unavailable=['30分钟行情缺失','30分钟历史覆盖不足'].includes(exit.status);
+    const checked=(exit.status==='已触发'&&Boolean(exit.confirmed_at||exit.date))||
+        (['待触发','未触发'].includes(exit.status)&&Boolean(exit.observed_through));
+    const unknown=requireEvidence&&!checked&&!unavailable,triggered=exit.status==='已触发'&&!unknown;
     const value=Number(exit.return_pct),settled=exit.return_pct!=null&&Number.isFinite(value);
-    const detail=triggered?`✅ ${shortCycleCompactTime(exit.confirmed_at||exit.date)}${settled?`<small class="reminder-detail">参考收益 ${returnPct(value)}</small>`:'<small class="reminder-detail">次交易日开盘参考价待归档</small>'}`:!event?'— 尚无买入提醒':unavailable?'❔ 待行情补齐':'❌ 未触发';
-    const conclusion=triggered?'✅ 已触发':!event?'— 尚无买入提醒':unavailable?'❔ 待行情补齐':'❌ 未触发';
+    const detail=triggered?`✅ ${shortCycleCompactTime(exit.confirmed_at||exit.date)}${settled?`<small class="reminder-detail">参考收益 ${returnPct(value)}</small>`:'<small class="reminder-detail">下一根30分钟K线开盘参考价待归档</small>'}`:!event?'— 尚无买入提醒':unknown?'❔ 尚未核验':unavailable?'❔ 待行情补齐':'❌ 未触发';
+    const conclusion=triggered?'✅ 已触发':!event?'— 尚无买入提醒':unknown?'❔ 尚未核验':unavailable?'❔ 待行情补齐':'❌ 未触发';
     const headline=triggered?`✅ 卖出提醒 ${shortCycleCompactTime(exit.confirmed_at||exit.date)}`:conclusion.replace('❌ ','');
-    return `<div class="m30-condition-result ${triggered?'is-triggered':'is-pending'}">${headline}</div><small class="sell-condition-basis">严格30分钟MACD顶背离</small><details class="m30-condition-detail"><summary>查看卖出条件</summary><table class="reminder-condition-table"><thead><tr><th>卖出条件</th><th>结果／确认时间</th></tr></thead><tbody><tr><th scope="row">严格30分钟MACD顶背离</th><td>${detail}</td></tr><tr class="reminder-final-row"><th scope="row">卖出提醒</th><td>${conclusion}</td></tr></tbody></table></details>`;
+    const coverage=requireEvidence&&exit.observed_through?`<tr><th scope="row">核验行情截止</th><td>${shortCycleCompactTime(exit.observed_through)}</td></tr>`:'';
+    return `<div class="m30-condition-result ${triggered?'is-triggered':'is-pending'}">${headline}</div><small class="sell-condition-basis">严格30分钟MACD顶背离</small><details class="m30-condition-detail"><summary>查看卖出条件</summary><table class="reminder-condition-table"><thead><tr><th>卖出条件</th><th>结果／确认时间</th></tr></thead><tbody><tr><th scope="row">严格30分钟MACD顶背离</th><td>${detail}</td></tr>${coverage}<tr class="reminder-final-row"><th scope="row">卖出提醒</th><td>${conclusion}</td></tr></tbody></table></details>`;
 }
 function strictM30ExitReturnCell(modelName,row,evidence=row,date=''){
     const code=String(row?.['代码']||row?.code||'').padStart(6,'0'),event=shortCycleAlertEvent(modelName,row,evidence);
@@ -3216,6 +3225,13 @@ function monthlyConfirmedReminderRows(model){
     for(const event of model.events||[])add(event.structure_snapshot||event,event);
     return [...byDay.values()].sort((a,b)=>String(b._monthlyConfirmedAt).localeCompare(String(a._monthlyConfirmedAt)));
 }
+function monthlySellConditionCell(row){
+    // Monthly records are independent of the trading/short-cycle watchlists.
+    // Only an explicit result on this reminder can establish a checked sell state.
+    return m30FirstSellConditionCell({...row.confirmed_event,
+        strict_m30_top_divergence_exit:row.confirmed_event?.strict_m30_top_divergence_exit||row.strict_m30_top_divergence_exit},
+        {requireEvidence:true});
+}
 function monthlyConsolidationFirstPanel(state){
     state.displayedAlertCount=0;
     const model=dailyExtra.monthlyConsolidationFirst;
@@ -3227,9 +3243,13 @@ function monthlyConsolidationFirstPanel(state){
     const rows=reminders.filter(row=>selected==='all'||row._monthlyReminderDate===selected);
     recordDisplayedReminders(state,rows);
     const detail=rows.find(row=>String(row.code)===String(state.monthlyDetailCode||'')&&(!state.monthlyDetailKey||row._monthlyReminderKey===state.monthlyDetailKey));
-    const body=rows.map((row,index)=>`<tr><td>${safe(row.rank??index+1)}</td><td><b>${safe(row.name)}</b><br>${safe(row.code)}</td><td class="focus-reason"><b>价格创新低，DIF、DEA均不创新低</b><small>完整前低 ${safe(row.previous_price_low)} → 新低 ${safe(row.c?.price_low)}<br>DIF ${safe(row.a?.dif_min)} → ${safe(row.c?.dif_min)}<br>DEA ${safe(row.a?.dea_min)} → ${safe(row.c?.dea_min)}</small></td><td><span class="two-center-status">日线底分型已确认</span></td><td>${safe(formatDateTime(row._monthlyConfirmedAt))}<br><small>月线新低日 ${safe(formatDate(row.daily_price_low_date||row.c?.low_date))}</small>${row.confirmed_event?`<br><small>${safe(row.confirmed_event.origin)} · 首次核验 ${safe(formatDateTime(row.confirmed_event.discovered_at))}</small>`:''}</td><td><button type="button" class="m30-detail-open" data-monthly-open="${safe(row.code)}" data-monthly-record="${safe(row._monthlyReminderKey)}">▶ 查看月线与背离依据</button></td></tr>`).join('');
+    const body=rows.map((row,index)=>{
+        const buy=historicalBuyConditions.render('月线盘整背驰一买',row.confirmed_event||{},row,
+            {'规则版本':model.version,'提醒条件满足':true,'提醒确认时间':row._monthlyConfirmedAt});
+        return `<tr><td>${safe(row.rank??index+1)}</td><td><b>${safe(row.name)}</b><br>${safe(row.code)}</td><td class="short-cycle-condition">${buy}</td><td class="sell-condition-cell">${monthlySellConditionCell(row)}</td><td class="focus-reason"><b>价格创新低，DIF、DEA均不创新低</b><small>完整前低 ${safe(row.previous_price_low)} → 新低 ${safe(row.c?.price_low)}<br>DIF ${safe(row.a?.dif_min)} → ${safe(row.c?.dif_min)}<br>DEA ${safe(row.a?.dea_min)} → ${safe(row.c?.dea_min)}<br>月线新低日 ${safe(formatDate(row.daily_price_low_date||row.c?.low_date))}</small></td><td><span class="two-center-status">日线底分型已确认</span></td><td><button type="button" class="m30-detail-open" data-monthly-open="${safe(row.code)}" data-monthly-record="${safe(row._monthlyReminderKey)}">▶ 查看月线与背离依据</button></td></tr>`;
+    }).join('');
     const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-monthly-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="monthlyConsolidationTitle"><header class="second-detail-head"><div><h3 id="monthlyConsolidationTitle">${safe(detail.name)} ${safe(detail.code)} · 月线盘整背驰一买</h3><p>日线底分型已确认 · 提醒 ${safe(formatDateTime(detail._monthlyConfirmedAt))}</p><p>最近30根月K内已确认月线顶分型 · 完整参考前低 ${safe(detail.previous_price_low)}</p></div><button type="button" class="second-detail-close" data-monthly-close aria-label="关闭弹窗">×</button></header>${combinedAnnotatedCharts(weeklyConsolidationChart(detail,'价格',150),weeklyConsolidationChart(detail,'MACD',150))}<p class="macd-shape-note">完整前后绿段DIF、DEA均不创新低，价格严格创新低；日线底分型的低点实际日不得早于月线新低日，右侧日K收盘确认后提醒。</p></section></div>`:'';
-    return `<section><div class="daily-filters"><label>提醒日期 <select id="monthlySignalDate">${options}</select></label></div><div class="two-center-hero"><h2>月线盘整背驰一买</h2></div>${rows.length?`<div class="wrap"><table class="two-center-table focus-table"><thead><tr><th>排名</th><th>${model.asset_scope==='stocks_and_etfs'?'股票 / ETF':'股票'}</th><th>月线背离依据</th><th>确认状态</th><th>提醒触发时间</th><th>看图核验</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">所选日期暂无已确认提醒。</p>'}${model.current_month_complete===false?'<p class="preclose-warning">当月月K尚未收定：按截至行情日的实际日线计算；月线顶分型的右侧月K必须已收定。已确认提醒保留当时的结构与日线确认时间。</p>':''}<p class="daily-note">扫描范围：${model.asset_scope==='stocks_and_etfs'?'股票与ETF':'股票'} · 已核验 ${safe(model.coverage??'--')} / ${safe(model.universe_count??'--')} 只 · 本轮跳过 ${safe(model.failed_count??0)} 只（复权、行情或参考段无法核验）。行情截止 ${safe(formatDate(model.daily_date))} · 计算 ${safe(formatDateTime(model.generated_at))}。历史核验保留原日线确认时间，不补发过去的提醒。</p><details class="daily-rules" open><summary>模型条件与计算口径</summary><p>30根月K内已确认月线顶分型 → 月线零轴下绿→红→绿 → 价格创新低、DIF与DEA均不创新低 → 日线底分型收盘确认。</p><p>${safe(model.rules)}</p><p>${safe(model.implementation)}</p></details>${modal}</section>`;
+    return `<section><div class="daily-filters"><label>提醒日期 <select id="monthlySignalDate">${options}</select></label></div><div class="two-center-hero"><h2>月线盘整背驰一买</h2></div>${rows.length?`<div class="wrap"><table class="two-center-table focus-table"><thead><tr><th>排名</th><th>${model.asset_scope==='stocks_and_etfs'?'股票 / ETF':'股票'}</th><th>买入提醒条件</th><th>卖出提醒条件</th><th>月线背离依据</th><th>当前状态</th><th>看图核验</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">所选日期暂无已确认提醒。</p>'}${model.current_month_complete===false?'<p class="preclose-warning">当月月K尚未收定：按截至行情日的实际日线计算；月线顶分型的右侧月K必须已收定。已确认提醒保留当时的结构与日线确认时间。</p>':''}<p class="daily-note">扫描范围：${model.asset_scope==='stocks_and_etfs'?'股票与ETF':'股票'} · 已核验 ${safe(model.coverage??'--')} / ${safe(model.universe_count??'--')} 只 · 本轮跳过 ${safe(model.failed_count??0)} 只（复权、行情或参考段无法核验）。行情截止 ${safe(formatDate(model.daily_date))} · 计算 ${safe(formatDateTime(model.generated_at))}。历史核验保留原日线确认时间，不补发过去的提醒。</p><details class="daily-rules" open><summary>模型条件与计算口径</summary><p>30根月K内已确认月线顶分型 → 月线零轴下绿→红→绿 → 价格创新低、DIF与DEA均不创新低 → 日线底分型收盘确认。</p><p>${safe(model.rules)}</p><p>${safe(model.implementation)}</p></details>${modal}</section>`;
 }
 function weeklyConsolidationFirstPanel(state){
     state.displayedAlertCount=0;
@@ -3714,7 +3734,7 @@ function installConditionDialogs(root){
         button.onclick=()=>{
             const previous=document.querySelector('[data-condition-modal]');if(previous)previous.remove();
             const modal=document.createElement('div');modal.className='condition-dialog-overlay';modal.dataset.conditionModal='';
-            const rule=selling?'<p class="condition-dialog-rule">严格30分钟MACD顶背离：检查提醒日之后的两个高点，间隔不超过48根30分钟K线；第二高点价格比第一高点高出0.1%以上，两处DIF均为正，第二处DIF及MACD柱值更低。第二高点由右侧两根已收盘K线确认；确认后按下一根30分钟K线开盘价计算参考卖出收益。</p>':'';
+            const rule=selling?'<p class="condition-dialog-rule">严格30分钟MACD顶背离：零轴上相邻红→绿→红；价格严格突破完整前红段及同轮零轴上参考前高，DIF、DEA各自整段最高值均不创新高（允许相等）。局部底和单线过零不重置比较基准；柱体高度、面积不替代双线判定。第二高点由右侧两根已收盘30分钟K线确认，确认后按下一根30分钟K线开盘价计算参考卖出收益。是否触发以本条已归档核验结果为准；提醒不代表实际成交。</p>':'';
             modal.innerHTML=`<section class="condition-dialog" role="dialog" aria-modal="true" aria-label="${selling?'卖出':'买入'}条件"><header><h3>${safe(stock)}${stock?' · ':''}${selling?'卖出':'买入'}条件与时间点</h3><button type="button" data-condition-close aria-label="关闭">×</button></header><div class="condition-dialog-content">${rule}${content}</div></section>`;
             const close=()=>{modal.remove();button.focus()};
             modal.querySelector('[data-condition-close]').onclick=close;
