@@ -248,7 +248,7 @@
   }catch(_){}
   state.pendingAlerts=activePendingAlerts(state.pendingAlerts);
   if(state.model===weeklyModel)state.cap=2;
-  let historyData, plan, busy = false, lastRequest = 0, tab = 'plan', priceInputs={}, paperBooks={};
+  let historyData, historyNotice='', plan, busy = false, lastRequest = 0, tab = 'plan', priceInputs={}, paperBooks={};
   function currentPrices(){return priceInputs[priceKey()]||{};}
   function save() { try { localStorage.setItem(key, JSON.stringify(state)); } catch (_) { $('status').textContent = '浏览器未允许保存设置；模拟记录仍保存在本机服务中。'; } }
   function chinaClock() { const parts = new Intl.DateTimeFormat('sv-SE', {timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).split(' '); return {day:parts[0],time:parts[1]}; }
@@ -409,7 +409,7 @@
   }
   function drawHistory() {
     if(!historyData){
-      $('historyBasis').textContent=`本金${money(state.capital)} · 历史推算待读取`;
+      $('historyBasis').textContent=historyNotice||`本金${money(state.capital)} · 历史推算待读取`;
       for(const id of ['historyMetrics','chart','historyDetail'])$(id).innerHTML='';
       $('historyRows').innerHTML=empty(5,'历史推算待读取');
       $('historyTradeTimes').innerHTML=empty(7,'历史推算待读取');return;
@@ -440,12 +440,17 @@
       const value=await request('/api/history?capital='+encodeURIComponent(capital)+(model===defaultModel?'':'&model='+encodeURIComponent(model)+'&execution_policy='+encodeURIComponent(executionPolicy)));
       if(capital!==state.capital||model!==state.model)return;
       if(model===weeklyModel&&value.execution_policy!==executionPolicy)throw new Error('周线规则版本未更新，请更新网页计算资源后重试；模拟记录保留');
-      historyData=value;
+      historyData=value;historyNotice='';
       const oldCap=state.cap;
       if(!historyData.selected_caps.includes(state.cap))state.cap=historyData.selected_caps[0];
       if(oldCap!==state.cap){lastRequest++;plan=null;}
       save();draw();
       if(oldCap!==state.cap)await refresh();
+    }
+    catch(error){
+      if(error.message!=='weekly_history_rule_not_ready')throw error;
+      if(capital!==state.capital||model!==state.model)return;
+      historyData=null;historyNotice='周线新规则历史参考待重算';draw();
     }
     finally{$('applyPlan').disabled=false;}
   }
@@ -491,7 +496,7 @@
   $('capitalForm').addEventListener('submit',async event=>{
     event.preventDefault();const next=Number($('capital').value);
     if(!Number.isFinite(next)||next<100||next>100000000){showNotice('本金须在100元至1亿元之间',true);return;}
-    state.capital=next;lastRequest++;plan=null;historyData=null;save();draw();
+    state.capital=next;lastRequest++;plan=null;historyData=null;historyNotice='';save();draw();
     $('schemes').innerHTML='';$('historyDetail').textContent='正在按新本金重算';
     showNotice('正在保存本金并重算当前模型的股数与费用…');
     beginLoading('正在保存本金并重算当前模型的股数与费用…');
@@ -500,7 +505,7 @@
     finally{endLoading();}
   });
   $('rollingModel').addEventListener('change',async event=>{
-    state.model=event.target.value===weeklyModel?weeklyModel:defaultModel;state.cap=2;lastRequest++;plan=null;historyData=null;save();draw();
+    state.model=event.target.value===weeklyModel?weeklyModel:defaultModel;state.cap=2;lastRequest++;plan=null;historyData=null;historyNotice='';save();draw();
     showNotice('正在按所选模型重新计算…');
     beginLoading('正在按所选模型重新计算…');
     try{await loadHistory();await foregroundRefresh();}catch(error){showNotice(error.message,true);}finally{endLoading();}
