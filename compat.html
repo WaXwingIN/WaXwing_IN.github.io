@@ -3184,19 +3184,40 @@ function weeklyConsolidationChart(row,kind,weeks){
     }
     return `<div class="macd-chart-panel"><strong>${price?`${row.period==='月线'?'月K':'周K'} / 完整参考前低 / 价格新低`:'MACD(12,26,9) / 绿→红→绿 / DIF与DEA最低值'}</strong><div class="macd-chart-scroll"><svg viewBox="0 0 ${width} ${height}" style="width:${width}px;height:${height}px" role="img" aria-label="${price?`${row.period==='月线'?'月线':'周线'}顶分型和价格新低`:'前后绿柱的DIF、DEA背驰'}">${drawing}<text x="45" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[0]))}</text><text x="1040" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[n-1]))}</text></svg></div></div>`;
 }
+function monthlyConfirmedReminderRows(model){
+    const byDay=new Map();
+    const add=(snapshot,event=null)=>{
+        if(!snapshot||snapshot.bottom_confirmed===false||snapshot.bottom_confirmed!==true&&!event?.triggered_at)return;
+        const code=String(event?.code??snapshot.code??'').padStart(6,'0');
+        if(!/^\d{6}$/.test(code))return;
+        const confirmed=String(event?.triggered_at||snapshot.daily_bottom_fractal?.confirmed_at||'');
+        const day=String(confirmed||event?.date||model.daily_date||'').slice(0,10);
+        if(!day)return;
+        const key=`${code}|${day}`,previous=byDay.get(key);
+        // The archived structure remains authoritative after a later scan changes
+        // the current candidate. Deduplication only affects this display projection.
+        if(previous&&((previous.confirmed_event&&!event)||(Boolean(previous.confirmed_event)===Boolean(event)&&String(previous._monthlyConfirmedAt)>=confirmed)))return;
+        byDay.set(key,{...snapshot,code,name:event?.name||snapshot.name,confirmed_event:event,
+            _monthlyConfirmedAt:confirmed,_monthlyReminderDate:day,_monthlyReminderKey:key});
+    };
+    for(const row of model.rows||[])add(row);
+    for(const event of model.events||[])add(event.structure_snapshot||event,event);
+    return [...byDay.values()].sort((a,b)=>String(b._monthlyConfirmedAt).localeCompare(String(a._monthlyConfirmedAt)));
+}
 function monthlyConsolidationFirstPanel(state){
+    state.displayedAlertCount=0;
     const model=dailyExtra.monthlyConsolidationFirst;
     if(!model||model.version!=='monthly-consolidation-divergence-v1')return '<p class="daily-error">月线盘整背驰数据尚未生成，请等待收盘扫描完成。</p>';
-    const events=model.events||[],date=state.monthlySignalDate||'latest',status=state.monthlyStatus||'all';
-    const distinct=rows=>new Set(rows.map(r=>String(r.code))).size;
-    const days=[...new Set(events.map(e=>e.date))].sort().reverse();
-    const options=`<option value="latest" ${date==='latest'?'selected':''}>当前候选 · ${distinct(model.rows||[])}只</option><option value="all" ${date==='all'?'selected':''}>全部历史 · ${distinct(events)}只</option>`+days.map(day=>`<option value="${safe(day)}" ${date===day?'selected':''}>${safe(formatDate(day))} · ${distinct(events.filter(e=>e.date===day))}只</option>`).join('');
-    const selected=date==='latest'?(model.rows||[]):events.filter(e=>date==='all'||e.date===date).map(e=>({...e.structure_snapshot,confirmed_event:e}));
-    const rows=selected.filter(r=>status==='all'||(status==='confirmed'?r.bottom_confirmed:!r.bottom_confirmed));
-    const detail=rows.find(r=>String(r.code)===String(state.monthlyDetailCode||''));
-    const body=rows.map(row=>`<tr><td>${safe(row.rank||'--')}</td><td><b>${safe(row.name)}</b><br>${safe(row.code)}</td><td>前低 ${safe(row.previous_price_low)} → 新低 ${safe(row.c?.price_low)}<br><small>DIF ${safe(row.a?.dif_min)} → ${safe(row.c?.dif_min)}<br>DEA ${safe(row.a?.dea_min)} → ${safe(row.c?.dea_min)}</small></td><td>${safe(row.status)}${row.confirmed_event?`<br><small>${safe(row.confirmed_event.origin)} · 首次核验 ${safe(formatDateTime(row.confirmed_event.discovered_at))}</small>`:''}</td><td>${row.daily_bottom_fractal?safe(formatDateTime(row.daily_bottom_fractal.confirmed_at)):'等待右侧日K收盘确认'}<br><small>月线新低日 ${safe(formatDate(row.daily_price_low_date||row.c?.low_date))}</small></td><td><button type="button" class="m30-detail-open" data-monthly-open="${safe(row.code)}">查看月线与背离依据</button></td></tr>`).join('');
-    const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-monthly-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="monthlyConsolidationTitle"><header class="second-detail-head"><div><h3 id="monthlyConsolidationTitle">${safe(detail.name)} ${safe(detail.code)} · 月线盘整背驰一买</h3><p>${safe(detail.status)} · 最近30根月K内已确认月线顶分型 · 完整参考前低 ${safe(detail.previous_price_low)}</p></div><button type="button" class="second-detail-close" data-monthly-close aria-label="关闭弹窗">×</button></header>${combinedAnnotatedCharts(weeklyConsolidationChart(detail,'价格',150),weeklyConsolidationChart(detail,'MACD',150))}<p class="macd-shape-note">完整前后绿段DIF、DEA均不创新低，价格严格创新低；日线底分型的低点实际日不得早于月线新低日，右侧日K收盘确认后提醒。</p></section></div>`:'';
-    return `<section><div class="two-center-hero"><h2>月线盘整背驰一买</h2></div><label class="macd-lookback">提醒日期 <select id="monthlySignalDate">${options}</select></label><label class="macd-lookback">确认状态 <select id="monthlyStatus"><option value="all" ${status==='all'?'selected':''}>全部</option><option value="confirmed" ${status==='confirmed'?'selected':''}>日线已确认</option><option value="waiting" ${status==='waiting'?'selected':''}>待日线底分型</option></select></label>${rows.length?`<div class="wrap"><table class="two-center-table"><thead><tr><th>排名</th><th>${model.asset_scope==='stocks_and_etfs'?'股票 / ETF':'股票'}</th><th>月线背离依据</th><th>当前状态</th><th>日线确认时间</th><th>看图核验</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">当前筛选下暂无符合条件的股票。</p>'}${model.current_month_complete===false?'<p class="preclose-warning">当月月K尚未收定：按截至行情日的实际日线计算，后续变化可能使候选失效；月线顶分型的右侧月K必须已收定。</p>':''}<p class="daily-note">扫描范围：${model.asset_scope==='stocks_and_etfs'?'股票与ETF':'股票'} · 已核验 ${safe(model.coverage??'--')} / ${safe(model.universe_count??'--')} 只 · 本轮跳过 ${safe(model.failed_count??0)} 只（复权、行情或参考段无法核验）。行情截止 ${safe(formatDate(model.daily_date))} · 当前符合形态 ${safe(model.eligible)}只，其中日线已确认 ${distinct((model.rows||[]).filter(r=>r.bottom_confirmed))}只。历史核验保留原日线确认时间，不补发过去的提醒。</p><details class="daily-rules" open><summary>模型条件与计算口径</summary><p>30根月K内已确认月线顶分型 → 月线零轴下绿→红→绿 → 价格创新低、DIF与DEA均不创新低 → 日线底分型收盘确认。</p><p>${safe(model.rules)}</p><p>${safe(model.implementation)}</p></details>${modal}</section>`;
+    const reminders=monthlyConfirmedReminderRows(model),latest=String(model.daily_date||reminders[0]?._monthlyReminderDate||'').slice(0,10);
+    const requested=state.monthlySignalDate||'latest',selected=requested==='latest'?latest:requested;
+    const days=[...new Set([latest,...reminders.map(row=>row._monthlyReminderDate)].filter(Boolean))].sort().reverse();
+    const options=`<option value="all"${selected==='all'?' selected':''}>全部历史 · ${reminderStockCount(reminders)}只</option>`+days.map(day=>`<option value="${safe(day===latest?'latest':day)}" data-reminder-date="${safe(day)}"${selected===day?' selected':''}>${safe(formatDate(day))} · ${reminderStockCount(reminders.filter(row=>row._monthlyReminderDate===day))}只</option>`).join('');
+    const rows=reminders.filter(row=>selected==='all'||row._monthlyReminderDate===selected);
+    recordDisplayedReminders(state,rows);
+    const detail=rows.find(row=>String(row.code)===String(state.monthlyDetailCode||'')&&(!state.monthlyDetailKey||row._monthlyReminderKey===state.monthlyDetailKey));
+    const body=rows.map((row,index)=>`<tr><td>${safe(row.rank??index+1)}</td><td><b>${safe(row.name)}</b><br>${safe(row.code)}</td><td class="focus-reason"><b>价格创新低，DIF、DEA均不创新低</b><small>完整前低 ${safe(row.previous_price_low)} → 新低 ${safe(row.c?.price_low)}<br>DIF ${safe(row.a?.dif_min)} → ${safe(row.c?.dif_min)}<br>DEA ${safe(row.a?.dea_min)} → ${safe(row.c?.dea_min)}</small></td><td><span class="two-center-status">日线底分型已确认</span></td><td>${safe(formatDateTime(row._monthlyConfirmedAt))}<br><small>月线新低日 ${safe(formatDate(row.daily_price_low_date||row.c?.low_date))}</small>${row.confirmed_event?`<br><small>${safe(row.confirmed_event.origin)} · 首次核验 ${safe(formatDateTime(row.confirmed_event.discovered_at))}</small>`:''}</td><td><button type="button" class="m30-detail-open" data-monthly-open="${safe(row.code)}" data-monthly-record="${safe(row._monthlyReminderKey)}">▶ 查看月线与背离依据</button></td></tr>`).join('');
+    const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-monthly-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="monthlyConsolidationTitle"><header class="second-detail-head"><div><h3 id="monthlyConsolidationTitle">${safe(detail.name)} ${safe(detail.code)} · 月线盘整背驰一买</h3><p>日线底分型已确认 · 提醒 ${safe(formatDateTime(detail._monthlyConfirmedAt))}</p><p>最近30根月K内已确认月线顶分型 · 完整参考前低 ${safe(detail.previous_price_low)}</p></div><button type="button" class="second-detail-close" data-monthly-close aria-label="关闭弹窗">×</button></header>${combinedAnnotatedCharts(weeklyConsolidationChart(detail,'价格',150),weeklyConsolidationChart(detail,'MACD',150))}<p class="macd-shape-note">完整前后绿段DIF、DEA均不创新低，价格严格创新低；日线底分型的低点实际日不得早于月线新低日，右侧日K收盘确认后提醒。</p></section></div>`:'';
+    return `<section><div class="daily-filters"><label>提醒日期 <select id="monthlySignalDate">${options}</select></label></div><div class="two-center-hero"><h2>月线盘整背驰一买</h2></div>${rows.length?`<div class="wrap"><table class="two-center-table focus-table"><thead><tr><th>排名</th><th>${model.asset_scope==='stocks_and_etfs'?'股票 / ETF':'股票'}</th><th>月线背离依据</th><th>确认状态</th><th>提醒触发时间</th><th>看图核验</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">所选日期暂无已确认提醒。</p>'}${model.current_month_complete===false?'<p class="preclose-warning">当月月K尚未收定：按截至行情日的实际日线计算；月线顶分型的右侧月K必须已收定。已确认提醒保留当时的结构与日线确认时间。</p>':''}<p class="daily-note">扫描范围：${model.asset_scope==='stocks_and_etfs'?'股票与ETF':'股票'} · 已核验 ${safe(model.coverage??'--')} / ${safe(model.universe_count??'--')} 只 · 本轮跳过 ${safe(model.failed_count??0)} 只（复权、行情或参考段无法核验）。行情截止 ${safe(formatDate(model.daily_date))} · 计算 ${safe(formatDateTime(model.generated_at))}。历史核验保留原日线确认时间，不补发过去的提醒。</p><details class="daily-rules" open><summary>模型条件与计算口径</summary><p>30根月K内已确认月线顶分型 → 月线零轴下绿→红→绿 → 价格创新低、DIF与DEA均不创新低 → 日线底分型收盘确认。</p><p>${safe(model.rules)}</p><p>${safe(model.implementation)}</p></details>${modal}</section>`;
 }
 function weeklyConsolidationFirstPanel(state){
     state.displayedAlertCount=0;
@@ -4129,8 +4150,24 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
             String(event.origin||'').includes('回放')?'回放推定提醒':'提醒触发',
             event.origin||'提醒归档',event.event_id||'');
     }
-    for(const row of extra.monthlyConsolidationFirst?.rows||[])add('月线盘整背驰一买',row,extra.monthlyConsolidationFirst.daily_date,row.status,'模型当日展示','');
-    for(const event of extra.monthlyConsolidationFirst?.events||[])add('月线盘整背驰一买',event,event.triggered_at,'日线底分型已确认',event.origin,event.event_id);
+    const monthly=extra.monthlyConsolidationFirst||{},monthlyRecords=new Map(),monthlyArchivedCodes=new Set();
+    // Public lookup projections retain event identity without its full chart
+    // snapshot. A dated archived event is still a confirmed monthly reminder.
+    for(const event of [...monthly.events||[]].sort((a,b)=>String(b.triggered_at||'').localeCompare(String(a.triggered_at||'')))){
+        if(!event.triggered_at||event.bottom_confirmed===false||event.structure_snapshot?.bottom_confirmed===false)continue;
+        const code=String(event.code??event.structure_snapshot?.code??'').padStart(6,'0'),key=`${code}|${dateKey(event.triggered_at)}`;
+        if(!monthlyRecords.has(key))monthlyRecords.set(key,{row:{...event.structure_snapshot,...event},when:event.triggered_at,event});
+        monthlyArchivedCodes.add(code);
+    }
+    for(const row of monthly.rows||[]){
+        if(row.bottom_confirmed!==true)continue;
+        const code=String(row.code||'').padStart(6,'0'),confirmed=row.daily_bottom_fractal?.confirmed_at;
+        if(!confirmed&&monthlyArchivedCodes.has(code))continue;
+        const when=confirmed||monthly.daily_date,key=`${code}|${dateKey(when)}`;
+        if(!monthlyRecords.has(key))monthlyRecords.set(key,{row,when});
+    }
+    for(const {row,when,event} of monthlyRecords.values())
+        add('月线盘整背驰一买',row,when,'日线底分型已确认',event?.origin||'模型当日展示',event?.event_id||'');
     for(const field of ['events','replay_events','recent_replay_events'])for(const event of extra.macdModelHistory?.[field]||[])add(event.model,event,event.triggered_at,'买入条件已确认','模型扫描',event.event_id);
     for(const record of extra.modelPoolFunnels?.rows||[]){
         const event=record.event;
@@ -4187,7 +4224,7 @@ function configureStockLookupTarget(target,code,date,origin=''){
     if(target==='legacy_history')Object.assign(state,{legacyQuery:String(code),legacyDate:iso,legacyModel:'all',legacyDetail:null});
     if(target==='m30_first')state.m30SignalDate=iso;
     if(['weekly_first','weekly_consolidation_first'].includes(target))state.weeklySignalDate=iso;
-    if(target==='monthly_consolidation_first'){state.monthlySignalDate=iso===dailyExtra.monthlyConsolidationFirst?.daily_date?'latest':iso;state.monthlyDetailCode=null}
+    if(target==='monthly_consolidation_first'){state.monthlySignalDate=iso===dailyExtra.monthlyConsolidationFirst?.daily_date?'latest':iso;state.monthlyDetailCode=null;state.monthlyDetailKey=null}
     if(target==='two_centers')state.signalDate=day===dateKey(data.daily_date)?'latest':iso;
     if(['daily_macd','sixty_minute_macd'].includes(target)){
         state.macdDate=iso;state.macdQuery=String(code);
@@ -5227,12 +5264,11 @@ draw=function(){
     if(dailyConsolidationModal){const close=()=>{const code=stateFor('daily_consolidation_first').detailCode;stateFor('daily_consolidation_first').detailCode=null;draw();content.querySelector(`[data-daily-consolidation-open="${code}"]`)?.focus({preventScroll:true})};dailyConsolidationModal.onclick=event=>{if(event.target===dailyConsolidationModal)close()};dailyConsolidationModal.querySelector('[data-daily-consolidation-close]')?.addEventListener('click',close)}
     const weeklyPullbackModal=content.querySelector('[data-weekly-pullback-modal]');
     if(weeklyPullbackModal){const close=()=>{const code=stateFor('weekly_first').detailCode;stateFor('weekly_first').detailCode=null;draw();content.querySelector(`[data-weekly-pullback-open="${code}"]`)?.focus({preventScroll:true})};weeklyPullbackModal.onclick=event=>{if(event.target===weeklyPullbackModal)close()};weeklyPullbackModal.querySelector('[data-weekly-pullback-close]')?.addEventListener('click',close)}
-    const monthlyDate=content.querySelector('#monthlySignalDate'),monthlyStatus=content.querySelector('#monthlyStatus');
-    if(monthlyDate)monthlyDate.onchange=()=>{state.monthlySignalDate=monthlyDate.value;state.monthlyDetailCode=null;draw()};
-    if(monthlyStatus)monthlyStatus.onchange=()=>{state.monthlyStatus=monthlyStatus.value;state.monthlyDetailCode=null;draw()};
-    content.querySelectorAll('[data-monthly-open]').forEach(button=>button.onclick=()=>{state.monthlyDetailCode=button.dataset.monthlyOpen;draw()});
+    const monthlyDate=content.querySelector('#monthlySignalDate');
+    if(monthlyDate)monthlyDate.onchange=()=>{state.monthlySignalDate=monthlyDate.value;state.monthlyDetailCode=null;state.monthlyDetailKey=null;draw()};
+    content.querySelectorAll('[data-monthly-open]').forEach(button=>button.onclick=()=>{state.monthlyDetailCode=button.dataset.monthlyOpen;state.monthlyDetailKey=button.dataset.monthlyRecord;draw();content.querySelector('[data-monthly-close]')?.focus({preventScroll:true})});
     const monthlyModal=content.querySelector('[data-monthly-modal]');
-    if(monthlyModal){const close=()=>{state.monthlyDetailCode=null;draw()};monthlyModal.querySelector('[data-monthly-close]').onclick=close;monthlyModal.onclick=event=>{if(event.target===monthlyModal)close()};}
+    if(monthlyModal){const close=()=>{const code=state.monthlyDetailCode,key=state.monthlyDetailKey;state.monthlyDetailCode=null;state.monthlyDetailKey=null;draw();[...content.querySelectorAll('[data-monthly-open]')].find(button=>button.dataset.monthlyOpen===code&&(!key||button.dataset.monthlyRecord===key))?.focus({preventScroll:true})};monthlyModal.querySelector('[data-monthly-close]').onclick=close;monthlyModal.onclick=event=>{if(event.target===monthlyModal)close()};monthlyModal.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close()}};}
     const weeklyConsolidationModal=content.querySelector('[data-weekly-consolidation-modal]');
     if(weeklyConsolidationModal){const close=()=>{const code=stateFor('weekly_consolidation_first').detailCode;stateFor('weekly_consolidation_first').detailCode=null;draw();content.querySelector(`[data-weekly-consolidation-open="${code}"]`)?.focus({preventScroll:true})};weeklyConsolidationModal.onclick=event=>{if(event.target===weeklyConsolidationModal)close()};weeklyConsolidationModal.querySelector('[data-weekly-consolidation-close]')?.addEventListener('click',close)}
     content.querySelectorAll('.m30-detail-dialog,details.daily-rules').forEach(syncChartTimeAxes);
