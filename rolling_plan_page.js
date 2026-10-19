@@ -381,7 +381,14 @@
     $('marketDecision').hidden=!plan;$('marketDecision').innerHTML=decision.html;
     $('planReason').textContent = !plan ? '数据尚未核验，暂停新增模拟买入。' : afternoon ? afternoonReason(plan) : plan.no_buy_reason || (plan.simulation?.opened_days?.includes(plan.trade_date)?weekly?'本日开盘模拟已完成，午休核验13:00补仓机会':'本日开盘模拟已完成，盘中空位等待下一交易日':!priced?'模拟持仓行情未核验，暂停新买预算计算':!rows.length?'没有可新增的空位或当日新提醒':'开盘按下列顺序评估模拟新买');
     $('buyBasis').textContent = plan ? `当前计划交易日 ${plan.trade_date} · 信号日 ${plan.signal_date} · 最多考察排序前${state.cap}名 · 每笔预算为前收盘参考资产的1/${state.cap}` : '';
-    $('simulationBasis').textContent = `从 ${state.startDate||'所选交易日'} 以零持仓和设定本金开始，按前一交易日信号09:30开盘模拟买入${weekly?'，并增加13:00补仓':''}，随后滚动到最新行情。${weekly?'已有模拟流水保留，补仓名单须在13:00前核验并冻结；已错过的批次仅提供历史试算。':''}过去日期不补发旧提醒，模拟持仓不代表实际成交。`;
+    $('holdingTitle').textContent = b.unloaded?'当前模拟持仓 · 待读取':`当前模拟持仓 · ${b.positions.length}只`;
+    $('simulationBasis').textContent = `从 ${state.startDate||'所选交易日'} 起，以${money(state.capital)}按${weekly?'周线低波动两只':'低波动滚动'+state.cap+'只'}方案持续模拟。下表仅列出模拟账本中尚未卖出的股票，不代表实际账户持仓。`;
+    const holdingValues=b.positions.map(p=>valuation?.positions?.[p.code]);
+    const cutoffs=[...new Set(holdingValues.map(v=>v?.asof).filter(Boolean))].sort();
+    const missingMarks=holdingValues.filter(v=>!v?.asof).length;
+    const oldMarks=holdingValues.some(v=>v?.day&&v.day<clock.day);
+    const cutoffText=cutoffs.length>1?`${cutoffs[0]} 至 ${cutoffs.at(-1)}（各股不同，详见表格）`:cutoffs[0];
+    $('holdingAsOf').textContent=b.unloaded?'模拟账本待读取，暂不能确认持仓':!b.positions.length?'模拟账本当前为空仓':`估值行情：${cutoffText?cutoffText+'（北京时间）':'待核验'}${missingMarks?' · '+missingMarks+'只行情待核验':''}${oldMarks?' · 今日行情待更新':''}${plan?.read_only?' · 当前显示上次保存的模拟记录':''}`;
     const firstBuys=(b.ledger||[]).filter(e=>e.side==='模拟买入'&&e.at.slice(0,10)===state.startDate);
     $('startPurchases').hidden=state.startDate===chinaClock().day||b.unloaded;
     $('startPurchasesTitle').textContent=`起点当日模拟买入 · ${state.startDate}`;
