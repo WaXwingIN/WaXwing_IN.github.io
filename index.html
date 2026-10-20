@@ -67,6 +67,11 @@ body.waxwing-ui .wrap th .rank-sort-button:focus-visible{outline:2px solid var(-
 .d2-daily-bottom-hint{margin:7px 0;color:#64758a;font-size:12px;line-height:1.6}.d2-daily-bottom-hint strong{display:block}.d2-daily-bottom-hint span{display:block;font-weight:400}.d2-daily-bottom-hint.fractal-hint{width:100%;padding:8px 10px;border-left:4px solid #d97706;font-size:13px}
 dialog[data-d2-bottom-dialog]{width:min(900px,calc(100vw - 28px));max-height:90vh;overflow:auto;padding:24px;border:2px solid #d97706;border-radius:14px;background:#fff;color:var(--wx-text,#203247);font:inherit;box-sizing:border-box}dialog[data-d2-bottom-dialog]::backdrop{background:rgba(15,23,42,.72)}dialog[data-d2-bottom-dialog] h2{color:#b45309}dialog[data-d2-bottom-dialog] button{width:100%;background:#2563eb;color:#fff;border:0;border-radius:7px;min-height:36px;font:inherit}
 body.waxwing-ui .d2-inner-tabs button{flex:0 0 auto;white-space:nowrap}
+body.waxwing-ui .d2-bottom-table{width:100%;min-width:720px;table-layout:fixed}
+body.waxwing-ui .d2-bottom-table th:nth-child(1){width:22%}body.waxwing-ui .d2-bottom-table th:nth-child(2){width:18%}body.waxwing-ui .d2-bottom-table th:nth-child(3){width:25%}body.waxwing-ui .d2-bottom-table th:nth-child(4){width:35%}
+body.waxwing-ui .d2-bottom-table th{white-space:nowrap}body.waxwing-ui .d2-bottom-table th,body.waxwing-ui .d2-bottom-table td{text-align:left!important}body.waxwing-ui .d2-bottom-table td{vertical-align:top}body.waxwing-ui .d2-bottom-table time{white-space:nowrap}
+body.waxwing-ui .d2-bottom-confirmed{color:#b45309;font-weight:600}
+body.waxwing-ui .d2-bottom-reminders{margin-top:4px;color:#64758a;font-size:12px}body.waxwing-ui .d2-bottom-reminders summary{cursor:pointer;color:#2563eb}body.waxwing-ui .d2-bottom-reminders ul{margin:6px 0;padding-left:16px}body.waxwing-ui .d2-bottom-reminders li{margin:6px 0}body.waxwing-ui .d2-bottom-reminders small{display:block}
 </style></head><body class="daily-ui-booting waxwing-ui"><script>/* Shared ES5 controls for model, holding and history pages. */
 (function () {
     if (window.__waxwingStockCodeCopy) return;
@@ -2042,10 +2047,22 @@ async function sendD2BottomNotification(){
     }catch(_error){/* Keep pending acknowledgements and retry failed delivery on refresh. */}
     finally{d2BottomNotificationPending=false}
 }
+function d2BottomGroups(events=d2BottomEvents()){
+    const groups=new Map();
+    for(const event of events){
+        const key=`${event.code}|${event.fractal.fractal_date}|${event.trigger_at}`;
+        if(!groups.has(key))groups.set(key,{...event,reminders:[]});
+        const reminders=groups.get(key).reminders;
+        if(!reminders.some(item=>(item.d2_event_id||item.event_id)===(event.d2_event_id||event.event_id)))reminders.push(event);
+    }
+    for(const group of groups.values())group.reminders.sort((a,b)=>String(b.d2_trigger_at).localeCompare(String(a.d2_trigger_at)));
+    return [...groups.values()].sort((a,b)=>String(b.trigger_at).localeCompare(String(a.trigger_at))||String(a.code).localeCompare(String(b.code)));
+}
 function d2BottomPanel(state){
-    const events=d2BottomEvents().slice().sort((a,b)=>String(b.trigger_at).localeCompare(String(a.trigger_at))),dates=[...new Set(events.map(e=>e.trigger_at.slice(0,10)))];
+    const events=d2BottomGroups(),dates=[...new Set(events.map(e=>e.trigger_at.slice(0,10)))];
     const selected=state.bottomDate||dates[0]||'all',rows=events.filter(e=>selected==='all'||e.trigger_at.slice(0,10)===selected),count=date=>new Set(events.filter(e=>date==='all'||e.trigger_at.slice(0,10)===date).map(e=>e.code)).size;
-    return `<section class="d2-alert-page">${d2InnerTabs(state)}<h2>D2提醒后 · 日线底分型</h2><p class="daily-note">原D2提醒后，日线底分型右侧日K收盘确认时重点提示；仅作辅助参考，不改变买卖条件。历史核验不补发通知。</p>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">确认日期 <select data-d2-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(d=>`<option value="${safe(d)}"${selected===d?' selected':''}>${safe(formatDate(d))} · ${count(d)}只</option>`).join('')}</select></label>${rows.length?`<div class="wrap"><table><thead><tr><th>股票</th><th>原D2提醒时间</th><th>日线分型日</th><th>收盘确认时间</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${safe(e.name)} ${safe(e.code)}</td><td>${safe(formatDateTime(e.d2_trigger_at))}</td><td class="fractal-hint">${safe(formatDate(e.fractal.fractal_date))}</td><td class="fractal-hint">${safe(formatDateTime(e.trigger_at))}</td></tr>`).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已核验的日线底分型。</p>'}</section>`;
+    const reminderCell=e=>`<time>${safe(formatDateTime(e.reminders[0].d2_trigger_at))}</time><details class="d2-bottom-reminders"><summary>查看${e.reminders.length}次D2提醒</summary><ul>${e.reminders.map(item=>`<li>提醒 ${safe(formatDateTime(item.d2_trigger_at))}${item.d2_observed_at&&item.d2_observed_at!==item.d2_trigger_at?`<small>实际发现 ${safe(formatDateTime(item.d2_observed_at))}</small>`:''}</li>`).join('')}</ul></details>`;
+    return `<section class="d2-alert-page d2-bottom-fractal-page">${d2InnerTabs(state)}<h2>D2提醒后 · 日线底分型</h2><p class="daily-note">按底分型确认日期查看，同一只股票的同一次底分型合并为一行。</p>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">确认日期 <select data-d2-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(d=>`<option value="${safe(d)}"${selected===d?' selected':''}>${safe(formatDate(d))} · ${count(d)}只</option>`).join('')}</select></label>${rows.length?`<div class="wrap"><table class="d2-bottom-table"><thead><tr><th>股票</th><th>底分型低点日</th><th title="底分型右侧日K收盘后确认，不代表实际扫描或推送时间">底分型确认时间</th><th>关联D2提醒</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${safe(e.name)} ${safe(e.code)}</td><td><time>${safe(formatDate(e.fractal.fractal_date))}</time></td><td><strong class="d2-bottom-confirmed"><time>${safe(formatDateTime(e.trigger_at).slice(0,16))}</time></strong></td><td>${reminderCell(e)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已核验的日线底分型。</p>'}<p class="daily-note">底分型日是中间低点K线的日期；确认时间是右侧日K收盘、形态成立的时间。D2提醒的实际发现时间可在详情中查看。仅作辅助参考，不改变D2买卖条件；历史核验不补发通知。</p></section>`;
 }
 function dailyFractalEvent(modelName,code,date){return (dailyExtra.dailyFractalAlerts?.events||[]).find(item=>item.model===modelName&&item.code===String(code||'').padStart(6,'0')&&item.date===String(date||'').slice(0,10))||null}
 function d2DailyBottomState(code,date){
@@ -3244,11 +3261,11 @@ function freezeIdentityColumns(table){
     const labels=header.map(cell=>cell.textContent.replace(/\s+/g,' ').trim().replace(/\s*[↑↓↕]$/,''));
     const compactIdentity=['序号','排名','选股时排名'].includes(labels[0]);
     if(compactIdentity)table.classList?.add('compact-identity-table');
-    const cols=header.length>1?[0,1]:[0];
+    const cols=table.classList.contains('d2-bottom-table')?[0]:header.length>1?[0,1]:[0];
     for(const row of table.rows){
         if(row.cells.length!==header.length)continue;
         [...row.cells].forEach((cell,index)=>{
-            if(index>=2&&cell.classList.contains('stock-sticky')){
+            if(!cols.includes(index)&&cell.classList.contains('stock-sticky')){
                 cell.classList.remove('stock-sticky');cell.style.left='';cell.style.zIndex='';
             }
             if(compactIdentity&&index===0)cell.classList.add('identity-rank-cell');
@@ -5361,7 +5378,7 @@ function standardizeModelHeading(root,id){
     };
     if(!descriptions[id])return;
     const title=root.querySelector(':scope>section>h2');
-    if(!title||id==='d2_alert'&&root.querySelector('.d2-manual-review-page'))return;
+    if(!title||id==='d2_alert'&&root.querySelector('.d2-manual-review-page,.d2-bottom-fractal-page'))return;
     const hero=document.createElement('div');hero.className='two-center-hero';
     title.before(hero);hero.append(title);
     const description=document.createElement('p');description.textContent=descriptions[id];hero.append(description);
