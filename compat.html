@@ -65,6 +65,8 @@ body.waxwing-ui .wrap th .rank-sort-button:focus-visible{outline:2px solid var(-
 
 
 .d2-daily-bottom-hint{margin:7px 0;color:#64758a;font-size:12px;line-height:1.6}.d2-daily-bottom-hint strong{display:block}.d2-daily-bottom-hint span{display:block;font-weight:400}.d2-daily-bottom-hint.fractal-hint{width:100%;padding:8px 10px;border-left:4px solid #d97706;font-size:13px}
+dialog[data-d2-bottom-dialog]{width:min(900px,calc(100vw - 28px));max-height:90vh;overflow:auto;padding:24px;border:2px solid #d97706;border-radius:14px;background:#fff;color:var(--wx-text,#203247);font:inherit;box-sizing:border-box}dialog[data-d2-bottom-dialog]::backdrop{background:rgba(15,23,42,.72)}dialog[data-d2-bottom-dialog] h2{color:#b45309}dialog[data-d2-bottom-dialog] button{width:100%;background:#2563eb;color:#fff;border:0;border-radius:7px;min-height:36px;font:inherit}
+body.waxwing-ui .d2-inner-tabs button{flex:0 0 auto;white-space:nowrap}
 </style></head><body class="daily-ui-booting waxwing-ui"><script>/* Shared ES5 controls for model, holding and history pages. */
 (function () {
     if (window.__waxwingStockCodeCopy) return;
@@ -946,7 +948,13 @@ async function hydratePageDetails(code,record=null){
     }else if(activeDaily==='two_centers'){
         const model=data.models?.['日线趋势一买']||{};
         if(state.signalDate==='latest')find((model.max_b_age_pools?.[String(state.lookback||model.default_lookback||240)]||[]).find(row=>String(row['代码']).padStart(6,'0')===normalized));
-        else find((dailyExtra.shortCycleOutcomes?.trend_history||[]).filter(item=>String(item.triggered_at||'').slice(0,10)===state.signalDate));
+        else{
+            const events=trendReminderHistory(dailyExtra.shortCycleOutcomes||{},dailyExtra.shortCycleAlertRates||{},
+                dailyExtra.navigationSignals?.dailyCloseReminders||dailyExtra.dailyCloseReminders);
+            find(events.filter(item=>String(item.code||'').padStart(6,'0')===normalized&&
+                (state.signalDate==='all'||String(item.triggered_at||'').slice(0,10)===state.signalDate)&&
+                (!record||trendReminderRecordKey(item)===record)));
+        }
     }
     for(const row of [...matches])if(row.chart_key&&dailyExtra.weeklyFirst?.charts?.[row.chart_key])matches.add(dailyExtra.weeklyFirst.charts[row.chart_key]);
     async function hydrate(value){
@@ -978,7 +986,7 @@ document.addEventListener('click',async event=>{
     if(!button||button.dataset.pageHydrated==='yes')return;
     event.preventDefault();event.stopImmediatePropagation();
     button.disabled=true;
-    try{await hydratePageDetails(button.dataset.m30Detail||button.dataset.dailyFirstDetail||button.dataset.dailyConsolidationOpen||button.dataset.weeklyPullbackOpen||button.dataset.weeklyConsolidationOpen||button.dataset.monthlyOpen,button.dataset.m30Record||null);button.dataset.pageHydrated='yes';button.disabled=false;button.click()}
+    try{await hydratePageDetails(button.dataset.m30Detail||button.dataset.dailyFirstDetail||button.dataset.dailyConsolidationOpen||button.dataset.weeklyPullbackOpen||button.dataset.weeklyConsolidationOpen||button.dataset.monthlyOpen,button.dataset.m30Record||button.dataset.dailyFirstRecord||null);button.dataset.pageHydrated='yes';button.disabled=false;button.click()}
     catch(error){button.disabled=false;button.title='详情加载失败，请点击重试';console.warn('Detail load failed',error)}
 },true);
 function d2SnapshotNewer(incoming,current){
@@ -1539,6 +1547,7 @@ try{const initialUrl=new URL(location.href);if(initialUrl.searchParams.has('mode
 const modelName=()=> '首踩10日线';
 const stateFor=id=>{if(!dailyState.has(id)){const second=id==='second',sortKey=second?'center_similarity':'rank',sortDirection=second?-1:1,weekly=id==='weekly_first'||id==='weekly_consolidation_first';dailyState.set(id,{date:'latest',reference:id==='limit1'?'001299':'002155',sortKey,sortDirection,sortStack:[{key:sortKey,direction:sortDirection}],combineSort:false,expandAll:second,secondDetailCode:null,shortCycleFilter:weekly||id==='two_centers'?'appeared':'all',funnelLevel:id==='holding_pool'?'strong':'raw'})}return dailyState.get(id)};
 if(location.hash==='#d2-ideal')stateFor('d2_alert').d2Section='ideal';
+if(location.hash==='#d2-bottom'){activeDaily='d2_alert';stateFor('d2_alert').d2Section='bottom'}
 const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const formatDate=value=>{const digits=String(value??'').replace(/\D/g,'');return digits.length>=8?`${digits.slice(0,4)}/${digits.slice(4,6)}/${digits.slice(6,8)}`:'--'};
 const formatDateTime=value=>{const text=String(value??''),date=formatDate(text),match=text.match(/(?:T|\s)(\d{2}:\d{2}:\d{2})/);return date==='--'?'--':date+(match?' '+match[1]:'')};
@@ -1997,16 +2006,52 @@ function d2ScopeRows(state){
     return {day:selected,rows};
 }
 function d2InnerTabs(state){
-    const active=['manual','ideal'].includes(state.d2Section)?state.d2Section:'alerts',{day,rows}=d2ScopeRows(state),historical=d2SelectedScope(state)!=='latest';
+    const active=['manual','ideal','bottom'].includes(state.d2Section)?state.d2Section:'alerts',{day,rows}=d2ScopeRows(state),historical=d2SelectedScope(state)!=='latest';
     const ideal=row=>historical&&day!==d2DisplaySnapshot().session?.date?row._historicalIdeal:d2DisplayIdeal(row);
     const count=rows.filter(row=>!ideal(row)&&!d2ManuallyApproved(row.code,day)).length,idealCount=rows.filter(ideal).length,approved=rows.filter(row=>!ideal(row)&&d2ManuallyApproved(row.code,day)).length;
-    return `<nav class="d2-inner-tabs" role="tablist" aria-label="D2提醒分类"><button type="button" role="tab" data-d2-section="alerts" aria-selected="${active==='alerts'}">D2提醒 ${rows.length}</button><button type="button" role="tab" data-d2-section="manual" aria-selected="${active==='manual'}">需人工筛选 ${count}</button><button type="button" role="tab" data-d2-section="ideal" aria-selected="${active==='ideal'}">理想30分钟分支 ${idealCount}</button></nav><p class="daily-note">${formatDate(day)} 已确认提醒：${rows.length}只${approved?`，其中人工已通过 ${approved} 只`:''}；按当天累计去重，同一股票再次命中不增加数量，后续条件变化不撤销已确认提醒。</p>`;
+    return `<nav class="d2-inner-tabs" role="tablist" aria-label="D2提醒分类"><button type="button" role="tab" data-d2-section="alerts" aria-selected="${active==='alerts'}">D2提醒 ${rows.length}</button><button type="button" role="tab" data-d2-section="manual" aria-selected="${active==='manual'}">需人工筛选 ${count}</button><button type="button" role="tab" data-d2-section="ideal" aria-selected="${active==='ideal'}">理想30分钟分支 ${idealCount}</button><button type="button" role="tab" data-d2-section="bottom" aria-selected="${active==='bottom'}">日线底分型 ${new Set(d2BottomEvents().map(e=>e.code)).size}</button></nav><p class="daily-note">${formatDate(day)} 已确认提醒：${rows.length}只${approved?`，其中人工已通过 ${approved} 只`:''}；按当天累计去重，同一股票再次命中不增加数量，后续条件变化不撤销已确认提醒。</p>`;
+}
+function d2BottomEvents(){return (dailyExtra.dailyFractalAlerts?.d2_bottom_events||[]).filter(e=>e.fractal?.type==='底'&&!d2ManuallyExcluded(e.code,String(e.d2_trigger_at).slice(0,10)))}
+let d2BottomNotificationPending=false;
+async function sendD2BottomNotification(){
+    if(d2BottomNotificationPending)return;
+    d2BottomNotificationPending=true;
+    try{
+        const read=key=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(_error){return []}},seen=new Set(read('waxwing_d2_bottom_seen')),now=Date.now();
+        const fresh=d2BottomEvents().filter(e=>{const at=d2NotificationTime(e.trigger_at);return e.origin==='实时规则扫描'&&Number.isFinite(at)&&now>=at&&now-at<=45*60000});
+        const pending=new Map(read('waxwing_d2_bottom_pending').map(e=>[e.event_id,e]));
+        for(const e of fresh)if(!seen.has(e.event_id))pending.set(e.event_id,e);
+        const items=[...pending.values()];
+        if(items.length&&!document.querySelector('[data-d2-bottom-dialog]')){
+            localStorage.setItem('waxwing_d2_bottom_pending',JSON.stringify(items));
+            const dialog=document.createElement('dialog');dialog.dataset.d2BottomDialog='1';
+            dialog.innerHTML=`<h2>D2日线底分型 · 重点提示</h2>${items.map(e=>`<p><strong>${safe(e.name)} ${safe(e.code)}</strong><br>原D2提醒 ${safe(formatDateTime(e.d2_trigger_at))}<br>分型日 ${safe(formatDate(e.fractal.fractal_date))} · 收盘确认 ${safe(formatDateTime(e.trigger_at))}</p>`).join('')}<p>仅作辅助参考，不代表买入或下单。</p><button type="button">我已知晓</button>`;
+            dialog.addEventListener('cancel',e=>e.preventDefault());
+            dialog.querySelector('button').onclick=()=>{localStorage.setItem('waxwing_d2_bottom_pending','[]');dialog.close();dialog.remove()};
+            document.body.appendChild(dialog);dialog.showModal();
+            for(const e of items)seen.add(e.event_id);
+            localStorage.setItem('waxwing_d2_bottom_seen',JSON.stringify([...seen].slice(-5000)));
+        }
+        if(d2NotificationAvailable()&&Notification.permission==='granted'&&d2NotificationEnabled()){
+            const pushed=new Set(read('waxwing_d2_bottom_pushed'));
+            for(const e of fresh.filter(e=>!pushed.has(e.event_id))){
+                await dispatchD2SystemNotification('WaXwing · D2日线底分型重点提示',{body:`${e.name} ${e.code} · 原D2 ${e.d2_trigger_at} · 日线底分型确认 ${e.trigger_at}`,tag:e.event_id,requireInteraction:true,data:{url:location.href.split('#')[0]+'#d2-bottom',d2Section:'bottom'}});
+                pushed.add(e.event_id);localStorage.setItem('waxwing_d2_bottom_pushed',JSON.stringify([...pushed].slice(-5000)));
+            }
+        }
+    }catch(_error){/* Keep pending acknowledgements and retry failed delivery on refresh. */}
+    finally{d2BottomNotificationPending=false}
+}
+function d2BottomPanel(state){
+    const events=d2BottomEvents().slice().sort((a,b)=>String(b.trigger_at).localeCompare(String(a.trigger_at))),dates=[...new Set(events.map(e=>e.trigger_at.slice(0,10)))];
+    const selected=state.bottomDate||dates[0]||'all',rows=events.filter(e=>selected==='all'||e.trigger_at.slice(0,10)===selected),count=date=>new Set(events.filter(e=>date==='all'||e.trigger_at.slice(0,10)===date).map(e=>e.code)).size;
+    return `<section class="d2-alert-page">${d2InnerTabs(state)}<h2>D2提醒后 · 日线底分型</h2><p class="daily-note">原D2提醒后，日线底分型右侧日K收盘确认时重点提示；仅作辅助参考，不改变买卖条件。历史核验不补发通知。</p>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">确认日期 <select data-d2-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(d=>`<option value="${safe(d)}"${selected===d?' selected':''}>${safe(formatDate(d))} · ${count(d)}只</option>`).join('')}</select></label>${rows.length?`<div class="wrap"><table><thead><tr><th>股票</th><th>原D2提醒时间</th><th>日线分型日</th><th>收盘确认时间</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${safe(e.name)} ${safe(e.code)}</td><td>${safe(formatDateTime(e.d2_trigger_at))}</td><td class="fractal-hint">${safe(formatDate(e.fractal.fractal_date))}</td><td class="fractal-hint">${safe(formatDateTime(e.trigger_at))}</td></tr>`).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已核验的日线底分型。</p>'}</section>`;
 }
 function dailyFractalEvent(modelName,code,date){return (dailyExtra.dailyFractalAlerts?.events||[]).find(item=>item.model===modelName&&item.code===String(code||'').padStart(6,'0')&&item.date===String(date||'').slice(0,10))||null}
 function d2DailyBottomState(code,date){
     const model='D2第二回调双路径提醒',day=String(date||'').slice(0,10),normalized=String(code||'').padStart(6,'0');
     const payload=dailyExtra.dailyFractalAlerts,coverage=payload?.coverage_by_model?.[model];
-    const event=dailyFractalEvent(model,normalized,day);
+    const event=d2BottomEvents().find(e=>e.code===normalized&&String(e.d2_trigger_at).slice(0,10)===day)||dailyFractalEvent(model,normalized,day);
     if(event)return {status:'yes',detail:`分型 ${safe(formatDate(event.fractal?.fractal_date))}；确认 ${safe(formatDateTime(event.fractal?.confirmed_at))}`};
     if(!Array.isArray(coverage?.dates)||!coverage.dates.includes(day))return {status:'unknown',detail:'以已收盘日K的确认结果为准'};
     const checked=payload?.checked_candidates_by_model?.[model];
@@ -2250,6 +2295,7 @@ function d2CountReconciliation(snapshot,date){
     return `<div class="d2-count-reconciliation"><strong>${safe(formatDate(stamp))} · 理想分支入池核对</strong><p>理想分支已确认 ${triggered.length}只 · 理想分支已入跟踪池 ${codes.size}只（待买入 ${pending}只）</p>${missing.length?`<p>未入池 ${missing.length}只：${missing.map(row=>`${safe(row.name)} ${safe(row.code)}（尚无入池记录）`).join('、')}。历史信号不自动补单。</p>`:''}${unmatched?`<p>其中 ${unmatched} 只入池股票的提醒明细尚未同步，不能视为未触发。</p>`:''}<small>这里仅核对所列日期的理想分支，不含需人工筛选；与上方全部D2提醒数量不同。当前条件变化不撤销已入池记录；待买入仍须等待执行日。</small></div>`;
 }
 function d2AlertPanel(state){
+    if(state.d2Section==='bottom')return d2BottomPanel(state);
     if(state.d2Section==='manual')return d2ManualReviewPanel(state);
     const idealOnly=state.d2Section==='ideal',snapshot=d2DisplaySnapshot(),{payload,session,candidates,nearRows,scanAt,offline}=snapshot;
     const rows=idealOnly?snapshot.rows.filter(d2DisplayIdeal):snapshot.rows;
@@ -2365,7 +2411,7 @@ async function dispatchD2SystemNotification(title,options){
         finally{clearTimeout(timer)}
     }
     const notice=new Notification(title,options);
-    notice.onclick=()=>{window.focus();activeDaily='d2_alert';stateFor('d2_alert').d2Section=options.data?.d2Section==='alerts'?'alerts':'ideal';draw();notice.close()};
+    notice.onclick=()=>{window.focus();activeDaily='d2_alert';stateFor('d2_alert').d2Section=['alerts','bottom'].includes(options.data?.d2Section)?options.data.d2Section:'ideal';draw();notice.close()};
     if(typeof notice.addEventListener==='function'){
         await d2NotificationDeadline(new Promise((resolve,reject)=>{
             notice.addEventListener('show',resolve,{once:true});
@@ -2573,6 +2619,7 @@ function d2DesktopEvents(snapshot,now=Date.now()){
     return [...events.values()];
 }
 async function sendD2M30DesktopNotification(observedSnapshot=null){
+    sendD2BottomNotification();
     if(publicCloudPage&&!publicStaticPage)return;
     if(!d2NotificationAvailable()||Notification.permission!=='granted'||!d2NotificationEnabled()){
         const reason=!d2NotificationAvailable()?'当前页面不能调用桌面通知':Notification.permission!=='granted'?'浏览器尚未允许通知':'桌面推送开关未开启';
@@ -3088,6 +3135,37 @@ function monthlySellConditionCell(row){
         strict_m30_top_divergence_exit:row.confirmed_event?.strict_m30_top_divergence_exit||row.strict_m30_top_divergence_exit},
         {requireEvidence:true});
 }
+function monthlyTrackingCells(row){
+    const event=row.confirmed_event;
+    const exit=event?.strict_m30_top_divergence_exit;
+    const sold=exit?.status==='已触发'&&exit.return_pct!=null;
+    const latest=sold?exit.return_pct:event?.latest_return_pct;
+    const render=value=>value==null?'<span class="pending-return">待核验</span>':`<span class="${value>0?'pos':value<0?'neg':'flat'}">${value>0?'+':''}${Number(value).toFixed(2)}%</span>`;
+    return `<td>${render(latest)}<small>${sold?'退出':'截至'} ${safe(formatDate(sold?String(exit.confirmed_at||'').slice(0,10):event?.latest_date))}</small></td>`+[1,3,5].map(h=>{
+        const outcome=event?.outcomes?.[String(h)];
+        return `<td>${outcome?.status==='已结算'?render(outcome.return_pct):`<span class="pending-return">${safe(outcome?.status||'待核验')}</span>`}</td>`;
+    }).join('');
+}
+function threeModelComparisonPanel(){
+    const data=dailyExtra.threeModelComparison;
+    if(!data?.models)return '';
+    const horizons=[1,3,5];
+    const rows=Object.entries(data.models).map(([name,stats])=>`<tr><td>${safe(name)}</td>${horizons.map(h=>{
+        const result=stats.horizons?.[String(h)]||{};
+        const average=result.average_return_pct==null?'--':`<span class="${result.average_return_pct>0?'pos':result.average_return_pct<0?'neg':'flat'}">${result.average_return_pct>0?'+':''}${Number(result.average_return_pct).toFixed(2)}%</span>`;
+        return `<td>${result.win_rate_pct==null?'待结算':Number(result.win_rate_pct).toFixed(2)+'%'}<small>成功 ${safe(result.wins??0)} / 已结算 ${safe(result.settled??0)} · 待结算或缺行情 ${safe(result.pending_or_missing??0)}<br>平均收益 ${average}</small></td>`;
+    }).join('')}</tr>`).join('');
+    return `<details class="daily-rules" open><summary>三个模型成功率对比 · 最近30个交易日</summary><p class="daily-note">${safe(formatDate(data.from))} 至 ${safe(formatDate(data.through))} · 股票与ETF · 同一提醒日收盘基准，收益大于0为成功；仅已结算样本计入分母。历史回放不代表当时实际推送，小样本结果仅供核验。</p><div class="wrap"><table class="focus-table"><thead><tr><th>模型</th>${horizons.map(h=>`<th>T+${h}成功率</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
+}
+function monthlyTrackingSummary(model,rows){
+    const events=rows.map(row=>row.confirmed_event).filter(Boolean);
+    const columns=[1,3,5].map(h=>{
+        const settled=events.map(event=>event.outcomes?.[String(h)]).filter(o=>o?.status==='已结算'&&o.return_pct!=null);
+        const wins=settled.filter(o=>o.return_pct>0).length;
+        return `<span>T+${h}成功率 ${settled.length?(wins/settled.length*100).toFixed(2)+'%':'待结算'}（${wins}/${settled.length}，待结算或缺行情 ${events.length-settled.length}）</span>`;
+    }).join(' · ');
+    return `<p class="daily-note">后续跟踪 · 截至 ${safe(formatDate(model.tracking_through||model.daily_date))} · ${columns}<br>按所选提醒日期统计，提醒日收盘至后续市场交易日收盘，收益大于0为成功；未到期或缺行情不计入成功率分母。</p>`;
+}
 function monthlyConsolidationFirstPanel(state){
     state.displayedAlertCount=0;
     const model=dailyExtra.monthlyConsolidationFirst;
@@ -3102,10 +3180,10 @@ function monthlyConsolidationFirstPanel(state){
     const body=rows.map((row,index)=>{
         const buy=historicalBuyConditions.render('月线盘整背驰一买',row.confirmed_event||{},row,
             {'规则版本':model.version,'提醒条件满足':true,'提醒确认时间':row._monthlyConfirmedAt});
-        return `<tr><td>${safe(row.rank??index+1)}</td><td><b>${safe(row.name)}</b><br>${safe(row.code)}</td><td class="short-cycle-condition">${buy}</td><td class="sell-condition-cell">${monthlySellConditionCell(row)}</td><td class="focus-reason"><b>价格创新低，DIF、DEA均不创新低</b><small>完整前低 ${safe(row.previous_price_low)} → 新低 ${safe(row.c?.price_low)}<br>DIF ${safe(row.a?.dif_min)} → ${safe(row.c?.dif_min)}<br>DEA ${safe(row.a?.dea_min)} → ${safe(row.c?.dea_min)}<br>月线新低日 ${safe(formatDate(row.daily_price_low_date||row.c?.low_date))}</small></td><td><span class="two-center-status">日线底分型已确认</span></td><td><button type="button" class="m30-detail-open" data-monthly-open="${safe(row.code)}" data-monthly-record="${safe(row._monthlyReminderKey)}">▶ 查看月线与背离依据</button></td></tr>`;
+        return `<tr><td>${safe(row.rank??index+1)}</td><td><b>${safe(row.name)}</b><br>${safe(row.code)}</td><td class="short-cycle-condition">${buy}</td><td class="sell-condition-cell">${monthlySellConditionCell(row)}</td><td class="focus-reason"><b>价格创新低，DIF、DEA均不创新低</b><small>完整前低 ${safe(row.previous_price_low)} → 新低 ${safe(row.c?.price_low)}<br>DIF ${safe(row.a?.dif_min)} → ${safe(row.c?.dif_min)}<br>DEA ${safe(row.a?.dea_min)} → ${safe(row.c?.dea_min)}<br>月线新低日 ${safe(formatDate(row.daily_price_low_date||row.c?.low_date))}</small></td><td><span class="two-center-status">日线底分型已确认</span></td><td><button type="button" class="m30-detail-open" data-monthly-open="${safe(row.code)}" data-monthly-record="${safe(row._monthlyReminderKey)}">▶ 查看月线与背离依据</button></td>${monthlyTrackingCells(row)}</tr>`;
     }).join('');
     const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-monthly-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="monthlyConsolidationTitle"><header class="second-detail-head"><div><h3 id="monthlyConsolidationTitle">${safe(detail.name)} ${safe(detail.code)} · 月线盘整背驰一买</h3><p>日线底分型已确认 · 提醒 ${safe(formatDateTime(detail._monthlyConfirmedAt))}</p><p>最近30根月K内已确认月线顶分型 · 完整参考前低 ${safe(detail.previous_price_low)}</p></div><button type="button" class="second-detail-close" data-monthly-close aria-label="关闭弹窗">×</button></header>${combinedAnnotatedCharts(weeklyConsolidationChart(detail,'价格',150),weeklyConsolidationChart(detail,'MACD',150))}<p class="macd-shape-note">完整前后绿段DIF、DEA均不创新低，价格严格创新低；日线底分型的低点实际日不得早于月线新低日，右侧日K收盘确认后提醒。</p></section></div>`:'';
-    return `<section><div class="daily-filters"><label>提醒日期 <select id="monthlySignalDate">${options}</select></label></div><div class="two-center-hero"><h2>月线盘整背驰一买</h2><p>月线零轴下MACD绿→红→绿 → 价格严格跌破同轮完整前低、DIF与DEA均不创新低 → 已收盘日线底分型确认后提示。</p></div>${rows.length?`<div class="wrap"><table class="two-center-table focus-table"><thead><tr><th>排名</th><th>${model.asset_scope==='stocks_and_etfs'?'股票 / ETF':'股票'}</th><th>买入提醒条件</th><th>卖出提醒条件</th><th>月线背离依据</th><th>当前状态</th><th>看图核验</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">所选日期暂无已确认提醒。</p>'}${model.current_month_complete===false?'<p class="preclose-warning">当月月K尚未收定：按截至行情日的实际日线计算；月线顶分型的右侧月K必须已收定。已确认提醒保留当时的结构与日线确认时间。</p>':''}<p class="daily-note">扫描范围：${model.asset_scope==='stocks_and_etfs'?'股票与ETF':'股票'} · 已核验 ${safe(model.coverage??'--')} / ${safe(model.universe_count??'--')} 只 · 本轮跳过 ${safe(model.failed_count??0)} 只（复权、行情或参考段无法核验）。行情截止 ${safe(formatDate(model.daily_date))} · 计算 ${safe(formatDateTime(model.generated_at))}。历史核验保留原日线确认时间，不补发过去的提醒。</p><details class="daily-rules" open><summary>模型条件与计算口径</summary><p>30根月K内已确认月线顶分型 → 月线零轴下绿→红→绿 → 价格创新低、DIF与DEA均不创新低 → 日线底分型收盘确认。</p><p>${safe(model.rules)}</p><p>${safe(model.implementation)}</p></details>${modal}</section>`;
+    return `<section><div class="daily-filters"><label>提醒日期 <select id="monthlySignalDate">${options}</select></label></div><div class="two-center-hero"><h2>月线盘整背驰一买</h2><p>月线零轴下MACD绿→红→绿 → 价格严格跌破同轮完整前低、DIF与DEA均不创新低 → 已收盘日线底分型确认后提示。</p></div>${monthlyTrackingSummary(model,rows)}${rows.length?`<div class="wrap"><table class="two-center-table focus-table"><thead><tr><th>排名</th><th>${model.asset_scope==='stocks_and_etfs'?'股票 / ETF':'股票'}</th><th>买入提醒条件</th><th>卖出提醒条件</th><th>月线背离依据</th><th>当前状态</th><th>看图核验</th><th>提醒后涨跌</th><th>T+1收益</th><th>T+3收益</th><th>T+5收益</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">所选日期暂无已确认提醒。</p>'}${model.current_month_complete===false?'<p class="preclose-warning">当月月K尚未收定：按截至行情日的实际日线计算；月线顶分型的右侧月K必须已收定。已确认提醒保留当时的结构与日线确认时间。</p>':''}<p class="daily-note">扫描范围：${model.asset_scope==='stocks_and_etfs'?'股票与ETF':'股票'} · 已核验 ${safe(model.coverage??'--')} / ${safe(model.universe_count??'--')} 只 · 本轮跳过 ${safe(model.failed_count??0)} 只（复权、行情或参考段无法核验）。行情截止 ${safe(formatDate(model.daily_date))} · 计算 ${safe(formatDateTime(model.generated_at))}。历史核验保留原日线确认时间，不补发过去的提醒。</p><details class="daily-rules" open><summary>模型条件与计算口径</summary><p>30根月K内已确认月线顶分型 → 月线零轴下绿→红→绿 → 价格创新低、DIF与DEA均不创新低 → 日线底分型收盘确认。</p><p>${safe(model.rules)}</p><p>${safe(model.implementation)}</p></details>${modal}</section>`;
 }
 function weeklyConsolidationFirstPanel(state){
     state.displayedAlertCount=0;
@@ -3452,8 +3530,11 @@ function trendReminderHistory(outcomes,rates,close){
     const archived=close?.historical_rule_application?[]:(outcomes.trend_history||[]);
     const events=[...archived,...(rates.events||[]).filter(item=>item.rule_versions?.includes('model-daily-bottom-close-v1')),...(close?.events||[])];
     const unique=new Map();
-    for(const item of events)if(item.model==='日线趋势一买')unique.set(item.event_id||`${item.code}|${item.triggered_at}`,item);
+    for(const item of events)if(item.model==='日线趋势一买')unique.set(trendReminderRecordKey(item),item);
     return [...unique.values()];
+}
+function trendReminderRecordKey(event){
+    return String(event.event_id||`${String(event.code||'').padStart(6,'0')}|${event.triggered_at||''}`);
 }
 function twoCenterPanel(){
     const model=data.models?.['日线趋势一买']||data.models?.['日线一买']||{};
@@ -3474,7 +3555,7 @@ function twoCenterPanel(){
     if(state.signalDate!=='latest'&&state.signalDate!=='all'&&!dates.includes(state.signalDate))state.signalDate='latest';
     const selectedDate=state.signalDate,selectedEvents=selectedDate==='latest'?[]:selectedDate==='all'?history:history.filter(item=>triggerDate(item)===selectedDate);
     const historicalEvidence=(event={},outcome={})=>{const period=event['周期']||'30分钟',other=period==='60分钟'?'30分钟':'60分钟';const signal={...event,'状态':event['状态']||`末段＋${period}底背离`,'提醒条件满足':event['提醒条件满足']!==false,'提醒状态':outcome.origin==='实时归档'?'有效':'历史回放，非实时推送'};return {'结构首次可见时间':outcome.structure_available_at||event['结构首次可见时间']||null,'提醒':signal,[period]:signal,[other]:{'状态':'未出现','周期':other}}};
-    const allRows=selectedDate==='latest'?currentRows.map(row=>({...row})):selectedEvents.map(item=>{const fallback=currentRows.find(row=>String(row['代码']).padStart(6,'0')===String(item.code).padStart(6,'0'))||{},snapshot=item.structure_snapshot||{};return {...snapshot,'代码':String(item.code).padStart(6,'0'),'名称':snapshot['名称']||item.name||fallback['名称']||item.code,_trendHistoryEvent:item.evidence||{},_trendOutcome:item}});
+    const allRows=selectedDate==='latest'?currentRows.map(row=>({...row})):selectedEvents.map(item=>{const fallback=currentRows.find(row=>String(row['代码']).padStart(6,'0')===String(item.code).padStart(6,'0'))||{},snapshot=item.structure_snapshot||{};return {...snapshot,'代码':String(item.code).padStart(6,'0'),'名称':snapshot['名称']||item.name||fallback['名称']||item.code,_trendHistoryEvent:item.evidence||{},_trendOutcome:item,_trendRecordKey:trendReminderRecordKey(item)}});
     if(focusCode){
         const existing=allRows.find(row=>String(row['代码']).padStart(6,'0')===focusCode);
         if(existing)existing._lookupFocus=true;
@@ -3497,8 +3578,8 @@ function twoCenterPanel(){
     const preview=data.is_intraday_preview?'<p class="preclose-warning"><strong>盘中预览：</strong>当日日K尚未收盘，最终形态以收盘扫描为准，不发正式通知。</p>':'';
     const focusRow=rows.find(row=>row._lookupFocus),focusNotice=focusRow?`<p class="stock-lookup-focus"><strong>股票检索定位：</strong>${safe(focusRow['名称'])} ${safe(focusRow['代码'])} · 记录日期 ${safe(formatDate(state.focusDate||data.daily_date))}；已在当前日线趋势一买列表中定位。</p>`:'';
     const dateForRow=row=>selectedDate==='latest'?data.daily_date:selectedDate==='all'?shortCycleDate(row._trendOutcome?.triggered_at||data.daily_date):selectedDate;
-    const body=rows.map((row,index)=>{const outcome=outcomeOf(row),focused=row===focusRow,rowDate=dateForRow(row);return `<tr${focused?' class="stock-lookup-focus-row" data-stock-lookup-focus-row':''}><td>${index+1}${focused?'<br><small>检索定位</small>':''}</td><td><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td>${shortCycleConditionCell(evidenceOf(row),'日线趋势一买',row['代码'],rowDate)}<td class="focus-reason"><b>价格跌破完整参考前低，DIF、DEA均不创新低</b><small>D3 ${safe(formatDate(row['A日期']))} → D5 ${safe(formatDate(row['B日期']))}</small></td><td><span class="two-center-status${row['状态']==='背驰形成中'?' alert':''}">${safe(row['状态'])}</span></td><td><button type="button" class="m30-detail-open" data-daily-first-detail="${safe(row['代码'])}">▶ 查看日线D3/D5</button></td><td>${safe(formatDate(row['B日期']))}<br>${safe(row['Price_B'])}<br><small>${selectedDate==='latest'?`距今${safe(row['B距今天数'])}日`:'当时结构快照'}</small></td><td>${outcome?safe(formatDateTime(outcome.triggered_at)):'未触发'}</td><td>${safe(outcome?.origin||'未归档')}</td><td>${operationLatestReturnCell('日线趋势一买',row['代码'],outcome,Boolean(outcome))}</td>${EXIT_RETURN_HORIZONS.map(h=>`<td>${returnCell(outcome,h)}</td>`).join('')}<td class="sell-condition-cell">${strictM30ExitReturnCell('日线趋势一买',row,evidenceOf(row),rowDate)}</td></tr>`}).join('');
-    const selectedDetail=rows.find(row=>String(row['代码'])===String(state.detailCode||'')),currentDetail=currentRows.find(row=>String(row['代码'])===String(state.detailCode||''));
+    const body=rows.map((row,index)=>{const outcome=outcomeOf(row),focused=row===focusRow,rowDate=dateForRow(row);return `<tr${focused?' class="stock-lookup-focus-row" data-stock-lookup-focus-row':''}><td>${index+1}${focused?'<br><small>检索定位</small>':''}</td><td><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td>${shortCycleConditionCell(evidenceOf(row),'日线趋势一买',row['代码'],rowDate)}<td class="focus-reason"><b>价格跌破完整参考前低，DIF、DEA均不创新低</b><small>D3 ${safe(formatDate(row['A日期']))} → D5 ${safe(formatDate(row['B日期']))}</small></td><td><span class="two-center-status${row['状态']==='背驰形成中'?' alert':''}">${safe(row['状态'])}</span></td><td><button type="button" class="m30-detail-open" data-daily-first-detail="${safe(row['代码'])}" data-daily-first-record="${safe(row._trendRecordKey||'')}">▶ 查看日线D3/D5</button></td><td>${safe(formatDate(row['B日期']))}<br>${safe(row['Price_B'])}<br><small>${selectedDate==='latest'?`距今${safe(row['B距今天数'])}日`:'当时结构快照'}</small></td><td>${outcome?safe(formatDateTime(outcome.triggered_at)):'未触发'}</td><td>${safe(outcome?.origin||'未归档')}</td><td>${operationLatestReturnCell('日线趋势一买',row['代码'],outcome,Boolean(outcome))}</td>${EXIT_RETURN_HORIZONS.map(h=>`<td>${returnCell(outcome,h)}</td>`).join('')}<td class="sell-condition-cell">${strictM30ExitReturnCell('日线趋势一买',row,evidenceOf(row),rowDate)}</td></tr>`}).join('');
+    const selectedDetail=rows.find(row=>String(row['代码'])===String(state.detailCode||'')&&(!state.detailRecordKey||row._trendRecordKey===state.detailRecordKey));
     const detail=selectedDetail||null;
     const chartDates=detail?.['形态图']?.['日期']||[];
     const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-daily-first-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="dailyFirstDetailTitle"><header class="second-detail-head"><div><h3 id="dailyFirstDetailTitle">${safe(detail['名称'])} ${safe(detail['代码'])} · 日线D3/D5</h3><p>当前选择：回溯${lookback}个交易日 · B距今≤${bAge}个交易日 · 实际展示${chartDates.length}根日K</p><p>图表区间：${safe(formatDate(chartDates[0]))} — ${safe(formatDate(chartDates[chartDates.length-1]))}</p></div><button type="button" class="second-detail-close" data-daily-first-close aria-label="关闭弹窗">×</button></header><label class="macd-zoom">横轴拉伸 <input type="range" min="820" max="2200" step="140" value="1100" data-macd-zoom></label>${chartDates.length?`${macdValleyCombinedChart(detail)}`:'<p class="daily-note">原历史结构图表未归档；当前图表不作为历史依据。</p>'}<p class="macd-shape-note">D3/D5价格低点 ${safe(formatDate(detail['Price_A日期']))} → ${safe(formatDate(detail['Price_B日期']))}；两个修复峰 ${safe(formatDate(detail['第一修复峰日期']))} → ${safe(formatDate(detail['第二修复峰日期']))}。</p></section></div>`:'';
@@ -4123,7 +4204,7 @@ function configureStockLookupTarget(target,code,date,origin=''){
     if(target==='m30_first')state.m30SignalDate=iso;
     if(['weekly_first','weekly_consolidation_first'].includes(target))state.weeklySignalDate=iso;
     if(target==='monthly_consolidation_first'){state.monthlySignalDate=iso===dailyExtra.monthlyConsolidationFirst?.daily_date?'latest':iso;state.monthlyDetailCode=null;state.monthlyDetailKey=null}
-    if(target==='two_centers')state.signalDate=day===dateKey(data.daily_date)?'latest':iso;
+    if(target==='two_centers'){state.signalDate=day===dateKey(data.daily_date)?'latest':iso;state.detailRecordKey=null}
     if(['daily_macd','sixty_minute_macd'].includes(target)){
         state.macdDate=iso;state.macdQuery=String(code);
         const model=target==='daily_macd'?'日线MACD底背离选股法':'60分钟MACD底背离选股法';
@@ -4977,6 +5058,7 @@ draw=function(){
         if(title)title.textContent=dailyModels.find(([key])=>key===id)?.[1]||title.textContent;
     }
     standardizeModelHeading(content,id);
+    if(['daily_macd','weekly_consolidation_first','monthly_consolidation_first'].includes(id))content.insertAdjacentHTML('beforeend',threeModelComparisonPanel());
     installModelFunnelHandlers(content,id,state);
     if(id==='second'){
         content.querySelectorAll('[data-class-ii-page]').forEach(button=>button.addEventListener('click',()=>{state.secondPage=Number(button.dataset.classIiPage);draw()}));
@@ -5039,7 +5121,7 @@ draw=function(){
     const macdModal=content.querySelector('[data-integrated-macd-modal]');
     content.querySelectorAll('[data-integrated-macd-period]').forEach(select=>select.onchange=()=>{state.macdPeriod=select.value;draw()});
     if(macdModal){const close=()=>{state.macdDetail=null;draw()};macdModal.querySelector('[data-integrated-macd-close]').onclick=close;macdModal.onclick=event=>{if(event.target===macdModal)close()};}
-    const trendDate=document.getElementById('twoCenterSignalDate');if(trendDate){stickyControls.append(trendDate.closest('.daily-filters'));trendDate.onchange=()=>{const trendState=stateFor('two_centers');trendState.signalDate=trendDate.value;trendState.focusCode=null;trendState.focusDate=null;trendState.detailCode=null;draw()}};
+    const trendDate=document.getElementById('twoCenterSignalDate');if(trendDate){stickyControls.append(trendDate.closest('.daily-filters'));trendDate.onchange=()=>{const trendState=stateFor('two_centers');trendState.signalDate=trendDate.value;trendState.focusCode=null;trendState.focusDate=null;trendState.detailCode=null;trendState.detailRecordKey=null;draw()}};
     content.querySelectorAll('[data-weekly-signal-date],[data-m30-signal-date]').forEach(select=>stickyControls.append(select.closest('.daily-filters')));
     const funnelBar=content.querySelector('.model-funnel-controls');if(funnelBar)stickyControls.append(funnelBar);
     installModelSectorFilter(content,id,state);
@@ -5078,6 +5160,7 @@ draw=function(){
     content.querySelector('[data-holding-simulation-form]')?.addEventListener('submit',event=>{event.preventDefault();saveSimulationSettings(event.currentTarget);draw()});
     content.querySelector('[data-d2-alert-date]')?.addEventListener('change',event=>{state.alertDate=state.manualDate=state.idealDate=event.target.value;state.focusCode=null;state.focusDate=null;draw()});
     content.querySelector('[data-d2-manual-date]')?.addEventListener('change',event=>{state.alertDate=state.manualDate=state.idealDate=event.target.value;state.focusCode=null;state.focusDate=null;draw()});
+    content.querySelector('[data-d2-bottom-date]')?.addEventListener('change',event=>{state.bottomDate=event.target.value;draw()});
     content.querySelectorAll('[data-d2-section]').forEach(button=>button.addEventListener('click',()=>{const selected=d2SelectedScope(state);state.alertDate=state.manualDate=state.idealDate=selected;state.d2Section=button.dataset.d2Section;draw()}));
     content.querySelectorAll('[data-pattern-sort]').forEach(button=>button.onclick=()=>{
         const key=button.dataset.patternSort;
@@ -5114,7 +5197,7 @@ draw=function(){
     content.querySelector('[data-short-cycle-filter]')?.addEventListener('change',event=>{state.shortCycleFilter=event.target.value;state.detailCode=null;draw()});
     content.querySelector('#twoCenterLookback')?.addEventListener('change',event=>{stateFor('two_centers').lookback=Number(event.target.value);draw()});
     content.querySelector('#twoCenterBAge')?.addEventListener('change',event=>{stateFor('two_centers').bMaxAge=Number(event.target.value);draw()});
-    content.querySelectorAll('[data-daily-first-detail]').forEach(button=>button.addEventListener('click',()=>{stateFor('two_centers').detailCode=button.dataset.dailyFirstDetail;draw();content.querySelector('[data-daily-first-close]')?.focus()}));
+    content.querySelectorAll('[data-daily-first-detail]').forEach(button=>button.addEventListener('click',()=>{const trendState=stateFor('two_centers');trendState.detailCode=button.dataset.dailyFirstDetail;trendState.detailRecordKey=button.dataset.dailyFirstRecord||null;draw();content.querySelector('[data-daily-first-close]')?.focus()}));
     content.querySelectorAll('[data-daily-consolidation-open]').forEach(button=>button.addEventListener('click',()=>{stateFor('daily_consolidation_first').detailCode=button.dataset.dailyConsolidationOpen;draw();content.querySelector('[data-daily-consolidation-close]')?.focus()}));
     stickyControls.querySelector('[data-weekly-signal-date]')?.addEventListener('change',event=>{state.weeklySignalDate=event.target.value;state.focusCode=null;state.focusDate=null;state.detailCode=null;draw()});
     stickyControls.querySelector('[data-m30-signal-date]')?.addEventListener('change',async event=>{state.m30SignalDate=event.target.value;state.focusCode=null;state.focusDate=null;state.detailCode=null;state.detailKey=null;draw()});
@@ -5157,7 +5240,7 @@ draw=function(){
     const m30ResearchModal=content.querySelector('[data-m30-research-modal]');
     if(m30ResearchModal){const close=()=>{const key=stateFor('m30_two_centers').researchDetail;stateFor('m30_two_centers').researchDetail=null;draw();content.querySelector(`[data-m30-research-detail="${key}"]`)?.focus({preventScroll:true})};m30ResearchModal.onclick=event=>{if(event.target===m30ResearchModal)close()};m30ResearchModal.querySelector('[data-m30-research-close]')?.addEventListener('click',close)}
     const dailyFirstModal=content.querySelector('[data-daily-first-modal]');
-    if(dailyFirstModal){const close=()=>{const code=stateFor('two_centers').detailCode;stateFor('two_centers').detailCode=null;draw();content.querySelector(`[data-daily-first-detail="${code}"]`)?.focus({preventScroll:true})};dailyFirstModal.onclick=event=>{if(event.target===dailyFirstModal)close()};dailyFirstModal.querySelector('[data-daily-first-close]')?.addEventListener('click',close)}
+    if(dailyFirstModal){const close=()=>{const trendState=stateFor('two_centers'),code=trendState.detailCode,record=trendState.detailRecordKey;trendState.detailCode=null;trendState.detailRecordKey=null;draw();[...content.querySelectorAll('[data-daily-first-detail]')].find(button=>button.dataset.dailyFirstDetail===code&&(!record||button.dataset.dailyFirstRecord===record))?.focus({preventScroll:true})};dailyFirstModal.onclick=event=>{if(event.target===dailyFirstModal)close()};dailyFirstModal.querySelector('[data-daily-first-close]')?.addEventListener('click',close)}
     const dailyConsolidationModal=content.querySelector('[data-daily-consolidation-modal]');
     if(dailyConsolidationModal){const close=()=>{const code=stateFor('daily_consolidation_first').detailCode;stateFor('daily_consolidation_first').detailCode=null;draw();content.querySelector(`[data-daily-consolidation-open="${code}"]`)?.focus({preventScroll:true})};dailyConsolidationModal.onclick=event=>{if(event.target===dailyConsolidationModal)close()};dailyConsolidationModal.querySelector('[data-daily-consolidation-close]')?.addEventListener('click',close)}
     const weeklyPullbackModal=content.querySelector('[data-weekly-pullback-modal]');
@@ -5295,13 +5378,13 @@ function compactDailyControls(content,sticky){
     const parameters=[...row.querySelectorAll(':scope>.macd-lookback')];
     if(parameters.length){const group=document.createElement('span');group.className='daily-parameter-group';parameters[0].before(group);parameters.forEach(label=>group.append(label))}
     const labels=[...row.children];
-    const priority=node=>node.querySelector('[data-holding-date],[data-class-ii-date],[data-d2-alert-date],[data-d2-manual-date],[data-m30-signal-date],#twoCenterSignalDate,#dailyDate,[data-weekly-signal-date],[data-integrated-macd-date]')?0:node.matches('.daily-parameter-group')?20:node.querySelector('[data-short-cycle-filter]')?25:10;
+    const priority=node=>node.querySelector('[data-holding-date],[data-class-ii-date],[data-d2-alert-date],[data-d2-manual-date],[data-d2-bottom-date],[data-m30-signal-date],#twoCenterSignalDate,#dailyDate,[data-weekly-signal-date],[data-integrated-macd-date]')?0:node.matches('.daily-parameter-group')?20:node.querySelector('[data-short-cycle-filter]')?25:10;
     labels.sort((a,b)=>priority(a)-priority(b)).forEach(node=>row.append(node));
     const tabs=content.querySelector('.d2-inner-tabs,.holding-view-tabs');if(tabs)sticky.append(tabs);
     if(row.childElementCount)sticky.append(row);
 }
 function normalizeReminderDateOptions(root){
-    const selectors='[data-class-ii-date],[data-integrated-macd-date],[data-weekly-signal-date],[data-d2-alert-date],[data-d2-manual-date],[data-m30-signal-date],#twoCenterSignalDate,#dailyDate';
+    const selectors='[data-class-ii-date],[data-integrated-macd-date],[data-weekly-signal-date],[data-d2-alert-date],[data-d2-manual-date],[data-d2-bottom-date],[data-m30-signal-date],#twoCenterSignalDate,#dailyDate';
     for(const select of root.querySelectorAll(selectors))for(const option of select.options){
         const raw=String(option.dataset.reminderDate||option.value||'');
         const day=/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw:option.textContent.match(/\d{4}[/-]\d{2}[/-]\d{2}/)?.[0];
@@ -5359,6 +5442,16 @@ async function refreshD2MonitorData(){
         if(activeDaily==='d2_alert')draw();
         else {sendD2M30DesktopNotification()}
     }catch(_error){d2LiveLoadFailed=true;updatePageMeta()}
+}
+async function refreshD2BottomData(){
+    if(location.protocol==='file:')return;
+    try{
+        const {payload}=await fetchLiveJson('d2_daily_bottom_events.json');
+        if(!payload||!Array.isArray(payload.d2_bottom_events))return;
+        dailyExtra.dailyFractalAlerts={...(dailyExtra.dailyFractalAlerts||{}),...payload};
+        sendD2BottomNotification();
+        if(activeDaily==='d2_alert')draw();
+    }catch(_error){/* Keep previously verified records until the next retry. */}
 }
 async function refreshWeeklyFirstData(){
     if(location.protocol==='file:')return;
@@ -5476,6 +5569,8 @@ async function refreshShortCycleData(){
     return shortCycleRefreshPromise;
 }
 if(location.protocol!=='file:'){
+    refreshD2BottomData();
+    setInterval(refreshD2BottomData,60000);
     if(privatePage()||publicCloudPage)setInterval(()=>refreshPageVersion({reload:true}).catch(error=>console.warn('Version refresh failed',error)),60000);
     if(publicCloudPage){
         setInterval(refreshPublicCloudNotifications,30000);
@@ -5489,7 +5584,7 @@ if(location.protocol!=='file:'){
         if(!publicCloudPage){setInterval(refreshD2ManualExclusions,60000);setInterval(refreshD2ManualApprovals,60000)}
     }
 }
-document.addEventListener('keydown',event=>{if(event.key==='Escape'){const active=dailyState.get(activeDaily);if(active?.macdDetail){active.macdDetail=null;draw();return}const consolidation=dailyState.get('daily_consolidation_first');if(consolidation?.detailCode){consolidation.detailCode=null;draw();return}const center=dailyState.get('weekly_consolidation_first');if(center?.detailCode){center.detailCode=null;draw();return}const weekly=dailyState.get('weekly_first');if(weekly?.detailCode){weekly.detailCode=null;draw();return}const dailyFirst=dailyState.get('two_centers');if(dailyFirst?.detailCode){dailyFirst.detailCode=null;draw();return}const m30Research=dailyState.get('m30_two_centers');if(m30Research?.researchDetail){m30Research.researchDetail=null;draw();return}const m30=dailyState.get('m30_first');if(m30?.detailCode){m30.detailCode=null;draw();return}const state=dailyState.get('second');if(state?.secondDetailCode){state.secondDetailCode=null;draw()}}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){const active=dailyState.get(activeDaily);if(active?.macdDetail){active.macdDetail=null;draw();return}const consolidation=dailyState.get('daily_consolidation_first');if(consolidation?.detailCode){consolidation.detailCode=null;draw();return}const center=dailyState.get('weekly_consolidation_first');if(center?.detailCode){center.detailCode=null;draw();return}const weekly=dailyState.get('weekly_first');if(weekly?.detailCode){weekly.detailCode=null;draw();return}const dailyFirst=dailyState.get('two_centers');if(dailyFirst?.detailCode){dailyFirst.detailCode=null;dailyFirst.detailRecordKey=null;draw();return}const m30Research=dailyState.get('m30_two_centers');if(m30Research?.researchDetail){m30Research.researchDetail=null;draw();return}const m30=dailyState.get('m30_first');if(m30?.detailCode){m30.detailCode=null;draw();return}const state=dailyState.get('second');if(state?.secondDetailCode){state.secondDetailCode=null;draw()}}});
 
 style.textContent+='.wrap table tbody tr.alert-row,.wrap table tbody tr.alert-row>td{background:#fff}.wrap table tbody tr.alert-row>td.short-cycle-condition,.wrap table tbody tr.alert-row>td.sell-condition-cell{background:#fff}';
 style.textContent+='.integrated-macd-filters input{font:inherit;padding:8px;border:1px solid #cbd5e1;border-radius:6px;max-width:100%;background:#fff}.macd-chart-wrap{padding:8px;border:1px solid #dbe3ed;border-radius:8px;background:#fff}.macd-chart-wrap svg{display:block;width:100%;height:auto}.integrated-macd-table .short-cycle-condition{min-width:280px}.integrated-macd-table>thead>tr>th{white-space:nowrap}';
