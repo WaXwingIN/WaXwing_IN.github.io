@@ -3155,7 +3155,7 @@ function threeModelComparisonPanel(){
         const average=result.average_return_pct==null?'--':`<span class="${result.average_return_pct>0?'pos':result.average_return_pct<0?'neg':'flat'}">${result.average_return_pct>0?'+':''}${Number(result.average_return_pct).toFixed(2)}%</span>`;
         return `<td>${result.win_rate_pct==null?'待结算':Number(result.win_rate_pct).toFixed(2)+'%'}<small>成功 ${safe(result.wins??0)} / 已结算 ${safe(result.settled??0)} · 待结算或缺行情 ${safe(result.pending_or_missing??0)}<br>平均收益 ${average}</small></td>`;
     }).join('')}</tr>`).join('');
-    return `<details class="daily-rules" open><summary>三个模型成功率对比 · 最近30个交易日</summary><p class="daily-note">${safe(formatDate(data.from))} 至 ${safe(formatDate(data.through))} · 股票与ETF · 同一提醒日收盘基准，收益大于0为成功；仅已结算样本计入分母。历史回放不代表当时实际推送，小样本结果仅供核验。</p><div class="wrap"><table class="focus-table"><thead><tr><th>模型</th>${horizons.map(h=>`<th>T+${h}成功率</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
+    return `<details class="daily-rules" open><summary>三个模型成功率对比 · 最近30个交易日</summary><p class="daily-note">${safe(formatDate(data.from))} 至 ${safe(formatDate(data.through))} · 股票与ETF · 现行规则全量回放（不随页面筛选变化），旧版本冻结提醒不参与本表。同一提醒日收盘基准，收益大于0为成功；仅已结算样本计入分母。历史回放不代表当时实际推送，小样本结果仅供核验。</p><div class="wrap"><table class="focus-table"><thead><tr><th>模型</th>${horizons.map(h=>`<th>T+${h}成功率</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
 }
 function monthlyTrackingSummary(model,rows){
     const events=rows.map(row=>row.confirmed_event).filter(Boolean);
