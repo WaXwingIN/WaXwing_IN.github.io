@@ -412,15 +412,17 @@ const historicalBuyConditions=(()=>{
         const row=(label,result)=>rows.push(`<tr><th scope="row">${esc(label)}</th><td>${result}</td></tr>`);
         if(macd){
             const isDaily=model==='日线MACD底背离选股法';
+            const fullDaily=isDaily&&(event.rule_version==='daily-full-cycle-dif-dea-bottom-v3'||saved.rule_version==='daily-full-cycle-dif-dea-bottom-v3');
             const stroke=saved[isDaily?'weekly_stroke':'daily_stroke']||{},signal=saved[isDaily?'daily':'m60']||evidence;
             const a=signal.first||{},b=signal.second||{},bottom=signal.bottom||{};
-            row('模型入选条件',isDaily?'最近30个交易周内严格周线顶分型，周线向下一笔未完成；其内日线绿→红→绿，两低点DIF及DEA均在零轴下，价格新低而两线最低值未创新低；日线底分型收盘确认':`最近50个交易日内严格日线顶分型，向下一笔未完成且下跌超过 ${number(event.threshold??20)} 个交易日；其内60分钟绿→红→绿，两低点DIF及DEA均在零轴下，价格新低而两线最低值未创新低；60分钟底分型收盘确认`);
-            row(isDaily?'周线下跌起点':'日线下跌起点',`${time(stroke.top?.date)}／${number(stroke.top?.price)}；顶分型右侧确认 ${time(stroke.top?.confirmed_at)}`);
+            row('模型入选条件',fullDaily?'日线DIF、DEA在零轴下呈相邻绿→红→绿；价格严格跌破完整前绿段及同轮负轴前低，完整前后绿段DIF、DEA最低值均不创新低（允许相等）；日线底分型右侧日K收盘确认':isDaily?'最近30个交易周内严格周线顶分型，周线向下一笔未完成；其内日线绿→红→绿，两低点DIF及DEA均在零轴下，价格新低而两线最低值未创新低；日线底分型收盘确认':`最近50个交易日内严格日线顶分型，向下一笔未完成且下跌超过 ${number(event.threshold??20)} 个交易日；其内60分钟绿→红→绿，两低点DIF及DEA均在零轴下，价格新低而两线最低值未创新低；60分钟底分型收盘确认`);
+            if(fullDaily)row('同轮负轴参考起点',`${time(signal.reference_start_at)}；完整参考前低 ${number(a.price_low)}`);
+            else row(isDaily?'周线下跌起点':'日线下跌起点',`${time(stroke.top?.date)}／${number(stroke.top?.price)}；顶分型右侧确认 ${time(stroke.top?.confirmed_at)}`);
             row('前段绿柱',`${time(a.start_at)} → ${time(a.end_at)}；低点 ${time(a.low_at)}／${number(a.price_low)}`);
             row('后段绿柱',`${time(b.start_at)} → ${time(b.end_at)}；低点 ${time(b.low_at)}／${number(b.price_low)}`);
             row('中间红柱',`${number(signal.red_bar_count)} 根`);
             row('DIF／DEA未创新低',`DIF ${number(a.dif_min)} → ${number(b.dif_min)}；DEA ${number(a.dea_min)} → ${number(b.dea_min)}`);
-            row('买入条件逐项核验',Object.entries(signal.checks||{}).map(([key,value])=>`${esc(({below_zero:'两低点DIF／DEA均在零轴下',green_red_green:'绿→红→绿',price_new_low:'价格创新低',dif_no_new_low:'DIF未创新低',dea_no_new_low:'DEA未创新低',bottom_fractal_confirmed:'底分型已确认'})[key]||key)}：${value===true?'满足':value===false?'不满足':'未留档'}`).join('<br>'));
+            row('买入条件逐项核验',Object.entries(signal.checks||{}).map(([key,value])=>`${esc(({complete_reference:'完整参考段可核验',below_zero:'两低点DIF／DEA均在零轴下',green_red_green:'绿→红→绿',price_new_low:'价格创新低',dif_no_new_low:'DIF未创新低',dea_no_new_low:'DEA未创新低',bottom_fractal_confirmed:'底分型已确认'})[key]||key)}：${value===true?'满足':value===false?'不满足':'未留档'}`).join('<br>'));
             row(isDaily?'日线底分型中心K':'60分钟底分型中心K',time(bottom.date||bottom.at));
             row(isDaily?'日线底分型右侧收盘确认':'60分钟底分型右侧收盘确认',time(bottom.confirmed_at));
             row('触发时间口径',esc(event.trigger_basis||'全部条件在该回放时点已通过；不冒充当时实际推送'));
@@ -580,7 +582,7 @@ function integratedMacdPanel(tab,state){
     const allOption=`<option value="all"${selected==='all'?' selected':''}>全部历史 · ${reminderStockCount(filteredGroups.flatMap(group=>group.rows))}只</option>`;
     const dateOptions=reminderDateOptions(filteredGroups,{latestDate:latest,latestRows,latestValue:latest,selectedDate:selected});
     const controls=`<div class="daily-filters integrated-macd-filters"><label>提醒日期 <select data-integrated-macd-date>${allOption}${selected==='all'?dateOptions.replace(' selected',''):dateOptions}</select></label><label>股票检索 <input data-integrated-macd-query value="${safe(state.macdQuery||'')}" placeholder="代码或名称"></label></div>`;
-    const rule=tab==='daily_macd'?'周线严格向下一笔内，日线绿→红→绿；价格新低而DIF、DEA未创新低，日线底分型右侧日K收盘确认。':'日线严格向下一笔内，60分钟绿→红→绿；价格新低而DIF、DEA未创新低，60分钟底分型右侧K线收盘确认。';
+    const rule=tab==='daily_macd'?(snapshot.rules||'日线DIF、DEA在零轴下呈相邻绿→红→绿；价格严格跌破完整前绿段及同轮负轴前低，DIF、DEA各自最低值均不创新低；日线底分型右侧日K收盘确认。'):'日线严格向下一笔内，60分钟绿→红→绿；价格新低而DIF、DEA未创新低，60分钟底分型右侧K线收盘确认。';
     const historicalDates=groups.map(g=>g.date).sort(),range=historicalDates.length?`${formatDate(historicalDates[0])}—${formatDate(historicalDates.at(-1))}`:'尚无归档';
     const settledRows=rows.filter(event=>Object.values(event.outcomes||{}).some(value=>value?.status==='已结算'&&value.return_pct!=null)||event.strict_m30_top_divergence_exit?.status==='已触发'&&event.strict_m30_top_divergence_exit.return_pct!=null);
     const performance=settledRows.length?`<section class="short-cycle-outcomes">${integratedMacdSummary(rows,'当前筛选收益')}</section>`:'';
@@ -5270,7 +5272,7 @@ function compactModelNotes(root){
 function standardizeModelHeading(root,id){
     const descriptions={
         second:'D0→G1→D1→G2→D2；中枢相似分达到入选门槛后，按所选提醒日期查看当前有效股票。',
-        daily_macd:'周线严格向下一笔内，日线MACD底背离，并由日线底分型右侧收盘确认。',
+        daily_macd:'日线零轴下绿→红→绿，价格跌破完整前低而DIF、DEA均不创新低；日线底分型右侧收盘确认。',
         sixty_minute_macd:'日线严格向下一笔内，60分钟MACD底背离，并由60分钟底分型右侧K线收盘确认。',
         d2_alert:'第二回调双路径提醒；确认结果按所选提醒日期展示。'
     };
