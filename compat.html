@@ -2049,20 +2049,28 @@ async function sendD2BottomNotification(){
 }
 function d2BottomGroups(events=d2BottomEvents()){
     const groups=new Map();
+    const sources=new Map();
+    for(const day of dailyExtra.d2History?.days||[])for(const row of day.rows||[])for(const event of row.d2_alert_events||[]){
+        if(event.event_key)sources.set(`existing|D2|${String(row.code).padStart(6,'0')}|${event.event_key}`,event.source);
+    }
     for(const event of events){
         const key=`${event.code}|${event.fractal.fractal_date}|${event.trigger_at}`;
         if(!groups.has(key))groups.set(key,{...event,reminders:[]});
         const reminders=groups.get(key).reminders;
-        if(!reminders.some(item=>(item.d2_event_id||item.event_id)===(event.d2_event_id||event.event_id)))reminders.push(event);
+        if(!reminders.some(item=>(item.d2_event_id||item.event_id)===(event.d2_event_id||event.event_id)))reminders.push({...event,d2_source:sources.get(event.d2_event_id)||event.d2_source||''});
     }
     for(const group of groups.values())group.reminders.sort((a,b)=>String(b.d2_trigger_at).localeCompare(String(a.d2_trigger_at)));
     return [...groups.values()].sort((a,b)=>String(b.trigger_at).localeCompare(String(a.trigger_at))||String(a.code).localeCompare(String(b.code)));
+}
+function d2BottomReminderType(event){
+    if(['ideal_m30_divergence','daily_kdj+ideal_m30_divergence'].includes(event.d2_source))return '理想30分钟分支';
+    return event.d2_source==='daily_kdj'?'需人工筛选':'提醒类型待核验';
 }
 function d2BottomPanel(state){
     const events=d2BottomGroups(),dates=[...new Set(events.map(e=>e.trigger_at.slice(0,10)))];
     const selected=state.bottomDate||dates[0]||'all',rows=events.filter(e=>selected==='all'||e.trigger_at.slice(0,10)===selected),count=date=>new Set(events.filter(e=>date==='all'||e.trigger_at.slice(0,10)===date).map(e=>e.code)).size;
     const reminderCell=e=>`<time>${safe(formatDate(e.reminders[0].d2_trigger_at))}</time>`;
-    return `<section class="d2-alert-page d2-bottom-fractal-page">${d2InnerTabs(state)}<h2>D2提醒后 · 日线底分型</h2><p class="daily-note">按底分型确认日期查看，同一只股票的同一次底分型合并为一行。</p>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">确认日期 <select data-d2-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(d=>`<option value="${safe(d)}"${selected===d?' selected':''}>${safe(formatDate(d))} · ${count(d)}只</option>`).join('')}</select></label>${rows.length?`<div class="wrap"><table class="d2-bottom-table"><thead><tr><th>股票</th><th>底分型低点日</th><th title="底分型右侧日K收盘后确认，不代表实际扫描或推送时间">底分型确认时间</th><th>最近D2提醒日期</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${safe(e.name)} ${safe(e.code)}</td><td><time>${safe(formatDate(e.fractal.fractal_date))}</time></td><td><strong class="d2-bottom-confirmed"><time>${safe(formatDateTime(e.trigger_at).slice(0,16))}</time></strong></td><td>${reminderCell(e)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已核验的日线底分型。</p>'}<p class="daily-note">底分型日是中间低点K线的日期；确认时间是右侧日K收盘、形态成立的时间。仅作辅助参考，不改变D2买卖条件；历史核验不补发通知。</p></section>`;
+    return `<section class="d2-alert-page d2-bottom-fractal-page">${d2InnerTabs(state)}<h2>D2提醒后 · 日线底分型</h2><p class="daily-note">按底分型确认日期查看，同一只股票的同一次底分型合并为一行。</p>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">确认日期 <select data-d2-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(d=>`<option value="${safe(d)}"${selected===d?' selected':''}>${safe(formatDate(d))} · ${count(d)}只</option>`).join('')}</select></label>${rows.length?`<div class="wrap"><table class="d2-bottom-table"><thead><tr><th>股票</th><th>底分型低点日</th><th title="底分型右侧日K收盘后确认，不代表实际扫描或推送时间">底分型确认时间</th><th>最近D2提醒日期</th><th>D2提醒类型</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${safe(e.name)} ${safe(e.code)}</td><td><time>${safe(formatDate(e.fractal.fractal_date))}</time></td><td><strong class="d2-bottom-confirmed"><time>${safe(formatDateTime(e.trigger_at).slice(0,16))}</time></strong></td><td>${reminderCell(e)}</td><td>${safe(d2BottomReminderType(e.reminders[0]))}</td></tr>`).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已核验的日线底分型。</p>'}<p class="daily-note">底分型日是中间低点K线的日期；确认时间是右侧日K收盘、形态成立的时间。仅作辅助参考，不改变D2买卖条件；历史核验不补发通知。</p></section>`;
 }
 function dailyFractalEvent(modelName,code,date){return (dailyExtra.dailyFractalAlerts?.events||[]).find(item=>item.model===modelName&&item.code===String(code||'').padStart(6,'0')&&item.date===String(date||'').slice(0,10))||null}
 function d2DailyBottomState(code,date){
