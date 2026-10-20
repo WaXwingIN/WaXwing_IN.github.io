@@ -2006,16 +2006,16 @@ function d2DailyBottomState(code,date){
     const payload=dailyExtra.dailyFractalAlerts,coverage=payload?.coverage_by_model?.[model];
     const event=dailyFractalEvent(model,normalized,day);
     if(event)return {status:'yes',detail:`分型 ${safe(formatDate(event.fractal?.fractal_date))}；确认 ${safe(formatDateTime(event.fractal?.confirmed_at))}`};
-    if(!Array.isArray(coverage?.dates)||!coverage.dates.includes(day))return {status:'unknown',detail:'该日缺少入池快照'};
+    if(!Array.isArray(coverage?.dates)||!coverage.dates.includes(day))return {status:'unknown',detail:'以已收盘日K的确认结果为准'};
     const checked=payload?.checked_candidates_by_model?.[model];
-    if(Array.isArray(checked)&&!checked.includes(`${day}|${normalized}`))return {status:'unknown',detail:'待已收盘日K核验'};
-    if(!Array.isArray(payload.d2_checked_candidates)||!payload.d2_checked_candidates.includes(`${day}|${normalized}`))return {status:'unknown',detail:'该股当日无入池快照'};
-    if((payload.missing_daily_bars||[]).some(item=>item.model===model&&item.code===normalized&&item.date===day))return {status:'unknown',detail:'该日日K缺失'};
+    if(Array.isArray(checked)&&!checked.includes(`${day}|${normalized}`))return {status:'unknown',detail:'以已收盘日K的确认结果为准'};
+    if(!Array.isArray(payload.d2_checked_candidates)||!payload.d2_checked_candidates.includes(`${day}|${normalized}`))return {status:'unknown',detail:'以已收盘日K的确认结果为准'};
+    if((payload.missing_daily_bars||[]).some(item=>item.model===model&&item.code===normalized&&item.date===day))return {status:'unknown',detail:'以已收盘日K的确认结果为准'};
     return {status:'no',detail:'该日未确认底分型'};
 }
 function d2DailyBottomDetail(code,date){
     const result=d2DailyBottomState(code,date);
-    return `<div class="d2-daily-bottom-hint${result.status==='yes'?' fractal-hint':''}"><strong>日线底分型：${result.status==='yes'?'已出现':result.status==='no'?'未出现':'待核验'}</strong><span>${result.detail}；辅助提示，不参与D2买入触发</span></div>`;
+    return `<div class="d2-daily-bottom-hint${result.status==='yes'?' fractal-hint':''}"><strong>日线底分型：${result.status==='yes'?'已出现':result.status==='no'?'未出现':'尚未核验'}</strong><span>${result.detail}；仅作辅助参考，不影响D2提醒</span></div>`;
 }
 function d2ManualDeleteButton(code,name,date){if(publicCloudPage)return '';return `<button type="button" class="d2-manual-delete" data-d2-manual-delete="${safe(String(code||'').padStart(6,'0'))}" data-d2-manual-name="${safe(name||'')}" data-d2-manual-date="${safe(String(date||'').slice(0,10))}">移出当日筛选</button>`}
 function d2ManualExclusionManager(){
