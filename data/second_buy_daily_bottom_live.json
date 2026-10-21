@@ -1,0 +1,1 @@
+{"version": "second-buy-daily-bottom-intraday-break-middle-v1", "generated_at": "2026-10-21 12:10:56", "complete_archive": false, "stock_count": 443, "checked_stocks": 578, "reference_stocks": 619, "definition": "曾有正式D2结构；去包含后三K为底分型，右侧K线高点严格突破中间K最高点，且右K现价严格高于原D2低点即盘中提示。不要求KDJ或30分钟背离，不等待收盘。", "strength_definition": "按发现时强／中／弱、突破幅度降序；强弱只排序，不过滤提醒。", "events": []}
