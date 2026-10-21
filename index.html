@@ -65,13 +65,21 @@ body.waxwing-ui .wrap th .rank-sort-button:focus-visible{outline:2px solid var(-
 
 
 .d2-daily-bottom-hint{margin:7px 0;color:#64758a;font-size:12px;line-height:1.6}.d2-daily-bottom-hint strong{display:block}.d2-daily-bottom-hint span{display:block;font-weight:400}.d2-daily-bottom-hint.fractal-hint{width:100%;padding:8px 10px;border-left:4px solid #d97706;font-size:13px}
-dialog[data-d2-bottom-dialog]{width:min(900px,calc(100vw - 28px));max-height:90vh;overflow:auto;padding:24px;border:2px solid #d97706;border-radius:14px;background:#fff;color:var(--wx-text,#203247);font:inherit;box-sizing:border-box}dialog[data-d2-bottom-dialog]::backdrop{background:rgba(15,23,42,.72)}dialog[data-d2-bottom-dialog] h2{color:#b45309}dialog[data-d2-bottom-dialog] button{width:100%;background:#2563eb;color:#fff;border:0;border-radius:7px;min-height:36px;font:inherit}
+dialog[data-d2-bottom-dialog]{width:min(900px,calc(100vw - 28px));max-height:90vh;overflow:auto;padding:24px;border:2px solid #d97706;border-radius:14px;background:#fff;color:var(--wx-text,#203247);font:inherit;box-sizing:border-box}dialog[data-d2-bottom-dialog]::backdrop{background:rgba(15,23,42,.72)}dialog[data-d2-bottom-dialog] h2{color:#b45309}dialog[data-d2-bottom-dialog] [data-d2-bottom-ack]{width:100%;background:#2563eb;color:#fff;border:0;border-radius:7px;min-height:36px;font:inherit}
 body.waxwing-ui .d2-inner-tabs button{flex:0 0 auto;white-space:nowrap}
 body.waxwing-ui .d2-bottom-table{width:100%;min-width:720px;table-layout:fixed}
 body.waxwing-ui .d2-bottom-table th:nth-child(1),body.waxwing-ui .d2-bottom-table td:nth-child(1){width:22%!important;min-width:0!important}
 body.waxwing-ui .d2-bottom-table th:nth-child(2){width:16%}body.waxwing-ui .d2-bottom-table th:nth-child(3){width:24%}body.waxwing-ui .d2-bottom-table th:nth-child(4){width:20%}body.waxwing-ui .d2-bottom-table th:nth-child(5){width:18%}
 body.waxwing-ui .d2-bottom-table th{white-space:nowrap}body.waxwing-ui .d2-bottom-table th,body.waxwing-ui .d2-bottom-table td{box-sizing:border-box;padding:12px 14px;text-align:left!important}body.waxwing-ui .d2-bottom-table td{vertical-align:top}body.waxwing-ui .d2-bottom-table time{white-space:nowrap}
 body.waxwing-ui .d2-bottom-confirmed{color:#b45309;font-weight:600}
+body.waxwing-ui .second-buy-bottom-card{min-width:0;box-sizing:border-box;overflow-wrap:anywhere}
+body.waxwing-ui .second-buy-bottom-card .d2-condition-table{width:100%;min-width:0;table-layout:fixed}
+body.waxwing-ui .second-buy-bottom-card .d2-condition-table th:first-child{width:35%}
+body.waxwing-ui .second-buy-bottom-card .d2-condition-table th:nth-child(2){width:21%}
+body.waxwing-ui .second-buy-bottom-card .d2-condition-table th:nth-child(3){width:44%}
+body.waxwing-ui .second-buy-bottom-card .d2-condition-table th,body.waxwing-ui .second-buy-bottom-card .d2-condition-table td{white-space:normal;min-width:0!important;position:static!important;box-sizing:border-box}
+body.waxwing-ui .second-buy-bottom-card small{display:block}
+dialog[data-d2-bottom-dialog]:focus{outline:none}
 body.waxwing-ui .d2-bottom-reminders{margin-top:4px;color:#64758a;font-size:12px}body.waxwing-ui .d2-bottom-reminders summary{cursor:pointer;color:#2563eb}body.waxwing-ui .d2-bottom-reminders ul{margin:6px 0;padding-left:16px}body.waxwing-ui .d2-bottom-reminders li{margin:6px 0}body.waxwing-ui .d2-bottom-reminders small{display:block}
 </style></head><body class="daily-ui-booting waxwing-ui"><script>/* Shared ES5 controls for model, holding and history pages. */
 (function () {
@@ -1149,6 +1157,7 @@ function mergeDailyBundle(payload){
     }
     if(Array.isArray(previous.classIiTracking?.stocks)&&!Array.isArray(payload.classIiTracking?.stocks))delete payload.classIiTracking;
     Object.assign(dailyExtra,payload||{});
+    if(payload.secondBuyBottom){dailyExtra.secondBuyBottom=previous.secondBuyBottom;mergeSecondBuyBottom(payload.secondBuyBottom)}
     if(previous.legacyModelHistory?.rows?.length>(dailyExtra.legacyModelHistory?.rows?.length||0))dailyExtra.legacyModelHistory=previous.legacyModelHistory;
     dailyExtra.macdModelHistory=mergeMacdHistory(payload.macdModelHistory,previous.macdModelHistory);
     if(previous.dailyCloseReminders&&!dailyCloseSnapshotNewer(dailyExtra.dailyCloseReminders,previous.dailyCloseReminders))dailyExtra.dailyCloseReminders=previous.dailyCloseReminders;
@@ -1554,6 +1563,7 @@ const modelName=()=> '首踩10日线';
 const stateFor=id=>{if(!dailyState.has(id)){const second=id==='second',sortKey=second?'center_similarity':'rank',sortDirection=second?-1:1,weekly=id==='weekly_first'||id==='weekly_consolidation_first';dailyState.set(id,{date:'latest',reference:id==='limit1'?'001299':'002155',sortKey,sortDirection,sortStack:[{key:sortKey,direction:sortDirection}],combineSort:false,expandAll:second,secondDetailCode:null,shortCycleFilter:weekly||id==='two_centers'?'appeared':'all',funnelLevel:id==='holding_pool'?'strong':'raw'})}return dailyState.get(id)};
 if(location.hash==='#d2-ideal')stateFor('d2_alert').d2Section='ideal';
 if(location.hash==='#d2-bottom'){activeDaily='d2_alert';stateFor('d2_alert').d2Section='bottom'}
+if(location.hash==='#d2-second-bottom'){activeDaily='d2_alert';stateFor('d2_alert').d2Section='second-bottom'}
 const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const formatDate=value=>{const digits=String(value??'').replace(/\D/g,'');return digits.length>=8?`${digits.slice(0,4)}/${digits.slice(4,6)}/${digits.slice(6,8)}`:'--'};
 const formatDateTime=value=>{const text=String(value??''),date=formatDate(text),match=text.match(/(?:T|\s)(\d{2}:\d{2}:\d{2})/);return date==='--'?'--':date+(match?' '+match[1]:'')};
@@ -2012,36 +2022,63 @@ function d2ScopeRows(state){
     return {day:selected,rows};
 }
 function d2InnerTabs(state){
-    const active=['manual','ideal','bottom'].includes(state.d2Section)?state.d2Section:'alerts',{day,rows}=d2ScopeRows(state),historical=d2SelectedScope(state)!=='latest';
+    const active=['manual','ideal','bottom','second-bottom'].includes(state.d2Section)?state.d2Section:'alerts',{day,rows}=d2ScopeRows(state),historical=d2SelectedScope(state)!=='latest';
     const ideal=row=>historical&&day!==d2DisplaySnapshot().session?.date?row._historicalIdeal:d2DisplayIdeal(row);
     const count=rows.filter(row=>!ideal(row)&&!d2ManuallyApproved(row.code,day)).length,idealCount=rows.filter(ideal).length,approved=rows.filter(row=>!ideal(row)&&d2ManuallyApproved(row.code,day)).length;
-    return `<nav class="d2-inner-tabs" role="tablist" aria-label="D2提醒分类"><button type="button" role="tab" data-d2-section="alerts" aria-selected="${active==='alerts'}">D2提醒 ${rows.length}</button><button type="button" role="tab" data-d2-section="manual" aria-selected="${active==='manual'}">需人工筛选 ${count}</button><button type="button" role="tab" data-d2-section="ideal" aria-selected="${active==='ideal'}">理想30分钟分支 ${idealCount}</button><button type="button" role="tab" data-d2-section="bottom" aria-selected="${active==='bottom'}">日线底分型 ${new Set(d2BottomEvents().map(e=>e.code)).size}</button></nav><p class="daily-note">${formatDate(day)} 已确认提醒：${rows.length}只${approved?`，其中人工已通过 ${approved} 只`:''}；按当天累计去重，同一股票再次命中不增加数量，后续条件变化不撤销已确认提醒。</p>`;
+    return `<nav class="d2-inner-tabs" role="tablist" aria-label="D2提醒分类"><button type="button" role="tab" data-d2-section="alerts" aria-selected="${active==='alerts'}">D2提醒 ${rows.length}</button><button type="button" role="tab" data-d2-section="manual" aria-selected="${active==='manual'}">需人工筛选 ${count}</button><button type="button" role="tab" data-d2-section="ideal" aria-selected="${active==='ideal'}">理想30分钟分支 ${idealCount}</button><button type="button" role="tab" data-d2-section="bottom" aria-selected="${active==='bottom'}">日线底分型 ${new Set(d2BottomEvents().map(e=>e.code)).size}</button><button type="button" role="tab" data-d2-section="second-bottom" aria-selected="${active==='second-bottom'}">二买日线底分型 ${dailyExtra.secondBuyBottom?.stock_count??dailyExtra.secondBuyBottomSummary?.stock_count??0}</button></nav><p class="daily-note">${formatDate(day)} 已确认提醒：${rows.length}只${approved?`，其中人工已通过 ${approved} 只`:''}；按当天累计去重，同一股票再次命中不增加数量，后续条件变化不撤销已确认提醒。</p>`;
 }
 function d2BottomEvents(){return (dailyExtra.dailyFractalAlerts?.d2_bottom_events||[]).filter(e=>e.fractal?.type==='底'&&!d2ManuallyExcluded(e.code,String(e.d2_trigger_at).slice(0,10)))}
+function secondBuyBottomEvents(){return (dailyExtra.secondBuyBottom?.events||[]).filter(e=>e.rule_version==='second-buy-daily-bottom-intraday-break-middle-v1'&&!d2ManuallyExcluded(e.code,e.reference?.snapshot_date))}
+function mergeSecondBuyBottom(payload){
+    if(payload?.version!=='second-buy-daily-bottom-intraday-break-middle-v1'||!Array.isArray(payload.events))return false;
+    const old=dailyExtra.secondBuyBottom||{},events=new Map((old.events||[]).map(e=>[e.event_id,e]));
+    let changed=false;
+    for(const event of payload.events){const previous=events.get(event.event_id);if(!previous||previous.origin!=='实时规则扫描'&&event.origin==='实时规则扫描'){events.set(event.event_id,event);changed=true}}
+    const newer=String(payload.generated_at||'')>=String(old.generated_at||'');
+    dailyExtra.secondBuyBottom={...old,...(newer?payload:{}),events:[...events.values()],complete_archive:old.complete_archive||payload.complete_archive};
+    return changed;
+}
+function compareSecondBuyBottom(a,b){return Number(b.strength?.level||0)-Number(a.strength?.level||0)||Number(b.strength?.breakout_pct||0)-Number(a.strength?.breakout_pct||0)||String(b.trigger_at).localeCompare(String(a.trigger_at))||String(a.code).localeCompare(String(b.code))}
+function secondBuyBottomCard(event){
+    const bars=event.fractal?.bars||{},reference=event.reference||{},structure=reference.structure||{},historic=event.origin!=='实时规则扫描';
+    const price=value=>Number.isFinite(Number(value))?Number(value).toFixed(2):'--';
+    const row=(label,actual)=>`<tr><th scope="row">${safe(label)}</th><td class="d2-condition-status">✅ 满足</td><td>${safe(actual)}</td></tr>`;
+    return `<article class="d2-proximity-item second-buy-bottom-card"><span class="d2-routing-badge manual">二买日线底分型 · ${safe(event.strength?.label||'--')}</span><b class="d2-stock-title">${safe(event.name)} ${safe(event.code)}</b><small>来源：正式D2结构 ${safe(formatDate(reference.snapshot_date))} · 原D2 ${price(event.d2_price)}（${safe(formatDate(structure.D2?.date))}）</small><small>${historic?'历史日线核验':'盘中实际发现'} ${safe(formatDateTime(event.trigger_at))} · 分型低点日 ${safe(formatDate(event.fractal.fractal_date))}</small><div class="d2-condition-list"><b>二买日线底分型提醒条件</b><table class="d2-condition-table"><thead><tr><th>条件</th><th>状态</th><th>实际／说明</th></tr></thead><tbody>${row('原正式D2结构',`D0 ${price(structure.D0?.price)} / D1 ${price(structure.D1?.price)} / D2 ${price(event.d2_price)}；中枢评分 ${price(reference.center_similarity)}`)}${row('去包含后三K底分型',`中K低点 ${price(bars.middle?.low)} ＜ 左K ${price(bars.left?.low)}、右K ${price(bars.right?.low)}；中K高点亦低于两侧`)}${row('右K突破中K最高点',`右K高点 ${price(bars.right?.high)} ＞ 中K高点 ${price(bars.middle?.high)}`)}${row(historic?'右K收盘站上原D2':'右K现价站上原D2',`${price(event.observed_price)} ＞ ${price(event.d2_price)}`)}${row('分型强弱（只排序）',`${event.strength?.label||'--'}；突破幅度 +${price(event.strength?.breakout_pct)}%`)}</tbody></table></div><small>${historic?'历史收盘数据核验，不代表当时盘中推送。':'不等待日K收盘；盘中形态可能变化，保留实际发现记录。'}</small></article>`;
+}
+let secondBuyBottomLoad=null,secondBuyBottomLoadError='';
+function secondBuyBottomPanel(state){
+    if(!dailyExtra.secondBuyBottom?.complete_archive&&!secondBuyBottomLoad&&!secondBuyBottomLoadError){
+        secondBuyBottomLoad=(dailyExtra.pageManifest?.assets?.['page/tab_d2_second_bottom']?readPageAsset('page/tab_d2_second_bottom').then(v=>v.secondBuyBottom):fetchLiveJson('second_buy_daily_bottom.json',{live:false}).then(v=>v.payload)).then(payload=>{mergeSecondBuyBottom(payload);if(activeDaily==='d2_alert')draw()}).catch(error=>{secondBuyBottomLoadError=error.message;if(activeDaily==='d2_alert')draw()});
+    }
+    const all=secondBuyBottomEvents(),dates=[...new Set(all.map(e=>e.right_date))].sort().reverse(),selected=state.secondBottomDate||'all';
+    const events=all.filter(e=>selected==='all'||e.right_date===selected).sort(compareSecondBuyBottom),count=day=>new Set(all.filter(e=>day==='all'||e.right_date===day).map(e=>e.code)).size;
+    return `<section class="d2-alert-page d2-second-bottom-page">${d2InnerTabs(state)}<h2>二买日线底分型</h2>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">提示日期 <select data-second-buy-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(day=>`<option value="${safe(day)}"${day===selected?' selected':''}>${safe(formatDate(day))} · ${count(day)}只</option>`).join('')}</select></label><div class="d2-proximity-list">${events.map(secondBuyBottomCard).join('')}</div>${!events.length?`<p class="daily-note">${secondBuyBottomLoadError?'记录暂未加载成功，可重试。':dailyExtra.secondBuyBottom?.complete_archive?'暂无符合条件的二买日线底分型。':'正在读取二买日线底分型记录…'}</p>${secondBuyBottomLoadError?'<button type="button" data-second-buy-bottom-retry>重新读取</button>':''}`:''}<p class="daily-note">原正式D2结构后，去包含后三K构成底分型，右侧日K突破中间K最高点且现价高于原D2低点，即盘中提示；不要求原KDJ或30分钟背离提醒。按发现时强／中／弱排序：右K现价高于左K高点为强，高于左K区间中点为中，其余为弱；同档按突破幅度降序，强弱不拦截提醒。历史日线核验不补发通知。</p></section>`;
+}
 let d2BottomNotificationPending=false;
 async function sendD2BottomNotification(){
     if(d2BottomNotificationPending)return;
     d2BottomNotificationPending=true;
     try{
         const read=key=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(_error){return []}},seen=new Set(read('waxwing_d2_bottom_seen')),now=Date.now();
-        const fresh=d2BottomEvents().filter(e=>{const at=d2NotificationTime(e.trigger_at);return e.origin==='实时规则扫描'&&Number.isFinite(at)&&now>=at&&now-at<=45*60000});
+        const fresh=[...d2BottomEvents(),...secondBuyBottomEvents()].filter(e=>{const at=d2NotificationTime(e.trigger_at);return e.origin==='实时规则扫描'&&Number.isFinite(at)&&now>=at&&now-at<=45*60000});
         const pending=new Map(read('waxwing_d2_bottom_pending').map(e=>[e.event_id,e]));
         for(const e of fresh)if(!seen.has(e.event_id))pending.set(e.event_id,e);
         const items=[...pending.values()];
         if(items.length&&!document.querySelector('[data-d2-bottom-dialog]')){
             localStorage.setItem('waxwing_d2_bottom_pending',JSON.stringify(items));
             const dialog=document.createElement('dialog');dialog.dataset.d2BottomDialog='1';
-            dialog.innerHTML=`<h2>D2日线底分型 · 重点提示</h2>${items.map(e=>`<p><strong>${safe(e.name)} ${safe(e.code)}</strong><br>原D2提醒 ${safe(formatDateTime(e.d2_trigger_at))}<br>分型日 ${safe(formatDate(e.fractal.fractal_date))} · 收盘确认 ${safe(formatDateTime(e.trigger_at))}</p>`).join('')}<p>仅作辅助参考，不代表买入或下单。</p><button type="button">我已知晓</button>`;
+            dialog.innerHTML=`<h2>日线底分型 · 重点提示</h2>${items.map(e=>e.model==='二买日线底分型'?secondBuyBottomCard(e):`<p><strong>D2提醒后 · ${safe(e.name)} ${safe(e.code)}</strong><br>原D2提醒 ${safe(formatDateTime(e.d2_trigger_at))}<br>分型日 ${safe(formatDate(e.fractal.fractal_date))} · 收盘确认 ${safe(formatDateTime(e.trigger_at))}</p>`).join('')}<p>仅作辅助参考，不代表买入或下单。</p><button type="button" data-d2-bottom-ack>我已知晓</button>`;
             dialog.addEventListener('cancel',e=>e.preventDefault());
-            dialog.querySelector('button').onclick=()=>{localStorage.setItem('waxwing_d2_bottom_pending','[]');dialog.close();dialog.remove()};
-            document.body.appendChild(dialog);dialog.showModal();
+            dialog.querySelector('[data-d2-bottom-ack]').onclick=()=>{localStorage.setItem('waxwing_d2_bottom_pending','[]');dialog.close();dialog.remove()};
+            dialog.tabIndex=-1;document.body.appendChild(dialog);dialog.showModal();dialog.focus({preventScroll:true});dialog.scrollTop=0;
             for(const e of items)seen.add(e.event_id);
             localStorage.setItem('waxwing_d2_bottom_seen',JSON.stringify([...seen].slice(-5000)));
         }
         if(d2NotificationAvailable()&&Notification.permission==='granted'&&d2NotificationEnabled()){
             const pushed=new Set(read('waxwing_d2_bottom_pushed'));
             for(const e of fresh.filter(e=>!pushed.has(e.event_id))){
-                await dispatchD2SystemNotification('WaXwing · D2日线底分型重点提示',{body:`${e.name} ${e.code} · 原D2 ${e.d2_trigger_at} · 日线底分型确认 ${e.trigger_at}`,tag:e.event_id,requireInteraction:true,data:{url:location.href.split('#')[0]+'#d2-bottom',d2Section:'bottom'}});
+                const intraday=e.model==='二买日线底分型';
+                await dispatchD2SystemNotification(intraday?'WaXwing · 二买日线底分型':'WaXwing · D2日线底分型重点提示',{body:intraday?`${e.name} ${e.code} · ${e.strength?.label} · 右K突破中K高点 ${e.fractal.bars.middle.high} · 实际发现 ${e.trigger_at}`:`${e.name} ${e.code} · 原D2 ${e.d2_trigger_at} · 日线底分型确认 ${e.trigger_at}`,tag:e.event_id,requireInteraction:true,data:{url:location.href.split('#')[0]+(intraday?'#d2-second-bottom':'#d2-bottom'),d2Section:intraday?'second-bottom':'bottom'}});
                 pushed.add(e.event_id);localStorage.setItem('waxwing_d2_bottom_pushed',JSON.stringify([...pushed].slice(-5000)));
             }
         }
@@ -2321,6 +2358,7 @@ function d2CountReconciliation(snapshot,date){
     return `<div class="d2-count-reconciliation"><strong>${safe(formatDate(stamp))} · 理想分支入池核对</strong><p>理想分支已确认 ${triggered.length}只 · 理想分支已入跟踪池 ${codes.size}只（待买入 ${pending}只）</p>${missing.length?`<p>未入池 ${missing.length}只：${missing.map(row=>`${safe(row.name)} ${safe(row.code)}（尚无入池记录）`).join('、')}。历史信号不自动补单。</p>`:''}${unmatched?`<p>其中 ${unmatched} 只入池股票的提醒明细尚未同步，不能视为未触发。</p>`:''}<small>这里仅核对所列日期的理想分支，不含需人工筛选；与上方全部D2提醒数量不同。当前条件变化不撤销已入池记录；待买入仍须等待执行日。</small></div>`;
 }
 function d2AlertPanel(state){
+    if(state.d2Section==='second-bottom')return secondBuyBottomPanel(state);
     if(state.d2Section==='bottom')return d2BottomPanel(state);
     if(state.d2Section==='manual')return d2ManualReviewPanel(state);
     const idealOnly=state.d2Section==='ideal',snapshot=d2DisplaySnapshot(),{payload,session,candidates,nearRows,scanAt,offline}=snapshot;
@@ -2437,7 +2475,7 @@ async function dispatchD2SystemNotification(title,options){
         finally{clearTimeout(timer)}
     }
     const notice=new Notification(title,options);
-    notice.onclick=()=>{window.focus();activeDaily='d2_alert';stateFor('d2_alert').d2Section=['alerts','bottom'].includes(options.data?.d2Section)?options.data.d2Section:'ideal';draw();notice.close()};
+    notice.onclick=()=>{window.focus();activeDaily='d2_alert';stateFor('d2_alert').d2Section=['alerts','bottom','second-bottom'].includes(options.data?.d2Section)?options.data.d2Section:'ideal';draw();notice.close()};
     if(typeof notice.addEventListener==='function'){
         await d2NotificationDeadline(new Promise((resolve,reject)=>{
             notice.addEventListener('show',resolve,{once:true});
@@ -5187,6 +5225,8 @@ draw=function(){
     content.querySelector('[data-d2-alert-date]')?.addEventListener('change',event=>{state.alertDate=state.manualDate=state.idealDate=event.target.value;state.focusCode=null;state.focusDate=null;draw()});
     content.querySelector('[data-d2-manual-date]')?.addEventListener('change',event=>{state.alertDate=state.manualDate=state.idealDate=event.target.value;state.focusCode=null;state.focusDate=null;draw()});
     content.querySelector('[data-d2-bottom-date]')?.addEventListener('change',event=>{state.bottomDate=event.target.value;draw()});
+    content.querySelector('[data-second-buy-bottom-date]')?.addEventListener('change',event=>{state.secondBottomDate=event.target.value;draw()});
+    content.querySelector('[data-second-buy-bottom-retry]')?.addEventListener('click',()=>{secondBuyBottomLoad=null;secondBuyBottomLoadError='';draw()});
     content.querySelectorAll('[data-d2-section]').forEach(button=>button.addEventListener('click',()=>{const selected=d2SelectedScope(state);state.alertDate=state.manualDate=state.idealDate=selected;state.d2Section=button.dataset.d2Section;draw()}));
     content.querySelectorAll('[data-pattern-sort]').forEach(button=>button.onclick=()=>{
         const key=button.dataset.patternSort;
@@ -5387,7 +5427,7 @@ function standardizeModelHeading(root,id){
     };
     if(!descriptions[id])return;
     const title=root.querySelector(':scope>section>h2');
-    if(!title||id==='d2_alert'&&root.querySelector('.d2-manual-review-page,.d2-bottom-fractal-page'))return;
+    if(!title||id==='d2_alert'&&root.querySelector('.d2-manual-review-page,.d2-bottom-fractal-page,.d2-second-bottom-page'))return;
     const hero=document.createElement('div');hero.className='two-center-hero';
     title.before(hero);hero.append(title);
     const description=document.createElement('p');description.textContent=descriptions[id];hero.append(description);
@@ -5404,13 +5444,13 @@ function compactDailyControls(content,sticky){
     const parameters=[...row.querySelectorAll(':scope>.macd-lookback')];
     if(parameters.length){const group=document.createElement('span');group.className='daily-parameter-group';parameters[0].before(group);parameters.forEach(label=>group.append(label))}
     const labels=[...row.children];
-    const priority=node=>node.querySelector('[data-holding-date],[data-class-ii-date],[data-d2-alert-date],[data-d2-manual-date],[data-d2-bottom-date],[data-m30-signal-date],#twoCenterSignalDate,#dailyDate,[data-weekly-signal-date],[data-integrated-macd-date]')?0:node.matches('.daily-parameter-group')?20:node.querySelector('[data-short-cycle-filter]')?25:10;
+    const priority=node=>node.querySelector('[data-holding-date],[data-class-ii-date],[data-d2-alert-date],[data-d2-manual-date],[data-d2-bottom-date],[data-second-buy-bottom-date],[data-m30-signal-date],#twoCenterSignalDate,#dailyDate,[data-weekly-signal-date],[data-integrated-macd-date]')?0:node.matches('.daily-parameter-group')?20:node.querySelector('[data-short-cycle-filter]')?25:10;
     labels.sort((a,b)=>priority(a)-priority(b)).forEach(node=>row.append(node));
     const tabs=content.querySelector('.d2-inner-tabs,.holding-view-tabs');if(tabs)sticky.append(tabs);
     if(row.childElementCount)sticky.append(row);
 }
 function normalizeReminderDateOptions(root){
-    const selectors='[data-class-ii-date],[data-integrated-macd-date],[data-weekly-signal-date],[data-d2-alert-date],[data-d2-manual-date],[data-d2-bottom-date],[data-m30-signal-date],#twoCenterSignalDate,#dailyDate';
+    const selectors='[data-class-ii-date],[data-integrated-macd-date],[data-weekly-signal-date],[data-d2-alert-date],[data-d2-manual-date],[data-d2-bottom-date],[data-second-buy-bottom-date],[data-m30-signal-date],#twoCenterSignalDate,#dailyDate';
     for(const select of root.querySelectorAll(selectors))for(const option of select.options){
         const raw=String(option.dataset.reminderDate||option.value||'');
         const day=/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw:option.textContent.match(/\d{4}[/-]\d{2}[/-]\d{2}/)?.[0];
@@ -5468,6 +5508,15 @@ async function refreshD2MonitorData(){
         if(activeDaily==='d2_alert')draw();
         else {sendD2M30DesktopNotification()}
     }catch(_error){d2LiveLoadFailed=true;updatePageMeta()}
+}
+async function refreshSecondBuyBottomData(){
+    if(location.protocol==='file:')return;
+    try{
+        const {payload}=await fetchLiveJson('second_buy_daily_bottom_live.json');
+        const changed=mergeSecondBuyBottom(payload);
+        sendD2BottomNotification();
+        if(changed&&activeDaily==='d2_alert')draw();
+    }catch(_error){/* Retain previously observed events; retry on the next poll. */}
 }
 async function refreshD2BottomData(){
     if(location.protocol==='file:')return;
@@ -5597,6 +5646,8 @@ async function refreshShortCycleData(){
 if(location.protocol!=='file:'){
     refreshD2BottomData();
     setInterval(refreshD2BottomData,60000);
+    refreshSecondBuyBottomData();
+    setInterval(refreshSecondBuyBottomData,60000);
     if(privatePage()||publicCloudPage)setInterval(()=>refreshPageVersion({reload:true}).catch(error=>console.warn('Version refresh failed',error)),60000);
     if(publicCloudPage){
         setInterval(refreshPublicCloudNotifications,30000);
@@ -5833,7 +5884,11 @@ style.textContent+=`.short-cycle-outcomes:has(>details):not(:has(>.wrap)){border
             if (!Number.isFinite(scan) || scan > now || checked.payload.daily_date !== new Date(now + 8 * 3600000).toISOString().slice(0, 10)) return;
             if (current && scan < d2NotificationTime(current.payload.generated_at)) return;
             current = snapshot;
-            const changed = syncDisplay(snapshot);
+            let changed = syncDisplay(snapshot);
+            if(checked.payload.second_buy_bottom&&typeof mergeSecondBuyBottom==='function'){
+                changed=mergeSecondBuyBottom(checked.payload.second_buy_bottom)||changed;
+                if(typeof sendD2BottomNotification==='function')await sendD2BottomNotification();
+            }
             const meta = document.getElementById?.('meta');
             if (meta) {
                 let stamp = document.getElementById('d2LiveReminderScanAt');
