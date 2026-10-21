@@ -49,10 +49,12 @@ body.waxwing-ui .wrap th .rank-sort-button:focus-visible{outline:2px solid var(-
 .d2-daily-bottom-hint{margin:7px 0;color:#64758a;font-size:12px;line-height:1.6}.d2-daily-bottom-hint strong{display:block}.d2-daily-bottom-hint span{display:block;font-weight:400}.d2-daily-bottom-hint.fractal-hint{width:100%;padding:8px 10px;border-left:4px solid #d97706;font-size:13px}
 dialog[data-d2-bottom-dialog]{width:min(720px,calc(100vw - 28px));border:2px solid #d97706;border-radius:14px;background:#fff;color:var(--wx-ink);font:14px/1.7 var(--wx-font)}dialog[data-d2-bottom-dialog]::backdrop{background:rgba(15,23,42,.72)}dialog[data-d2-bottom-dialog] h2{color:#b45309}dialog[data-d2-bottom-dialog] [data-d2-bottom-ack]{width:100%;background:#2563eb;color:#fff;border:0;border-radius:7px;min-height:44px;font:inherit;cursor:pointer}
 body.waxwing-ui .d2-inner-tabs button{flex:0 0 auto;white-space:nowrap}
-body.waxwing-ui .d2-bottom-table{width:100%;min-width:720px;table-layout:fixed}
-body.waxwing-ui .d2-bottom-table th:nth-child(1),body.waxwing-ui .d2-bottom-table td:nth-child(1){width:22%!important;min-width:0!important}
-body.waxwing-ui .d2-bottom-table th:nth-child(2){width:16%}body.waxwing-ui .d2-bottom-table th:nth-child(3){width:24%}body.waxwing-ui .d2-bottom-table th:nth-child(4){width:20%}body.waxwing-ui .d2-bottom-table th:nth-child(5){width:18%}
-body.waxwing-ui .d2-bottom-table th{white-space:nowrap}body.waxwing-ui .d2-bottom-table th,body.waxwing-ui .d2-bottom-table td{box-sizing:border-box;padding:12px 14px;text-align:left!important}body.waxwing-ui .d2-bottom-table td{vertical-align:top}body.waxwing-ui .d2-bottom-table time{white-space:nowrap}
+body.waxwing-ui .d2-bottom-card{min-width:0;box-sizing:border-box;background:#fff;border-color:var(--wx-line);overflow-wrap:anywhere}
+body.waxwing-ui .d2-bottom-facts{margin:10px 0 0;font-size:13px}
+body.waxwing-ui .d2-bottom-facts>div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px;padding:7px 0;border-top:1px solid var(--wx-line)}
+body.waxwing-ui .d2-bottom-facts dt{color:var(--wx-muted)}body.waxwing-ui .d2-bottom-facts dd{margin:0}
+body.waxwing-ui .d2-bottom-facts time{white-space:nowrap}
+@media(max-width:900px){body.waxwing-ui .d2-bottom-fractal-page .d2-proximity-list{grid-template-columns:minmax(0,1fr)!important}}
 body.waxwing-ui .d2-bottom-confirmed{color:#b45309;font-weight:600}
 body.waxwing-ui .second-buy-bottom-card{min-width:0;box-sizing:border-box;overflow-wrap:anywhere}
 body.waxwing-ui .second-buy-bottom-card .d2-condition-table{width:100%;min-width:0;table-layout:fixed}

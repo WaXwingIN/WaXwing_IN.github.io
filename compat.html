@@ -67,10 +67,12 @@ body.waxwing-ui .wrap th .rank-sort-button:focus-visible{outline:2px solid var(-
 .d2-daily-bottom-hint{margin:7px 0;color:#64758a;font-size:12px;line-height:1.6}.d2-daily-bottom-hint strong{display:block}.d2-daily-bottom-hint span{display:block;font-weight:400}.d2-daily-bottom-hint.fractal-hint{width:100%;padding:8px 10px;border-left:4px solid #d97706;font-size:13px}
 dialog[data-d2-bottom-dialog]{width:min(720px,calc(100vw - 28px));border:2px solid #d97706;border-radius:14px;background:#fff;color:var(--wx-ink);font:14px/1.7 var(--wx-font)}dialog[data-d2-bottom-dialog]::backdrop{background:rgba(15,23,42,.72)}dialog[data-d2-bottom-dialog] h2{color:#b45309}dialog[data-d2-bottom-dialog] [data-d2-bottom-ack]{width:100%;background:#2563eb;color:#fff;border:0;border-radius:7px;min-height:44px;font:inherit;cursor:pointer}
 body.waxwing-ui .d2-inner-tabs button{flex:0 0 auto;white-space:nowrap}
-body.waxwing-ui .d2-bottom-table{width:100%;min-width:720px;table-layout:fixed}
-body.waxwing-ui .d2-bottom-table th:nth-child(1),body.waxwing-ui .d2-bottom-table td:nth-child(1){width:22%!important;min-width:0!important}
-body.waxwing-ui .d2-bottom-table th:nth-child(2){width:16%}body.waxwing-ui .d2-bottom-table th:nth-child(3){width:24%}body.waxwing-ui .d2-bottom-table th:nth-child(4){width:20%}body.waxwing-ui .d2-bottom-table th:nth-child(5){width:18%}
-body.waxwing-ui .d2-bottom-table th{white-space:nowrap}body.waxwing-ui .d2-bottom-table th,body.waxwing-ui .d2-bottom-table td{box-sizing:border-box;padding:12px 14px;text-align:left!important}body.waxwing-ui .d2-bottom-table td{vertical-align:top}body.waxwing-ui .d2-bottom-table time{white-space:nowrap}
+body.waxwing-ui .d2-bottom-card{min-width:0;box-sizing:border-box;background:#fff;border-color:var(--wx-line);overflow-wrap:anywhere}
+body.waxwing-ui .d2-bottom-facts{margin:10px 0 0;font-size:13px}
+body.waxwing-ui .d2-bottom-facts>div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px;padding:7px 0;border-top:1px solid var(--wx-line)}
+body.waxwing-ui .d2-bottom-facts dt{color:var(--wx-muted)}body.waxwing-ui .d2-bottom-facts dd{margin:0}
+body.waxwing-ui .d2-bottom-facts time{white-space:nowrap}
+@media(max-width:900px){body.waxwing-ui .d2-bottom-fractal-page .d2-proximity-list{grid-template-columns:minmax(0,1fr)!important}}
 body.waxwing-ui .d2-bottom-confirmed{color:#b45309;font-weight:600}
 body.waxwing-ui .second-buy-bottom-card{min-width:0;box-sizing:border-box;overflow-wrap:anywhere}
 body.waxwing-ui .second-buy-bottom-card .d2-condition-table{width:100%;min-width:0;table-layout:fixed}
@@ -2099,7 +2101,7 @@ function secondBuyBottomPanel(state){
     if(!dailyExtra.secondBuyBottom?.complete_archive&&!secondBuyBottomLoad&&!secondBuyBottomLoadError){
         secondBuyBottomLoad=(dailyExtra.pageManifest?.assets?.['page/tab_d2_second_bottom']?readPageAsset('page/tab_d2_second_bottom').then(v=>v.secondBuyBottom):fetchLiveJson('second_buy_daily_bottom.json',{live:false}).then(v=>v.payload)).then(payload=>{mergeSecondBuyBottom(payload);if(activeDaily==='d2_alert')draw()}).catch(error=>{secondBuyBottomLoadError=error.message;if(activeDaily==='d2_alert')draw()});
     }
-    const all=secondBuyBottomEvents(),dates=[...new Set(all.map(e=>e.right_date))].sort().reverse(),selected=state.secondBottomDate||'all';
+    const all=secondBuyBottomEvents(),latest=m30CurrentTradingDate(),dates=[...new Set([latest,...all.map(e=>e.right_date)])].sort().reverse(),selected=state.secondBottomDate==='latest'||!state.secondBottomDate?latest:state.secondBottomDate;
     const events=all.filter(e=>selected==='all'||e.right_date===selected).sort(compareSecondBuyBottom),count=day=>new Set(all.filter(e=>day==='all'||e.right_date===day).map(e=>e.code)).size;
     return `<section class="d2-alert-page d2-second-bottom-page">${d2InnerTabs(state)}<h2>二买日线底分型</h2>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">提示日期 <select data-second-buy-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(day=>`<option value="${safe(day)}"${day===selected?' selected':''}>${safe(formatDate(day))} · ${count(day)}只</option>`).join('')}</select></label><div class="d2-proximity-list">${events.map(secondBuyBottomCard).join('')}</div>${!events.length?`<p class="daily-note">${secondBuyBottomLoadError?'记录暂未加载成功，可重试。':dailyExtra.secondBuyBottom?.complete_archive?'暂无符合条件的二买日线底分型。':'正在读取二买日线底分型记录…'}</p>${secondBuyBottomLoadError?'<button type="button" data-second-buy-bottom-retry>重新读取</button>':''}`:''}<p class="daily-note">原正式D2结构后，去包含后三K构成底分型，右侧日K突破中间K最高点且现价高于原D2低点，即盘中提示；不要求原KDJ或30分钟背离提醒。按发现时强／中／弱排序：右K现价高于左K高点为强，高于左K区间中点为中，其余为弱；同档按突破幅度降序，强弱不拦截提醒。历史日线核验不补发通知。</p></section>`;
 }
@@ -2163,11 +2165,14 @@ function d2BottomReminderType(event){
     if(['ideal_m30_divergence','daily_kdj+ideal_m30_divergence'].includes(event.d2_source))return '理想30分钟分支';
     return event.d2_source==='daily_kdj'?'需人工筛选':'提醒类型待核验';
 }
+function d2BottomCard(event){
+    const reminder=event.reminders[0],mapping=dailyExtra.stockSectorMap?.[event.code];
+    return `<article class="d2-proximity-item d2-bottom-card"><span class="d2-routing-badge manual">日线底分型 · 已收盘确认</span><b class="d2-stock-title">${safe(event.name)} ${safe(event.code)}</b>${mapping?`<small class="model-stock-sector">申万一级：${safe(mapping.name)}</small>`:''}<dl class="d2-bottom-facts"><div><dt>底分型低点日</dt><dd><time>${safe(formatDate(event.fractal.fractal_date))}</time></dd></div><div><dt>底分型确认时间</dt><dd class="d2-bottom-confirmed"><time>${safe(formatDateTime(event.trigger_at).slice(0,16))}</time></dd></div><div><dt>最近D2提醒日期</dt><dd><time>${safe(formatDate(reminder.d2_trigger_at))}</time></dd></div><div><dt>D2提醒类型</dt><dd>${safe(d2BottomReminderType(reminder))}</dd></div></dl></article>`;
+}
 function d2BottomPanel(state){
-    const events=d2BottomGroups(),dates=[...new Set(events.map(e=>e.trigger_at.slice(0,10)))];
-    const selected=state.bottomDate||'all',rows=events.filter(e=>selected==='all'||e.trigger_at.slice(0,10)===selected),count=date=>new Set(events.filter(e=>date==='all'||e.trigger_at.slice(0,10)===date).map(e=>e.code)).size;
-    const reminderCell=e=>`<time>${safe(formatDate(e.reminders[0].d2_trigger_at))}</time>`;
-    return `<section class="d2-alert-page d2-bottom-fractal-page">${d2InnerTabs(state)}<h2>D2提醒后 · 日线底分型</h2><p class="daily-note">按底分型确认日期查看，同一只股票的同一次底分型合并为一行。</p>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">确认日期 <select data-d2-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(d=>`<option value="${safe(d)}"${selected===d?' selected':''}>${safe(formatDate(d))} · ${count(d)}只</option>`).join('')}</select></label>${rows.length?`<div class="wrap"><table class="d2-bottom-table"><thead><tr><th>股票</th><th>底分型低点日</th><th title="底分型右侧日K收盘后确认，不代表实际扫描或推送时间">底分型确认时间</th><th>最近D2提醒日期</th><th>D2提醒类型</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${safe(e.name)} ${safe(e.code)}</td><td><time>${safe(formatDate(e.fractal.fractal_date))}</time></td><td><strong class="d2-bottom-confirmed"><time>${safe(formatDateTime(e.trigger_at).slice(0,16))}</time></strong></td><td>${reminderCell(e)}</td><td>${safe(d2BottomReminderType(e.reminders[0]))}</td></tr>`).join('')}</tbody></table></div>`:'<p class="daily-note">暂无已核验的日线底分型。</p>'}<p class="daily-note">底分型日是中间低点K线的日期；确认时间是右侧日K收盘、形态成立的时间。仅作辅助参考，不改变D2买卖条件；历史核验不补发通知。</p></section>`;
+    const events=d2BottomGroups(),latest=m30CurrentTradingDate(),dates=[...new Set([latest,...events.map(e=>e.trigger_at.slice(0,10))])].sort().reverse();
+    const selected=state.bottomDate==='latest'||!state.bottomDate?latest:state.bottomDate,rows=events.filter(e=>selected==='all'||e.trigger_at.slice(0,10)===selected),count=date=>new Set(events.filter(e=>date==='all'||e.trigger_at.slice(0,10)===date).map(e=>e.code)).size;
+    return `<section class="d2-alert-page d2-bottom-fractal-page">${d2InnerTabs(state)}<h2>D2提醒后 · 日线底分型</h2>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">确认日期 <select data-d2-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(d=>`<option value="${safe(d)}"${selected===d?' selected':''}>${safe(formatDate(d))} · ${count(d)}只</option>`).join('')}</select></label>${rows.length?`<div class="d2-proximity-list">${rows.map(d2BottomCard).join('')}</div>`:'<p class="daily-note">所选交易日暂无已核验的日线底分型。</p>'}<p class="daily-note">底分型日是中间低点K线的日期；确认时间是右侧日K收盘、形态成立的时间。同一只股票的同一次底分型合并为一张卡片。仅作辅助参考，不改变D2买卖条件；历史核验不补发通知。</p></section>`;
 }
 function dailyFractalEvent(modelName,code,date){return (dailyExtra.dailyFractalAlerts?.events||[]).find(item=>item.model===modelName&&item.code===String(code||'').padStart(6,'0')&&item.date===String(date||'').slice(0,10))||null}
 function d2DailyBottomState(code,date){
