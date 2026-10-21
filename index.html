@@ -4801,8 +4801,8 @@ function divergenceComparisonPanel(state,data){
 function publicModelSimulationPanel(state){
     const source=dailyExtra.modelSimulation;
     if(!Array.isArray(source?.records))return '<section class="holding-pool"><h2>每日买入试算</h2><p class="daily-error">公开模型试算数据尚未载入。</p></section>';
-    const uniform=state.periodComparisonMode!=='existing';
-    const modes=`<div class="holding-sim-mode-tabs" role="tablist" aria-label="收益比较口径"><button type="button" role="tab" data-period-comparison="uniform" aria-selected="${uniform}">月／周／日线同条件比较</button><button type="button" role="tab" data-period-comparison="existing" aria-selected="${!uniform}">原模型试算</button></div>`;
+    const uniform=state.periodComparisonMode==='uniform';
+    const modes=`<div class="holding-sim-mode-tabs" role="tablist" aria-label="收益比较口径"><button type="button" role="tab" data-period-comparison="existing" aria-selected="${!uniform}">原模型试算</button><button type="button" role="tab" data-period-comparison="uniform" aria-selected="${uniform}">同条件比较（试验）</button></div>`;
     if(uniform)return `<section class="holding-pool"><h2>${state.publicHoldingView==='returns'?'模型收益':'每日买入试算'}</h2>${modes}${divergenceComparisonPanel(state,source.divergence_comparison)}</section>`;
     const payload=holdingRecentWindow({...source,positions:source.records,selection:{profile:'strong'},publicModelView:true});
     payload.data_through=payload.window.through;
