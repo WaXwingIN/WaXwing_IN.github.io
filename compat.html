@@ -5961,6 +5961,7 @@ style.textContent+='.d2-proximity-item .d2-ai-application,.d2-history-minute-car
             if (current && scan < d2NotificationTime(current.payload.generated_at)) return;
             current = snapshot;
             let changed = syncDisplay(snapshot);
+            if(checked.payload.d2_ai_application&&typeof mergeD2AiMembership==='function')changed=mergeD2AiMembership(checked.payload.d2_ai_application)||changed;
             if(checked.payload.second_buy_bottom&&typeof mergeSecondBuyBottom==='function'){
                 changed=mergeSecondBuyBottom(checked.payload.second_buy_bottom)||changed;
                 if(typeof sendD2BottomNotification==='function')await sendD2BottomNotification();
