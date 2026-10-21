@@ -1249,7 +1249,8 @@ async function fetchLiveJson(name,{live=true}={}){
         `https://raw.githubusercontent.com/WaXwingIN/WaXwing_IN.github.io/${revision}/data/${name}?v=${stamp}`,
         `https://cdn.jsdelivr.net/gh/WaXwingIN/WaXwing_IN.github.io@${revision}/data/${name}?v=${stamp}`,local]:[local];
     let error;
-    for(const url of urls){try{const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`${name}: HTTP ${response.status}`);return {payload:await response.json(),fallback:remote&&live&&url===local}}catch(cause){error=cause}}
+    const timeout=name==='legacy_model_history.json'?120000:12000;
+    for(const url of urls){try{const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(timeout)});if(!response.ok)throw new Error(`${name}: HTTP ${response.status}`);return {payload:await response.json(),fallback:remote&&live&&url===local}}catch(cause){error=cause}}
     throw error;
 }
 function loadLocalDataScript(name){
@@ -1439,6 +1440,7 @@ function renderDailyNavigation(id){
     }).join('')+(publicCloudPage&&!publicStaticPage?'<button type="button" id="publicCloudNotifyToggle" aria-label="开启所有模型桌面提醒">🔔 开启桌面提醒</button>':'');
     const quickActions=document.createElement('div');quickActions.className='daily-quick-actions';quickActions.setAttribute('aria-label','常用入口');
     quickActions.innerHTML=`${publicCloudPage?'<button type="button" data-daily="holding_pool" data-public-holding-view="returns">模型收益</button><button type="button" data-daily="holding_pool" data-public-holding-view="simulation">每日买入试算</button>':'<button type="button" data-daily="holding_pool">持有跟踪池</button>'}<button type="button" data-daily="stock_lookup">股票检索</button><button type="button" data-daily="legacy_history">已停用模型历史</button>`;
+    if(id==='legacy_history')quickActions.insertAdjacentHTML('beforeend','<a href="momentum-v6.html">V6研究档案 ↗</a>');
     if(publicCloudPage&&id==='holding_pool')quickActions.querySelectorAll('[data-public-holding-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.publicHoldingView===(stateFor('holding_pool').publicHoldingView||'simulation'))));
     dailyNav.append(quickActions);
     if(publicCloudPage&&!publicStaticPage){
