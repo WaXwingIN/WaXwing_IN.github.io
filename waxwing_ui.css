@@ -34,6 +34,26 @@ body.waxwing-ui .callout{margin:24px 0;padding:14px 18px;color:var(--wx-teal);fo
 body.waxwing-ui .callout.error{color:#a33e38}
 body.waxwing-ui small.return-date-note{display:block;white-space:normal}
 body.waxwing-ui .return-date-note>span,body.waxwing-ui .return-date-note>time{display:inline-block;white-space:nowrap;overflow-wrap:normal;word-break:normal}
+dialog[data-market-reminders]{box-sizing:border-box;width:min(900px,calc(100vw - 28px));max-width:calc(100vw - 28px);max-height:80vh;max-height:80dvh;padding:0;border:1px solid var(--wx-line);border-top:4px solid var(--wx-teal);border-radius:12px;background:#fff;color:var(--wx-ink);font:14px/1.7 var(--wx-font);overflow:hidden}
+dialog[data-market-reminders][open]{display:flex;flex-direction:column}
+body.market-reminder-open{overflow:hidden}
+dialog[data-market-reminders]::backdrop{background:rgba(15,23,42,.65)}
+dialog[data-market-reminders] .wx-reminder-head{display:flex;flex:none;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--wx-line)}
+dialog[data-market-reminders] h2{margin:0;color:var(--wx-ink);font-size:20px}
+dialog[data-market-reminders] [data-market-reminder-count]{display:block;color:var(--wx-muted);font-size:12px}
+dialog[data-market-reminders] .wx-reminder-close{flex:none;width:40px;height:40px;border:1px solid var(--wx-line);border-radius:7px;background:#fff;color:var(--wx-ink);font:24px/1 var(--wx-font);cursor:pointer}
+dialog[data-market-reminders] .wx-reminder-body{min-height:0;padding:12px 18px;overflow:auto;overscroll-behavior:contain}
+dialog[data-market-reminders] .wx-reminder-foot{flex:none;padding:10px 18px;border-top:1px solid var(--wx-line)}
+dialog[data-market-reminders] [data-market-reminder-ack]{width:100%;min-height:42px;border:0;border-radius:7px;background:var(--wx-blue);color:#fff;font:500 14px/1.7 var(--wx-font);cursor:pointer}
+.market-reminder-group+.market-reminder-group{margin-top:16px}
+dialog[data-market-reminders] .market-reminder-group h3{margin:0 0 8px;color:var(--wx-teal);font-size:15px;font-weight:600}
+.market-reminder-group h3 small{margin-left:6px;color:var(--wx-muted);font-size:12px;font-weight:400}
+.market-reminder-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.market-reminder-item{min-width:0;padding:10px 12px;border:1px solid var(--wx-line);border-radius:8px;background:#f8fafc;overflow-wrap:anywhere}
+.market-reminder-item>b{font-weight:600}.market-reminder-item>small{display:block;margin-top:3px;color:var(--wx-muted);font-size:12px}
+.market-reminder-item>details{margin-top:7px}.market-reminder-item>details>summary{color:var(--wx-blue);cursor:pointer}
+.market-reminder-item>details>.d2-proximity-item{margin-top:8px}.market-reminder-item .d2-bottom-facts>div{grid-template-columns:100px minmax(0,1fr)}
+@media(max-width:700px){dialog[data-market-reminders]{max-height:72vh;max-height:72dvh}.market-reminder-items{grid-template-columns:minmax(0,1fr)}dialog[data-market-reminders] .wx-reminder-head,dialog[data-market-reminders] .wx-reminder-body{padding:10px 12px}dialog[data-market-reminders] .wx-reminder-foot{padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom))}}
 @media(max-width:700px){
  :root{--wx-page-padding:14px;--wx-title-size:25px}
  body.waxwing-ui main{padding-top:20px!important}

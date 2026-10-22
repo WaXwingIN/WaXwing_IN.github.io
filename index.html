@@ -52,6 +52,26 @@ body.waxwing-ui .callout{margin:24px 0;padding:14px 18px;color:var(--wx-teal);fo
 body.waxwing-ui .callout.error{color:#a33e38}
 body.waxwing-ui small.return-date-note{display:block;white-space:normal}
 body.waxwing-ui .return-date-note>span,body.waxwing-ui .return-date-note>time{display:inline-block;white-space:nowrap;overflow-wrap:normal;word-break:normal}
+dialog[data-market-reminders]{box-sizing:border-box;width:min(900px,calc(100vw - 28px));max-width:calc(100vw - 28px);max-height:80vh;max-height:80dvh;padding:0;border:1px solid var(--wx-line);border-top:4px solid var(--wx-teal);border-radius:12px;background:#fff;color:var(--wx-ink);font:14px/1.7 var(--wx-font);overflow:hidden}
+dialog[data-market-reminders][open]{display:flex;flex-direction:column}
+body.market-reminder-open{overflow:hidden}
+dialog[data-market-reminders]::backdrop{background:rgba(15,23,42,.65)}
+dialog[data-market-reminders] .wx-reminder-head{display:flex;flex:none;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--wx-line)}
+dialog[data-market-reminders] h2{margin:0;color:var(--wx-ink);font-size:20px}
+dialog[data-market-reminders] [data-market-reminder-count]{display:block;color:var(--wx-muted);font-size:12px}
+dialog[data-market-reminders] .wx-reminder-close{flex:none;width:40px;height:40px;border:1px solid var(--wx-line);border-radius:7px;background:#fff;color:var(--wx-ink);font:24px/1 var(--wx-font);cursor:pointer}
+dialog[data-market-reminders] .wx-reminder-body{min-height:0;padding:12px 18px;overflow:auto;overscroll-behavior:contain}
+dialog[data-market-reminders] .wx-reminder-foot{flex:none;padding:10px 18px;border-top:1px solid var(--wx-line)}
+dialog[data-market-reminders] [data-market-reminder-ack]{width:100%;min-height:42px;border:0;border-radius:7px;background:var(--wx-blue);color:#fff;font:500 14px/1.7 var(--wx-font);cursor:pointer}
+.market-reminder-group+.market-reminder-group{margin-top:16px}
+dialog[data-market-reminders] .market-reminder-group h3{margin:0 0 8px;color:var(--wx-teal);font-size:15px;font-weight:600}
+.market-reminder-group h3 small{margin-left:6px;color:var(--wx-muted);font-size:12px;font-weight:400}
+.market-reminder-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.market-reminder-item{min-width:0;padding:10px 12px;border:1px solid var(--wx-line);border-radius:8px;background:#f8fafc;overflow-wrap:anywhere}
+.market-reminder-item>b{font-weight:600}.market-reminder-item>small{display:block;margin-top:3px;color:var(--wx-muted);font-size:12px}
+.market-reminder-item>details{margin-top:7px}.market-reminder-item>details>summary{color:var(--wx-blue);cursor:pointer}
+.market-reminder-item>details>.d2-proximity-item{margin-top:8px}.market-reminder-item .d2-bottom-facts>div{grid-template-columns:100px minmax(0,1fr)}
+@media(max-width:700px){dialog[data-market-reminders]{max-height:72vh;max-height:72dvh}.market-reminder-items{grid-template-columns:minmax(0,1fr)}dialog[data-market-reminders] .wx-reminder-head,dialog[data-market-reminders] .wx-reminder-body{padding:10px 12px}dialog[data-market-reminders] .wx-reminder-foot{padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom))}}
 @media(max-width:700px){
  :root{--wx-page-padding:14px;--wx-title-size:25px}
  body.waxwing-ui main{padding-top:20px!important}
@@ -721,11 +741,15 @@ async function refreshPublicCloudNotifications(){
         const known=new Set(Array.isArray(seen)?seen:[]);
         let enabled=false;
         try{enabled=localStorage.getItem('waxwing_public_cloud_notice_enabled')==='1'}catch(_error){}
-        for(const event of events){
-            if(publicNoticeInitialized&&!known.has(event.id)&&enabled&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
-                try{const notice=new Notification(event.title,{body:event.body,tag:'waxwing-public-'+event.id});notice.onclick=()=>{window.open(publicNoticeLink(event.url),'_blank','noopener');notice.close()}}catch(_error){}
-            }
-            known.add(event.id);
+        const fresh=events.filter(event=>!known.has(event.id));
+        if(publicNoticeInitialized&&fresh.length&&enabled&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
+            try{
+                const notice=new Notification(`WaXwing · 模型提醒：${fresh.length}条`,{body:fresh.slice(0,5).map(event=>`${event.title}：${event.body}`).join('；'),tag:'waxwing-public-reminders'});
+                notice.onclick=()=>{window.open(publicNoticeLink('/stocks/'),'_blank','noopener');notice.close()};
+                for(const event of fresh)known.add(event.id);
+            }catch(_error){}
+        }else{
+            for(const event of events)known.add(event.id);
         }
         publicNoticeInitialized=true;
         try{localStorage.setItem('waxwing_public_cloud_notice_seen',JSON.stringify([...known].slice(-2000)))}catch(_error){}
@@ -2108,8 +2132,54 @@ function secondBuyBottomPanel(state){
     const events=all.filter(e=>selected==='all'||e.right_date===selected).sort(compareSecondBuyBottom),count=day=>new Set(all.filter(e=>day==='all'||e.right_date===day).map(e=>e.code)).size;
     return `<section class="d2-alert-page d2-second-bottom-page">${d2InnerTabs(state)}<h2>二买日线底分型</h2>${d2NotificationButton()}<label class="d2-history-filter d2-sticky-history-filter">提示日期 <select data-second-buy-bottom-date><option value="all"${selected==='all'?' selected':''}>全部历史 · ${count('all')}只</option>${dates.map(day=>`<option value="${safe(day)}"${day===selected?' selected':''}>${safe(formatDate(day))} · ${count(day)}只</option>`).join('')}</select></label><div class="d2-proximity-list">${events.map(secondBuyBottomCard).join('')}</div>${!events.length?`<p class="daily-note">${secondBuyBottomLoadError?'记录暂未加载成功，可重试。':dailyExtra.secondBuyBottom?.complete_archive?'暂无符合条件的二买日线底分型。':'正在读取二买日线底分型记录…'}</p>${secondBuyBottomLoadError?'<button type="button" data-second-buy-bottom-retry>重新读取</button>':''}`:''}<p class="daily-note">原正式D2结构后，去包含后三K构成底分型，右侧日K突破中间K最高点且现价高于原D2低点，即盘中提示；不要求原KDJ或30分钟背离提醒。按发现时强／中／弱排序：右K现价高于左K高点为强，高于左K区间中点为中，其余为弱；同档按突破幅度降序，强弱不拦截提醒。历史日线核验不补发通知。</p></section>`;
 }
+let marketReminders=null;
+function marketReminderRead(key){try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch(_error){return []}}
+function marketReminderWrite(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch(_error){}}
+function marketReminderCards(items){
+    const labels={d2:'D2双路径',bottom:'日线底分型','second-bottom':'二买日线底分型'};
+    return Object.entries(labels).map(([kind,label])=>{
+        let group=items.filter(item=>item.kind===kind);
+        if(!group.length)return '';
+        if(kind==='bottom')group=d2BottomGroups(group.map(item=>item.event)).map(event=>({...group.find(item=>item.code===event.code&&item.event.trigger_at===event.trigger_at),event}));
+        group.sort(kind==='second-bottom'?(a,b)=>compareSecondBuyBottom(a.event,b.event):d2AiPriority);
+        const cards=group.map(item=>{
+            let reason,detail;
+            if(kind==='d2'){
+                reason=`${item.branches.join(' / ')} · 提醒确认 ${formatDateTime(item.at)}`;
+                detail=item.row._confirmedRecord?d2DisplayCard(item.row,{scanAt:item.scanAt,candidates:[],payload:{feed_only:true}}):d2Card(item.row,item.scanAt,false,false,String(item.at).slice(0,10));
+            }else if(kind==='bottom'){
+                reason=`分型低点日 ${formatDate(item.event.fractal.fractal_date)} · 右K收盘确认 ${formatDateTime(item.at)}`;
+                detail=d2BottomCard(item.event);
+            }else{
+                reason=`${item.event.strength?.label||'--'} · 盘中突破中K高点、现价高于原D2 · ${formatDateTime(item.at)}`;
+                detail=secondBuyBottomCard(item.event);
+            }
+            return `<article class="market-reminder-item"><b>${safe(item.name)} ${safe(item.code)}</b>${d2AiBadge(item.row||item.event)}<small>${safe(reason)}</small><details data-reminder-detail="${safe(item.key)}"><summary>查看触发条件</summary>${detail}</details></article>`;
+        }).join('');
+        return `<section class="market-reminder-group"><h3>${label} <small>${group.length}项</small></h3><div class="market-reminder-items">${cards}</div></section>`;
+    }).join('')+'<p class="daily-note">仅展示近期真实触发或此前未确认的提醒；仅供观察，不代表买入或下单。</p>';
+}
+function marketReminderCenter(){
+    if(!marketReminders)marketReminders=new window.WaxwingMarketReminderCenter({document,storage:localStorage,render:marketReminderCards,
+        url:()=>location.href.split('#')[0]+'#d2-alert',deliver:dispatchD2SystemNotification,
+        acknowledge:items=>{
+            const d2=items.filter(item=>item.kind==='d2').map(item=>item.eventKey),bottom=items.filter(item=>item.kind!=='d2').map(item=>item.event.event_id);
+            marketReminderWrite('waxwing_d2_modal_seen_v2',[...new Set([...marketReminderRead('waxwing_d2_modal_seen_v2'),...d2])].slice(-5000));
+            for(const id of bottom)d2BottomSessionAcknowledged.add(id);
+            marketReminderWrite('waxwing_d2_bottom_pending',marketReminderRead('waxwing_d2_bottom_pending').filter(event=>!bottom.includes(event.event_id)));
+        }});
+    return marketReminders;
+}
+function queueD2ReminderSnapshot(snapshot,force=false){
+    const known=new Set(marketReminderRead('waxwing_d2_modal_seen_v2'));
+    const events=force?snapshot.rows.map(row=>({row,key:`${row.code}:${d2EffectiveConfirmedAt(row)}`,branches:['当前条件'],confirmed:d2NotificationTime(d2EffectiveConfirmedAt(row))})):d2DesktopEvents(snapshot).filter(item=>!known.has(item.key));
+    marketReminderCenter().enqueue(events.map(item=>({key:'d2:'+item.key,eventKey:item.key,kind:'d2',manual:force,row:item.row,code:item.row.code,name:item.row.name,
+        branches:item.branches,at:item.row._notificationConfirmedAt||d2EffectiveConfirmedAt(item.row),scanAt:snapshot.payload?.generated_at||snapshot.scanAt})));
+}
+function queueMarketDesktopNotification(items){return marketReminderCenter().notify(items)}
 let d2BottomNotificationPending=false;
 const d2BottomSessionSeen=new Set(),d2BottomSessionAcknowledged=new Set();
+const d2BottomSessionPushed=new Set();
 async function sendD2BottomNotification(){
     if(d2BottomNotificationPending)return;
     d2BottomNotificationPending=true;
@@ -2121,29 +2191,20 @@ async function sendD2BottomNotification(){
         const pending=new Map(read('waxwing_d2_bottom_pending').filter(e=>!d2BottomSessionAcknowledged.has(e.event_id)).map(e=>[e.event_id,e]));
         for(const e of fresh)if(!seen.has(e.event_id))pending.set(e.event_id,e);
         const items=[...pending.values()];
-        if(items.length&&!document.querySelector('[data-d2-bottom-dialog]')){
+        if(items.length){
             write('waxwing_d2_bottom_pending',items);
-            const dialog=document.createElement('dialog');dialog.dataset.d2BottomDialog='1';
-            dialog.setAttribute('aria-labelledby','d2BottomDialogTitle');
-            dialog.innerHTML=`<header class="wx-reminder-head"><h2 id="d2BottomDialogTitle">日线底分型 · 重点提示 <small>${items.length}条</small></h2><button type="button" class="wx-reminder-close" data-d2-bottom-close aria-label="已知晓并关闭提醒" autofocus>×</button></header><div class="wx-reminder-body">${items.map(e=>e.model==='二买日线底分型'?secondBuyBottomCard(e,true):`<article class="d2-proximity-item"><strong>D2提醒后 · ${safe(e.name)} ${safe(e.code)}</strong><br>原D2提醒 ${safe(formatDateTime(e.d2_trigger_at))}<br>分型日 ${safe(formatDate(e.fractal.fractal_date))} · 收盘确认 ${safe(formatDateTime(e.trigger_at))}</article>`).join('')}<p class="daily-note">仅作辅助参考，不代表买入或下单。</p></div><footer class="wx-reminder-foot"><button type="button" data-d2-bottom-ack>我已知晓，关闭提醒</button></footer>`;
-            dialog.addEventListener('cancel',e=>e.preventDefault());
-            const acknowledge=()=>{
-                for(const e of items)d2BottomSessionAcknowledged.add(e.event_id);
-                write('waxwing_d2_bottom_pending',[]);
-                try{dialog.close()}finally{dialog.remove()}
-            };
-            dialog.querySelector('[data-d2-bottom-ack]').onclick=acknowledge;
-            dialog.querySelector('[data-d2-bottom-close]').onclick=acknowledge;
-            dialog.tabIndex=-1;document.body.appendChild(dialog);dialog.showModal();dialog.focus({preventScroll:true});dialog.scrollTop=0;
+            marketReminderCenter().enqueue(items.map(event=>({key:'bottom:'+event.event_id,kind:event.model==='二买日线底分型'?'second-bottom':'bottom',event,
+                code:event.code,name:event.name,at:event.trigger_at})));
             for(const e of items){seen.add(e.event_id);d2BottomSessionSeen.add(e.event_id)}
             write('waxwing_d2_bottom_seen',[...seen].slice(-5000));
         }
         if(d2NotificationAvailable()&&Notification.permission==='granted'&&d2NotificationEnabled()){
-            const pushed=new Set(read('waxwing_d2_bottom_pushed'));
-            for(const e of fresh.filter(e=>!pushed.has(e.event_id))){
-                const intraday=e.model==='二买日线底分型';
-                await dispatchD2SystemNotification(intraday?'WaXwing · 二买日线底分型':'WaXwing · D2日线底分型重点提示',{body:intraday?`${e.name} ${e.code} · ${e.strength?.label} · 右K突破中K高点 ${e.fractal.bars.middle.high} · 实际发现 ${e.trigger_at}`:`${e.name} ${e.code} · 原D2 ${e.d2_trigger_at} · 日线底分型确认 ${e.trigger_at}`,tag:e.event_id,requireInteraction:true,data:{url:location.href.split('#')[0]+(intraday?'#d2-second-bottom':'#d2-bottom'),d2Section:intraday?'second-bottom':'bottom'}});
-                pushed.add(e.event_id);localStorage.setItem('waxwing_d2_bottom_pushed',JSON.stringify([...pushed].slice(-5000)));
+            const pushed=new Set([...read('waxwing_d2_bottom_pushed'),...d2BottomSessionPushed]),events=fresh.filter(e=>!pushed.has(e.event_id));
+            if(events.length){
+                await queueMarketDesktopNotification(events.map(e=>({key:'bottom:'+e.event_id,label:e.model==='二买日线底分型'?'二买日线底分型':'日线底分型',
+                    text:`${e.name} ${e.code}（${e.model==='二买日线底分型'?'盘中突破中K高点':'右K收盘确认'}）${e.trigger_at}`,ai:d2AiApplication(e)})));
+                for(const e of events){pushed.add(e.event_id);d2BottomSessionPushed.add(e.event_id)}
+                write('waxwing_d2_bottom_pushed',[...pushed].slice(-5000));
             }
         }
     }catch(_error){/* Keep pending acknowledgements and retry failed delivery on refresh. */}
@@ -2571,10 +2632,8 @@ function d2NotificationTime(value){
     return Date.parse(/^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(text)?text+'+08:00':text);
 }
 function d2EventRows(snapshot){
-    // The observed-feed client owns its modal. Background full-page redraws
-    // must not stack a second reminder on top of that existing dialog.
-    if(snapshot.offline||snapshot.payload?.feed_only||
-        typeof document!=='undefined'&&document.querySelector?.('[data-d2-live-reminders]'))return [];
+    // The lightweight feed queues its verified events directly in the center.
+    if(snapshot.offline||snapshot.payload?.feed_only)return [];
     const now=Date.now(),scan=d2NotificationTime(snapshot.payload?.generated_at);
     if(!Number.isFinite(scan)||now<scan||now-scan>45*60000)return [];
     let seen=[];
@@ -2719,6 +2778,7 @@ function weeklyPullbackChart(row,kind,weeks){
     return `<div class="macd-chart-panel"><strong>${price?'周线K线 + MA55':'周线MACD(12,26,9)'}</strong><small>${legend}</small><div class="macd-chart-scroll"><svg viewBox="0 0 ${width} ${height}" style="width:${width}px;height:${height}px" role="img" aria-label="${price?'价格与MA55':'DIF、DEA和MACD柱'}图，标记A至E">${drawing}${marks}<text x="42" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[0]))}</text><text x="1050" y="${height-7}" fill="#64748b" font-size="12">${safe(formatDate(dates[n-1]))}</text></svg></div></div>`;
 }
 let d2M30NotificationPending='';
+const d2M30SessionSeen=new Set();
 function d2DesktopEvents(snapshot,now=Date.now()){
     const scan=d2NotificationTime(snapshot.payload?.generated_at);
     if(snapshot.offline||/回算|重算|历史重放/.test(snapshot.payload?.kind||'')||!Number.isFinite(scan)||now<scan||now-scan>45*60000)return [];
@@ -2766,18 +2826,20 @@ function d2DesktopEvents(snapshot,now=Date.now()){
 }
 async function sendD2M30DesktopNotification(observedSnapshot=null){
     sendD2BottomNotification();
+    const snapshot=observedSnapshot||d2AlertSnapshot();
+    queueD2ReminderSnapshot(snapshot);
     if(publicCloudPage&&!publicStaticPage)return;
     if(!d2NotificationAvailable()||Notification.permission!=='granted'||!d2NotificationEnabled()){
         const reason=!d2NotificationAvailable()?'当前页面不能调用桌面通知':Notification.permission!=='granted'?'浏览器尚未允许通知':'桌面推送开关未开启';
         d2PushReceipt({checked_at:new Date().toISOString(),state:'blocked',reason});
         setD2PushStatus(reason,'error');return;
     }
-    const snapshot=observedSnapshot||d2AlertSnapshot(),now=Date.now(),scanTime=d2NotificationTime(snapshot.payload?.generated_at);
+    const now=Date.now(),scanTime=d2NotificationTime(snapshot.payload?.generated_at);
     if(snapshot.offline)return;
     if(!Number.isFinite(scanTime)||now<scanTime||now-scanTime>45*60000)return;
     let seen=[];
     try{seen=JSON.parse(localStorage.getItem('waxwing_d2_m30_seen_v1')||'[]')}catch(_error){}
-    const known=new Set(Array.isArray(seen)?seen:[]);
+    const known=new Set([...(Array.isArray(seen)?seen:[]),...d2M30SessionSeen]);
     const eligible=d2DesktopEvents(snapshot,now),events=eligible.filter(item=>!known.has(item.key));
     const receipt=d2PushReceipt({checked_at:new Date().toISOString(),scan_at:snapshot.payload.generated_at,eligible_count:eligible.length,pending_count:events.length,state:events.length?'pending':'idle',reason:''});
     if(!events.length){const last=receipt.delivered_at?`；上次 ${new Date(receipt.delivered_at).toLocaleTimeString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'})} 已交给系统`:'；尚无系统交付记录';setD2PushStatus(`已开启，本轮 ${eligible.length} 条近期提醒均已处理，暂无未通知的新提醒${last}`);return}
@@ -2785,14 +2847,11 @@ async function sendD2M30DesktopNotification(observedSnapshot=null){
     if(d2M30NotificationPending)return;
     d2M30NotificationPending=signature;
     try{
-        const summary=events.slice(0,5).map(({row,branches})=>`${d2AiApplication(row)?'AI应用优先 · ':''}${row.name} ${row.code}（${branches.join(' / ')}）${String(row._notificationConfirmedAt||'').slice(11,19)}`).join('、');
-        const result=await dispatchD2SystemNotification(`WaXwing D2双路径：${events.length}条新提醒${events.some(item=>d2AiApplication(item.row))?' · AI应用优先':''}`,{
-            body:`${summary}。仅供观察，不是买入信号。`,
-            icon:'favicon.ico',badge:'favicon.ico',tag:'waxwing-d2-m30:'+signature,renotify:true,requireInteraction:true,
-            data:{url:location.href.split('#')[0]+'#d2-alert',d2Section:'alerts'}});
-        d2PushReceipt({state:'accepted',delivered_at:new Date().toISOString(),delivered_count:events.length,mode:result.mode,tag:'waxwing-d2-m30:'+signature,reason:''});
+        const result=await queueMarketDesktopNotification(events.map(({row,branches,key})=>({key:'d2:'+key,label:'D2双路径',ai:d2AiApplication(row),
+            text:`${d2AiApplication(row)?'AI应用优先 · ':''}${row.name} ${row.code}（${branches.join(' / ')}）${String(row._notificationConfirmedAt||'').slice(11,19)}`})));
+        d2PushReceipt({state:'accepted',delivered_at:new Date().toISOString(),delivered_count:events.length,mode:result.mode,tag:result.tag,reason:''});
         setD2PushStatus(`已将 ${events.length} 条新提醒交给系统通知。若未见横幅，请按 Win+N 检查通知中心。`,'success');
-        for(const item of events)known.add(item.key);
+        for(const item of events){known.add(item.key);d2M30SessionSeen.add(item.key)}
         try{localStorage.setItem('waxwing_d2_m30_seen_v1',JSON.stringify([...known].slice(-1000)))}catch(_error){}
     }catch(error){d2PushReceipt({state:'failed',reason:error?.message||'通知接口失败'});setD2PushStatus(`桌面推送失败：${error?.message||'请测试通知权限'}，下次更新会重试。`,'error')}finally{d2M30NotificationPending=''}
 }
@@ -5407,10 +5466,11 @@ draw=function(){
     content.querySelector('#weeklyConsolidationChartWeeks')?.addEventListener('change',event=>{stateFor('weekly_consolidation_first').chartWeeks=Number(event.target.value);draw()});
     content.querySelectorAll('[data-weekly-consolidation-open]').forEach(button=>button.addEventListener('click',()=>{stateFor('weekly_consolidation_first').detailCode=button.dataset.weeklyConsolidationOpen;draw();content.querySelector('[data-weekly-consolidation-close]')?.focus()}));
     content.querySelectorAll('[data-macd-zoom]').forEach(input=>input.addEventListener('input',()=>{const box=input.closest('.macd-shape,.m30-detail-dialog');box?.querySelectorAll('.macd-chart-panel svg').forEach(svg=>{svg.style.width=`${input.value}px`})}));
-    const d2State=stateFor('d2_alert'),latestD2=d2AlertSnapshot(),pendingD2Rows=d2EventRows(latestD2),modalD2Rows=d2State.d2AlertForceOpen?latestD2.rows:pendingD2Rows,modalD2Signature=d2RowsSignature(modalD2Rows,latestD2.session?.date||'');
+    const d2State=stateFor('d2_alert'),latestD2=d2AlertSnapshot();
     content.querySelector('[data-d2-notification-toggle]')?.addEventListener('click',toggleD2DesktopNotification);
     content.querySelector('[data-d2-notification-test]')?.addEventListener('click',testD2DesktopNotification);
-    if(id==='d2_alert'&&(!d2State.d2Section||d2State.d2Section==='alerts')&&(!d2State.alertDate||d2State.alertDate==='latest')&&modalD2Rows.length)content.insertAdjacentHTML('beforeend',d2ProximityModal(modalD2Rows,modalD2Signature,latestD2.scanAt,latestD2.session?.date||'',!d2State.d2AlertForceOpen));
+    queueD2ReminderSnapshot(latestD2,Boolean(d2State.d2AlertForceOpen));
+    d2State.d2AlertForceOpen=false;
     content.querySelectorAll('[data-d2-manual-delete]').forEach(button=>button.addEventListener('click',()=>{
         const code=button.dataset.d2ManualDelete,name=button.dataset.d2ManualName||code,date=button.dataset.d2ManualDate;
         if(!window.confirm(`确定将 ${name} ${code} 移出 ${formatDate(date)} 的筛选结果？\n\n只影响这个交易日；以后交易日重新满足条件时仍会正常出现。`))return;
@@ -5424,8 +5484,6 @@ draw=function(){
     }));
     const secondModal=content.querySelector('[data-second-modal]');
     if(secondModal){const close=()=>{const code=state.secondDetailCode;state.secondDetailCode=null;draw();content.querySelector(`[data-second-detail="${code}"]`)?.focus({preventScroll:true})};secondModal.onclick=event=>{if(event.target===secondModal)close()};secondModal.querySelector('[data-second-detail-close]')?.addEventListener('click',close)}
-    const proximityModal=content.querySelector('[data-d2-proximity-modal]');
-    if(proximityModal){const close=()=>{try{const seen=JSON.parse(localStorage.getItem('waxwing_d2_modal_seen_v2')||'[]');const keys=modalD2Rows.map(row=>`${row.code}:${d2EffectiveConfirmedAt(row)}`).filter(Boolean);localStorage.setItem('waxwing_d2_modal_seen_v2',JSON.stringify([...new Set([...(Array.isArray(seen)?seen:[]),...keys])].slice(-1000)))}catch(_error){}d2State.d2AlertForceOpen=false;draw()};proximityModal.querySelectorAll('[data-d2-proximity-close]').forEach(button=>button.addEventListener('click',close))}
     const m30Modal=content.querySelector('[data-m30-modal]');
     if(m30Modal){const close=()=>{const code=stateFor('m30_first').detailCode;stateFor('m30_first').detailCode=null;draw();content.querySelector(`[data-m30-detail="${code}"]`)?.focus({preventScroll:true})};m30Modal.onclick=event=>{if(event.target===m30Modal)close()};m30Modal.querySelector('[data-m30-close]')?.addEventListener('click',close)}
     const m30ResearchModal=content.querySelector('[data-m30-research-modal]');
@@ -5936,10 +5994,6 @@ style.textContent+='.d2-proximity-item .d2-ai-application,.d2-history-minute-car
     window.__waxwingD2SignalFeed = true;
     const schema = 'waxwing-public-d2-feed-v1';
     let pending = false, lastDigest = '', current = null;
-    const readSeen = () => {
-        try { const value = JSON.parse(localStorage.getItem('waxwing_d2_modal_seen_v2') || '[]'); return Array.isArray(value) ? value : []; }
-        catch (_) { return []; }
-    };
     async function verified(envelope) {
         if (envelope?.schema !== schema || !/^[0-9a-f]{64}$/.test(envelope.sha256 || '') || typeof envelope.content !== 'string' || envelope.content.length > 2000000) throw new Error('提醒数据格式无效');
         const bytes = Uint8Array.from(atob(envelope.content), c => c.charCodeAt(0));
@@ -5950,23 +6004,7 @@ style.textContent+='.d2-proximity-item .d2-ai-application,.d2-history-minute-car
         return {payload, digest};
     }
     function display(snapshot) {
-        if (typeof d2DesktopEvents !== 'function' || typeof d2ProximityModal !== 'function') return;
-        if (document.querySelector('[data-d2-proximity-modal]')) return;
-        const known = new Set(readSeen()), events = d2DesktopEvents(snapshot).filter(item => !known.has(item.key));
-        if (!events.length) return;
-        const distinct = new Map(events.map(item => [item.row.code, item.row])), rows = [...distinct.values()];
-        const holder = document.createElement('div');
-        holder.setAttribute('data-d2-live-reminders', '');
-        holder.innerHTML = d2ProximityModal(rows, events.map(item => item.key).join('|'), snapshot.payload.generated_at, snapshot.payload.daily_date, true);
-        const close = () => {
-            try { localStorage.setItem('waxwing_d2_modal_seen_v2', JSON.stringify([...new Set([...readSeen(), ...events.map(item => item.key)])].slice(-1000))); }
-            catch (_) { /* A storage restriction only prevents persistent dismissal. */ }
-            holder.remove();
-        };
-        const modal = holder.querySelector('[data-d2-proximity-modal]');
-        holder.querySelectorAll('[data-d2-proximity-close]').forEach(button => button.addEventListener('click', close));
-
-        document.body.appendChild(holder);
+        if (typeof queueD2ReminderSnapshot === 'function') queueD2ReminderSnapshot(snapshot);
     }
     function syncDisplay(snapshot) {
         if (typeof dailyExtra === 'undefined' || typeof mergeDailyBundle !== 'function') return false;
@@ -6015,7 +6053,7 @@ style.textContent+='.d2-proximity-item .d2-ai-application,.d2-history-minute-car
             if(checked.payload.d2_ai_application&&typeof mergeD2AiMembership==='function')changed=mergeD2AiMembership(checked.payload.d2_ai_application)||changed;
             if(checked.payload.second_buy_bottom&&typeof mergeSecondBuyBottom==='function'){
                 changed=mergeSecondBuyBottom(checked.payload.second_buy_bottom)||changed;
-                if(typeof sendD2BottomNotification==='function')await sendD2BottomNotification();
+                if(typeof sendD2BottomNotification==='function')sendD2BottomNotification();
             }
             const meta = document.getElementById?.('meta');
             if (meta) {
