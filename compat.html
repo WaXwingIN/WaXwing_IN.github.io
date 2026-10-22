@@ -382,7 +382,105 @@ function drawPerformance(perf){
 }
 function draw(){const groups={focus:['首踩10日线'],strict:['T+1','T1-T5'],long:['中线']};const preferred='首踩10日线',names=(groups[tab]||[]).filter(n=>data.models&&data.models[n]);document.getElementById('content').innerHTML=names.length?names.map(n=>{let m=data.models[n],obs=m.observation_rows||[],rules=rulesUnlocked?esc(m.rules):'条件已隐藏，输入口令后查看。',locked=rulesUnlocked?'':' locked';let simple=n==='首踩10日线',featured=n===preferred;return `<section class="model${featured?' featured':''}"><div class="model-title"><h2>${n}</h2><div class="counts">${featured?'<span class="badge key">重点</span>':''}<span class="badge">${simple?'推荐':'已确认'} ${m.rows.length}</span>${simple?'':`<span class="badge obs">观察 ${obs.length}</span>`}</div></div><p class="meta">${simple?esc(data.market_context?.reason||'日线二买观察'):''}</p><div class="rules${locked}">${rules}</div>${rulesUnlocked&&m.implementation?`<details class="implementation"><summary>当前计算口径（与原文分开）</summary><p>${esc(m.implementation)}</p></details>`:""}<div class="subhead"><div class="sub-title"><h3>${simple?'次日观察':'已确认'}</h3></div><span class="count-pill">${m.rows.length} 只</span></div>${table(m.rows,'暂无严格符合条件的股票。',n)}${simple?'':`<div class="subhead"><div class="sub-title"><h3>观察池</h3><span class="hint">含结构待确认</span></div><span class="count-pill">${obs.length} 只</span></div>${table(obs,'暂无观察池股票。')}`}</section>`}).join(''):'<p class="note">当前标签暂无对应模型数据。</p>';document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));syncGate()}
 document.getElementById('content').addEventListener('click',e=>{let button=e.target.closest('button[data-sort-key]');if(button)toggleTableSort(button.dataset.sortTable,button.dataset.sortKey)});
-const performanceModal=document.getElementById('performanceModal');function closePerformance(){performanceModal.classList.add('hide');document.body.classList.remove('modal-open')}document.getElementById('openPerformance').onclick=async()=>{if(!performanceData){try{if(publicCloudPage){await refreshPageVersion();performanceData=await publicCloudJson('model_performance_latest.json')}else if(location.protocol==='file:')performanceData=await loadLocalDataScript('model_performance_latest');else{const response=await fetch('data/model_performance_latest.json',{cache:'no-store'});performanceData=response.ok?await response.json():null}drawPerformance(performanceData)}catch(_error){drawPerformance(null)}}performanceModal.classList.remove('hide');document.body.classList.add('modal-open')};document.getElementById('closePerformance').onclick=closePerformance;performanceModal.onclick=e=>{if(e.target===performanceModal)closePerformance()};document.addEventListener('keydown',e=>{if(e.key==='Escape')closePerformance()});document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;draw()});document.getElementById('unlockRules').onclick=async()=>{let ok=await sha256(document.getElementById('rulePass').value)===RULE_HASH;rulesUnlocked=ok;if(ok){sessionStorage.setItem('rulesUnlocked','1');document.getElementById('rulePass').value='';drawFocus(data);draw()}else{document.getElementById('ruleMsg').textContent='口令不正确'}};document.getElementById('rulePass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('unlockRules').click()});{const x={};data={...x,models:{}};const meta=document.getElementById('meta');if(meta){meta.textContent='';meta.classList.add('meta-loading');meta.setAttribute('aria-busy','true')}drawPerformance(null);setTimeout(()=>draw(),0)}</script></main><script>/* Public pages choose one data source before any model data is loaded. */
+const performanceModal=document.getElementById('performanceModal');function closePerformance(){performanceModal.classList.add('hide');document.body.classList.remove('modal-open')}document.getElementById('openPerformance').onclick=async()=>{if(!performanceData){try{if(publicCloudPage){await refreshPageVersion();performanceData=await publicCloudJson('model_performance_latest.json')}else if(location.protocol==='file:')performanceData=await loadLocalDataScript('model_performance_latest');else{const response=await fetch('data/model_performance_latest.json',{cache:'no-store'});performanceData=response.ok?await response.json():null}drawPerformance(performanceData)}catch(_error){drawPerformance(null)}}performanceModal.classList.remove('hide');document.body.classList.add('modal-open')};document.getElementById('closePerformance').onclick=closePerformance;performanceModal.onclick=e=>{if(e.target===performanceModal)closePerformance()};document.addEventListener('keydown',e=>{if(e.key==='Escape')closePerformance()});document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;draw()});document.getElementById('unlockRules').onclick=async()=>{let ok=await sha256(document.getElementById('rulePass').value)===RULE_HASH;rulesUnlocked=ok;if(ok){sessionStorage.setItem('rulesUnlocked','1');document.getElementById('rulePass').value='';drawFocus(data);draw()}else{document.getElementById('ruleMsg').textContent='口令不正确'}};document.getElementById('rulePass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('unlockRules').click()});{const x={};data={...x,models:{}};const meta=document.getElementById('meta');if(meta){meta.textContent='';meta.classList.add('meta-loading');meta.setAttribute('aria-busy','true')}drawPerformance(null);setTimeout(()=>draw(),0)}</script></main><script>/* One acknowledgement surface and one desktop summary for market reminders. */
+(function(root){
+    'use strict';
+    class MarketReminderCenter{
+        constructor(options){
+            this.options=options;this.pending=new Map();this.acknowledged=new Set();
+            this.desktop=new Map();this.waiters=[];this.dialog=null;this.rendered=[];
+            this.restore();
+        }
+        restore(){
+            try{
+                const records=JSON.parse(this.options.storage.getItem('waxwing_market_reminder_pending_v1')||'[]');
+                if(Array.isArray(records))for(const item of records){
+                    if(item&&typeof item.key==='string'&&['d2','bottom','second-bottom'].includes(item.kind))this.pending.set(item.key,item);
+                }
+            }catch(_error){}
+        }
+        persist(){
+            try{this.options.storage.setItem('waxwing_market_reminder_pending_v1',JSON.stringify([...this.pending.values()].filter(item=>!item.manual)))}catch(_error){}
+        }
+        enqueue(items){
+            let changed=false;
+            for(const item of items){
+                if(!item?.key||this.acknowledged.has(item.key)&&!item.manual||this.pending.has(item.key))continue;
+                this.pending.set(item.key,item);changed=true;
+            }
+            if(changed)this.persist();
+            if(this.dialog&&changed)this.render();
+            else if(this.pending.size&&!this.dialog&&!this.renderTimer)this.renderTimer=setTimeout(()=>{this.renderTimer=null;this.render()},350);
+        }
+        render(){
+            if(!this.pending.size)return;
+            const doc=this.options.document;
+            if(!this.dialog){
+                this.previousFocus=doc.activeElement;
+                const dialog=doc.createElement('dialog');this.dialog=dialog;
+                dialog.setAttribute('data-market-reminders','');dialog.setAttribute('aria-labelledby','marketReminderTitle');
+                dialog.innerHTML='<header class="wx-reminder-head"><div><h2 id="marketReminderTitle">市场提醒</h2><small data-market-reminder-count aria-live="polite"></small></div><button type="button" class="wx-reminder-close" data-market-reminder-close aria-label="全部已知晓并关闭提醒">×</button></header><div class="wx-reminder-body"></div><footer class="wx-reminder-foot"><button type="button" data-market-reminder-ack>全部已知晓，关闭提醒</button></footer>';
+                dialog.addEventListener('cancel',event=>event.preventDefault());
+                dialog.querySelector('[data-market-reminder-close]').onclick=()=>this.acknowledge();
+                dialog.querySelector('[data-market-reminder-ack]').onclick=()=>this.acknowledge();
+                doc.body.appendChild(dialog);
+                doc.body.classList.add('market-reminder-open');
+            }
+            const body=this.dialog.querySelector('.wx-reminder-body'),scroll=body.scrollTop;
+            const expanded=new Set([...body.querySelectorAll('details[open][data-reminder-detail]')].map(item=>item.dataset.reminderDetail));
+            const focused=doc.activeElement?.closest?.('[data-reminder-detail]')?.dataset.reminderDetail;
+            const items=[...this.pending.values()];this.rendered=items.map(item=>item.key);
+            body.innerHTML=this.options.render(items);
+            for(const detail of body.querySelectorAll('[data-reminder-detail]')){
+                if(expanded.has(detail.dataset.reminderDetail))detail.open=true;
+                if(detail.dataset.reminderDetail===focused)detail.querySelector('summary')?.focus({preventScroll:true});
+            }
+            body.scrollTop=scroll;
+            const stocks=new Set(items.map(item=>item.code)).size;
+            this.dialog.querySelector('[data-market-reminder-count]').textContent=`${items.length}条提醒 · ${stocks}只股票 · 按类别汇总`;
+            if(!this.dialog.open){this.dialog.showModal();this.dialog.querySelector('[data-market-reminder-ack]').focus({preventScroll:true})}
+        }
+        acknowledge(){
+            const items=this.rendered.map(key=>this.pending.get(key)).filter(Boolean);
+            for(const item of items){this.pending.delete(item.key);this.acknowledged.add(item.key)}
+            try{this.options.acknowledge(items)}finally{
+                this.persist();this.dialog.close();this.dialog.remove();this.dialog=null;this.notifiedDialog=null;
+                this.options.document.body.classList.remove('market-reminder-open');
+                this.previousFocus?.focus?.({preventScroll:true});
+                if(this.pending.size)this.enqueue([]);
+            }
+        }
+        notify(items){
+            if(!items.length)return Promise.resolve({mode:'idle'});
+            for(const item of items)this.desktop.set(item.key,item);
+            const result=new Promise((resolve,reject)=>this.waiters.push({resolve,reject}));
+            this.scheduleDelivery();return result;
+        }
+        scheduleDelivery(){
+            if(this.delivering||this.deliveryTimer||!this.desktop.size)return;
+            this.deliveryTimer=setTimeout(()=>{this.deliveryTimer=null;this.flushDelivery()},this.options.desktopDelay??600);
+        }
+        async flushDelivery(){
+            const items=[...this.desktop.values()].sort((a,b)=>Number(Boolean(b.ai))-Number(Boolean(a.ai)));
+            const waiters=this.waiters;this.desktop.clear();this.waiters=[];this.delivering=true;
+            try{
+                const counts=new Map();for(const item of items)counts.set(item.label,(counts.get(item.label)||0)+1);
+                const silent=Boolean(this.dialog&&this.notifiedDialog===this.dialog);
+                const result=await this.options.deliver(`WaXwing · 市场提醒：${items.length}条${items.some(item=>item.ai)?' · AI应用优先':''}`,{
+                    body:[...counts].map(([label,count])=>`${label} ${count}条`).join('；')+'。'+items.slice(0,5).map(item=>item.text).join('、')+(items.length>5?'等。':'。')+'详情统一在网页提醒窗口查看。',
+                    icon:'favicon.ico',badge:'favicon.ico',tag:'waxwing-market-reminders',renotify:!silent,silent,requireInteraction:true,
+                    data:{url:this.options.url(),d2Section:'alerts',marketReminders:true}});
+                this.notifiedDialog=this.dialog;
+                for(const waiter of waiters)waiter.resolve({...result,tag:'waxwing-market-reminders'});
+            }catch(error){for(const waiter of waiters)waiter.reject(error)}
+            finally{this.delivering=false;this.scheduleDelivery()}
+        }
+    }
+    if(typeof module!=='undefined'&&module.exports)module.exports=MarketReminderCenter;
+    else root.WaxwingMarketReminderCenter=MarketReminderCenter;
+})(typeof window==='undefined'?globalThis:window);
+
+/* Public pages choose one data source before any model data is loaded. */
 (function(global){
     'use strict';
     const KEY='waxwing_public_data_source_v1',PARAM='data_source';
