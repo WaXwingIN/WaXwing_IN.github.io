@@ -5600,7 +5600,7 @@ draw=function(){
     const weeklyConsolidationModal=content.querySelector('[data-weekly-consolidation-modal]');
     if(weeklyConsolidationModal){const close=()=>{const code=stateFor('weekly_consolidation_first').detailCode;stateFor('weekly_consolidation_first').detailCode=null;draw();content.querySelector(`[data-weekly-consolidation-open="${code}"]`)?.focus({preventScroll:true})};weeklyConsolidationModal.onclick=event=>{if(event.target===weeklyConsolidationModal)close()};weeklyConsolidationModal.querySelector('[data-weekly-consolidation-close]')?.addEventListener('click',close)}
     content.querySelectorAll('.m30-detail-dialog,details.daily-rules').forEach(syncChartTimeAxes);
-    document.body.classList.toggle('second-modal-open',Boolean(monthlyModal||secondModal||proximityModal||m30Modal||dailyFirstModal||dailyConsolidationModal||weeklyPullbackModal||weeklyConsolidationModal));
+    document.body.classList.toggle('second-modal-open',Boolean(monthlyModal||secondModal||m30Modal||dailyFirstModal||dailyConsolidationModal||weeklyPullbackModal||weeklyConsolidationModal));
     sendD2M30DesktopNotification();
     enhanceStockCodeCopy(document);
     enhanceWideTables(content);
