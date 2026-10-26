@@ -1581,6 +1581,7 @@ function renderDailyNavigation(id){
     quickActions.innerHTML=`${publicCloudPage?'<button type="button" data-daily="holding_pool" data-public-holding-view="returns">模型收益</button><button type="button" data-daily="holding_pool" data-public-holding-view="simulation">每日买入试算</button>':'<button type="button" data-daily="holding_pool">持有跟踪池</button>'}<button type="button" data-daily="stock_lookup">股票检索</button><button type="button" data-daily="legacy_history">已停用模型历史</button>`;
     if(id==='legacy_history')quickActions.insertAdjacentHTML('beforeend','<a href="momentum-v6.html">V6研究档案 ↗</a>');
     if(publicCloudPage&&id==='holding_pool')quickActions.querySelectorAll('[data-public-holding-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.publicHoldingView===(stateFor('holding_pool').publicHoldingView||'simulation'))));
+    quickActions.insertAdjacentHTML('afterbegin','<button type="button" data-daily="daily_priority" aria-pressed="'+String(id==='daily_priority')+'">每日优选</button>');
     dailyNav.append(quickActions);
     if(publicCloudPage&&!publicStaticPage){
         const button=document.getElementById('publicCloudNotifyToggle');
@@ -1603,6 +1604,10 @@ async function ensureDailyData(id){
 async function loadDailyData(id,{checkVersion=true}={}){
     const content=document.getElementById('content');
     try{
+        if(id==='daily_priority'&&dailyExtra.pageManifest&&!dailyExtra.pageManifest.assets?.['page/tab_daily_priority']){
+            content.innerHTML='<section class="holding-pool"><h2>每日优选</h2><p class="daily-note">当前发布版本尚未包含午间优选数据，更新发布版本后即可查看。</p></section>';
+            return;
+        }
         if(publicCloudPage&&id==='holding_pool'){
             if(checkVersion)await refreshPageVersion();
             if(!dailyExtra.pageManifest?.assets?.['page/tab_model_simulation']){
@@ -1725,6 +1730,7 @@ if(location.hash==='#stock-lookup')activeDaily='stock_lookup';
 if(location.hash==='#weekly-first-buy')activeDaily='weekly_first';
 if(location.hash==='#weekly-consolidation-first')activeDaily='weekly_consolidation_first';
 if(location.hash==='#monthly-consolidation-first')activeDaily='monthly_consolidation_first';
+if(location.hash==='#daily-priority')activeDaily='daily_priority';
 let initialD2RouteChecked=false;
 try{const initialUrl=new URL(location.href);if(initialUrl.searchParams.has('model')){initialUrl.searchParams.delete('model');history.replaceState(null,'',initialUrl)}}catch(_error){}
 const modelName=()=> '首踩10日线';
@@ -1866,6 +1872,7 @@ else window.addEventListener('resize',syncDailyStickyOffset);
 requestAnimationFrame(syncDailyStickyOffset);
 function selectDaily(id){
     activeDaily=id;
+    if(id==='daily_priority')history.replaceState(null,'','#daily-priority');
     const routes={d2_alert:'d2-alert',holding_pool:'holding-pool',stock_lookup:'stock-lookup',second:'class-ii',legacy_history:'legacy-model-history',daily_macd:'daily-macd',sixty_minute_macd:'sixty-minute-macd',weekly_first:'weekly-first-buy',weekly_consolidation_first:'weekly-consolidation-first',monthly_consolidation_first:'monthly-consolidation-first',two_centers:'daily-first-buy'};
     if(routes[id])history.replaceState(null,'','#'+routes[id]);
     showDailyLoading(id);ensureDailyData(id);document.getElementById('daily-'+id)?.focus()
@@ -5319,6 +5326,46 @@ style.textContent+=`.class-ii-table{width:100%;min-width:0}.class-ii-table td:nt
 
 function extraArchivePending(){return Boolean(dailyExtra.dailyConsolidationSessionsGzip&&
     !(dailyExtra.dailyConsolidationSessions?.sessions||[]).length)}
+function dailyPriorityPanel(state){
+    const live=dailyExtra.dailyPriority;
+    if(!live)return '<section class="holding-pool"><h2>每日优选</h2><p class="daily-note">午间优选数据尚未载入，请刷新重试。</p></section>';
+    const research=state.priorityScope==='research',payload=research?live.backtest:live;
+    const modes=`<div class="holding-pool-tabs"><button type="button" data-priority-scope="live" aria-pressed="${!research}">午间优选</button><button type="button" data-priority-scope="research" aria-pressed="${research}">近30日研究</button></div>`;
+    if(!payload)return `<section class="holding-pool"><h2>每日优选</h2>${modes}<p class="daily-note">近30日研究结果尚未发布。</p></section>`;
+    const sessions=payload.sessions||[],models=payload.models||[];
+    const dates=[...new Set([...sessions.map(row=>row.date),...(payload.latest_attempt?.date?[payload.latest_attempt.date]:[])])].sort().reverse();
+    const selected=state.date==='all'?'all':state.date==='latest'?dates[0]:state.date;
+    const shown=sessions.filter(row=>selected==='all'||row.date===selected);
+    const model=state.priorityModel||'all',visibleModels=models.filter(name=>model==='all'||name===model);
+    const number=(value,digits=2)=>value==null?'--':Number(value).toFixed(digits);
+    const filters=`<div class="daily-filter-row daily-filters"><label>优选日期 <select id="dailyDate"><option value="latest" ${state.date==='latest'?'selected':''}>${dates[0]?safe(formatDate(dates[0])):'尚未形成名单'}</option><option value="all" ${state.date==='all'?'selected':''}>全部历史</option>${dates.map(day=>`<option value="${safe(day)}" ${state.date===day?'selected':''}>${safe(formatDate(day))}</option>`).join('')}</select></label><label>来源模型 <select data-priority-model><option value="all">全部模型</option>${models.map(name=>`<option ${name===model?'selected':''}>${safe(name)}</option>`).join('')}</select></label></div>`;
+    const summary=visibleModels.map(name=>{
+        const picks=shown.flatMap(day=>day.models?.[name]?.picks||[]),outcomes=picks.map(row=>row.outcome||{status:'待核验'});
+        const closed=outcomes.filter(row=>row.status==='已退出'),wins=closed.filter(row=>Number(row.net_return_pct)>0).length;
+        const count=status=>outcomes.filter(row=>row.status===status).length;
+        const average=closed.length?closed.reduce((sum,row)=>sum+Number(row.net_return_pct),0)/closed.length:null;
+        return `<tr><td>${safe(name)}</td><td>${picks.length}</td><td>${closed.length} / ${wins}</td><td>${closed.length?number(100*wins/closed.length)+'%':'--'}</td><td>${returnPct(average)}</td><td>${count('持有中')}</td><td>${count('待买入')}</td><td>${count('未买入')}</td><td>${count('待核验')}</td></tr>`;
+    }).join('');
+    const cards=shown.map(session=>{
+        const market=session.market||{};
+        const index=(market.indices||[]).map(row=>`${safe(row.name)} ${returnPct(row.return_5_pct)} <small>5日</small>`).join(' · ');
+        const groups=visibleModels.map(name=>{
+            const group=session.models?.[name]||{},picks=group.picks||[];
+            const missing=Object.entries(group.coverage||{}).filter(([key])=>!['reminders','already_exited'].includes(key)).reduce((sum,[,value])=>sum+Number(value),0);
+            const items=picks.map(row=>{
+                const a=row.analysis||{},outcome=row.outcome||{status:'待买入'};
+                const scores=[['index','指数',15],['sector','板块',25],['volume','量',20],['price','价',20],['time','时',10],['space','空',10]];
+                return `<article class="priority-pick"><h4>优先${safe(row.rank)} · ${safe(row.name)} <span>${safe(row.code)}</span> <small>${safe(row.asset_type)}</small></h4><p><b>${number(row.score)}分</b> · ${safe(row.sector)}${row.membership_date?` <small>归属 ${safe(formatDate(row.membership_date))}</small>`:''}</p><dl><div><dt>量</dt><dd>上午量比 ${number(a.volume_ratio_5)}倍</dd></div><div><dt>价</dt><dd>相对三指数5日 ${returnPct(a.relative_5_pct)} · ${a.above_ma20?'MA20上方':'MA20下方'}</dd></div><div><dt>时</dt><dd>距近20日低点 ${safe(a.sessions_since_low)}个交易日</dd></div><div><dt>空</dt><dd>近10日低点 ${number(a.support_10)}；${a.resistance_20==null?'突破近20日高点，未推算上方目标':`近20日高点 ${number(a.resistance_20)}，空间/回撤 ${number(a.reward_risk)}倍`}</dd></div></dl><p class="daily-note">原提醒 ${safe(formatDateTime(row.triggered_at))} · ${row.entry_mode==='afternoon'?'当日13:00':'次交易日开盘'}参考进场</p><p><b>${safe(outcome.status)}</b> ${outcome.net_return_pct==null?'':returnPct(outcome.net_return_pct)}${outcome.reason?` · ${safe(outcome.reason)}`:''}</p>${outcome.entry_at?`<p class="daily-note">参考买入 ${safe(formatDateTime(outcome.entry_at))} / ${number(outcome.entry_price)}${outcome.exit_at?`；参考退出 ${safe(formatDateTime(outcome.exit_at))} / ${number(outcome.exit_price)}`:`；估值截止 ${safe(formatDate(outcome.mark_date))}`}</p>`:''}<details><summary>评分与原模型依据</summary><p class="daily-note">${scores.map(([key,label,max])=>`${label} ${number(row.scores?.[key])}/${max}`).join(' · ')}。固定研究评分，分数不代表成功概率。</p><p class="daily-note">原规则 ${safe(Array.isArray(row.rule_version)?row.rule_version.join('、'):row.rule_version||'沿用冻结提醒')}。量比使用前5个交易日上午同期均量；空间使用近10日低点与前20日高点，仅为价格区间参考。</p></details></article>`;
+            }).join('');
+            return `<section class="priority-model"><h3>${safe(name)}</h3><p class="daily-note">本轮可核验 ${Number(group.eligible||0)}只，优选 ${picks.length}只${missing?`；${missing}条提醒因资料或时序未完成核验` : ''}。</p><div class="priority-grid">${items||'<p class="daily-note">本轮无可核验的优选，不补入旧名单。</p>'}</div></section>`;
+        }).join('');
+        const sectors=(market.sectors||[]).map(row=>`<tr><td>${safe(row.name)}</td><td>${returnPct(row.return_5_pct)}</td><td>${returnPct(row.relative_5_pct)}</td><td>${number(row.above_ma20_ratio*100)}%</td><td>${safe(row.verified)}/${safe(row.total)}</td></tr>`).join('');
+        return `<section class="priority-session"><h3>${safe(formatDate(session.date))} · 午间名单</h3><p class="daily-note">行情截止 ${safe(formatDateTime(session.cutoff))}${research?' · 历史规则时点重建':` · 名单形成 ${safe(formatDateTime(session.frozen_at))}`}。</p><div class="priority-market">${index}<p class="daily-note">${safe(market.method)} ${safe(market.membership_method||'')}。ETF未核验标的板块时只引用全行业环境。</p></div>${groups}<details><summary>当日各板块强弱与覆盖</summary><div class="wrap"><table><thead><tr><th>板块</th><th>5日表现</th><th>相对三指数</th><th>站上MA20</th><th>成分覆盖</th></tr></thead><tbody>${sectors}</tbody></table></div></details></section>`;
+    }).join('');
+    const coverage=research?`研究窗口 ${safe(formatDate(payload.research?.from))}—${safe(formatDate(payload.research?.through))}，请求30个交易日，可核验 ${Number(payload.research?.covered_sessions||0)}日。${safe(payload.research?.scope||'')}`:'每日11:30后形成，午间冻结，各模型分别最多2只。当前还未形成名单时不展示旧名单代替。';
+    return `<section class="holding-pool priority-panel"><h2>每日优选</h2>${modes}<p class="daily-note">${coverage}</p>${filters}<h3>${selected==='all'?'全部历史':'所选优选日'} · 成功率</h3><p class="daily-note">${safe(payload.definition)} 退出核验截至 ${safe(formatDate(payload.evaluation_through))}。成功率＝已退出且扣费盈利笔数÷已退出笔数，浮盈不计入；同股跨模型分别计数，不代表独立样本。</p><div class="wrap"><table class="priority-summary"><thead><tr><th>来源模型</th><th>优选</th><th>退出 / 成功</th><th>成功率</th><th>退出平均净收益</th><th>持有中</th><th>待买入</th><th>未买入</th><th>待核验</th></tr></thead><tbody>${summary}</tbody></table></div>${cards||`<p class="daily-note">${safe(payload.latest_attempt?.status||'尚未形成可核验的午间名单。')}</p>`}<details><summary>评分、成本与统计口径</summary><p class="daily-note">指数15、板块25、量20、价20、时10、空10分。只用午盘及以前可见行情，原模型条件与退出规则保持。${safe(payload.fees)} 停牌、一字板或无法核验的参考进场不算已买入。历史研究名单与实际发布名单分别统计。</p></details></section>`;
+}
+style.textContent+=`.priority-panel .holding-pool-tabs{display:flex;gap:8px;margin:14px 0}.priority-panel .holding-pool-tabs button{padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#2563eb;font:inherit;cursor:pointer}.priority-panel .holding-pool-tabs button[aria-pressed="true"]{background:#2563eb;color:#fff;border-color:#2563eb}.priority-session{margin-top:24px}.priority-market{border:1px solid #0f817e;background:#f0fafa;border-radius:9px;padding:14px 16px}.priority-model{margin:20px 0}.priority-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.priority-pick{min-width:0;background:#fff;border:1px solid #dbe3ed;border-radius:9px;padding:16px}.priority-pick h4{margin:0 0 10px;font-size:16px;color:#203247}.priority-pick h4 small{font-size:12px;font-weight:400;color:#64748b}.priority-pick dl{margin:12px 0}.priority-pick dl>div{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;margin:8px 0}.priority-pick dt{color:#0f817e;font-weight:700}.priority-pick dd{margin:0;line-height:1.6;overflow-wrap:anywhere}.priority-pick p{line-height:1.7;overflow-wrap:anywhere}.priority-summary{min-width:850px}.priority-pick details{border-top:1px solid #e2e8f0;padding-top:10px}.priority-panel details{margin:14px 0}.priority-panel summary{cursor:pointer;color:#2563eb}@media(max-width:760px){.priority-grid{grid-template-columns:1fr}.priority-pick{padding:14px}.priority-market{padding:12px}}`;
 draw=function(){
     if(!data)return;
     if(publicCloudPage&&!publicCloudAvailable&&publicCloudVersion){
@@ -5337,6 +5384,7 @@ draw=function(){
         else if(location.hash==='#weekly-consolidation-first')activeDaily='weekly_consolidation_first';
         else if(location.hash==='#monthly-consolidation-first')activeDaily='monthly_consolidation_first';
         else if(location.hash==='#holding-pool')activeDaily='holding_pool';
+        else if(location.hash==='#daily-priority')activeDaily='daily_priority';
         else if(location.hash==='#macd-strategy'||location.hash==='#daily-first-buy')activeDaily='two_centers';
         else if(location.hash==='#m30-first-buy')activeDaily='d2_alert';
         else if(location.hash==='#m30-two-centers')activeDaily='d2_alert';
@@ -5416,6 +5464,7 @@ draw=function(){
         if(rulesUnlocked)content.insertAdjacentHTML('beforeend','<p class="daily-note">回撤排序分 = 100 − 当前回撤比例距61.8%的百分点差 + 上涨段涨停奖励8分。D0与G1均需右侧日K确认，涨停判定为相邻收盘涨幅≥9.9%。</p>');
     }else if(id==='d2_alert'){content.innerHTML=d2AlertPanel(state)}
     else if(id==='holding_pool'){content.innerHTML=holdingPoolPanel(state)}
+    else if(id==='daily_priority'){content.innerHTML=dailyPriorityPanel(state)}
     else if(id==='second'){content.innerHTML=classIiTrackingPanel(state)}
     else if(id==='stock_lookup'){content.innerHTML=stockLookupPanel(state)}
     else if(id==='two_centers'){content.innerHTML=twoCenterPanel()}
@@ -5455,10 +5504,13 @@ draw=function(){
     installHistoricalEvidenceHandlers(content);
     const focus=document.getElementById('focusWatch');if(focus)focus.hidden=!isMA||state.date!=='latest';
     document.getElementById('ruleGate').hidden=id==='legacy_history'||id==='d2_alert'||id==='holding_pool'||id==='second'||id==='stock_lookup'||id==='two_centers'||id==='m30_first'||id==='m30_two_centers'||id==='daily_macd'||id==='sixty_minute_macd'||id==='weekly_first'||id==='weekly_consolidation_first';
+    if(id==='daily_priority')document.getElementById('ruleGate').hidden=true;
     renderDailyNavigation(id);updatePageMeta();
     content.setAttribute('role','tabpanel');content.setAttribute('tabindex','0');
     if(dailyModels.some(x=>x[0]===id))content.setAttribute('aria-labelledby','daily-'+id);else content.removeAttribute('aria-labelledby');
     const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=async()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;try{if(id==='daily_consolidation_first')await loadDailyConsolidationDate(state.date);draw()}catch(error){content.innerHTML=`<p class="daily-error">详情加载失败：${safe(error.message)}</p>`}}};
+    stickyControls.querySelector('[data-priority-model]')?.addEventListener('change',event=>{state.priorityModel=event.target.value;draw()});
+    content.querySelectorAll('[data-priority-scope]').forEach(button=>button.addEventListener('click',()=>{state.priorityScope=button.dataset.priorityScope;state.date=state.priorityScope==='research'?'all':'latest';draw()}));
     const macdDate=content.querySelector('[data-integrated-macd-date]');
     if(macdDate){
         const filters=macdDate.closest('.daily-filters');stickyControls.append(filters);
