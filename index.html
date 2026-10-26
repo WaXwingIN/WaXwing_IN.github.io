@@ -466,8 +466,10 @@ const historicalBuyConditions=(()=>{
         const archivedVersions=event.rule_version?[event.rule_version]:(event.rule_versions||[]).filter(Boolean);
         const confirmationVersions=archivedVersions.length?archivedVersions:versions;
         const dailyMacdRed=model==='周线盘整背驰一买'&&confirmationVersions.includes('model-weekly-daily-macd-red-close-v1');
+        const weeklyEither=model==='周线盘整背驰一买'&&confirmationVersions.includes('model-weekly-daily-bottom-or-macd-close-v1');
+        const weeklyModern=dailyMacdRed||weeklyEither;
         const monthly=model==='月线盘整背驰一买'&&confirmationVersions.includes('monthly-consolidation-divergence-v1');
-        const daily=dailyMacdRed||confirmationVersions.includes('model-daily-bottom-close-v1');
+        const daily=weeklyModern||confirmationVersions.includes('model-daily-bottom-close-v1');
         const macd=['日线MACD底背离选股法','60分钟MACD底背离选股法'].includes(model);
         const trigger=event.triggered_at||buy['提醒确认时间']||event.buy_at||'';
         const origin=event.origin||buy['提醒状态']||'';
@@ -493,7 +495,7 @@ const historicalBuyConditions=(()=>{
             row('触发时间口径',esc(event.trigger_basis||'全部条件在该回放时点已通过；不冒充当时实际推送'));
             row('扫描发现时间',time(event.discovered_at));
         }else if(monthly||daily||(event.structure_snapshot&&descriptions[model]&&model!=='月线盘整背驰一买')){
-            row('模型入选条件',esc(dailyMacdRed?'周线零轴下相邻绿→红→绿；价格严格跌破完整前绿段及同轮负轴前低，完整前后绿段DIF、DEA各自最低值均不创新低；已收盘日线MACD红柱确认':descriptions[model]||model));
+            row('模型入选条件',esc(weeklyModern?'周线零轴下相邻绿→红→绿；价格严格跌破完整前绿段及同轮负轴前低，完整前后绿段DIF、DEA各自最低值均不创新低；'+(weeklyEither?'已收盘日线缠论底分型或MACD红柱，任一确认即可':'已收盘日线MACD红柱确认'):descriptions[model]||model));
             const structureAt=event.structure_available_at||evidence['结构首次可见时间']||saved['结构首次可见时间']||buy['结构首次可见时间'];
             row('结构入选时间',structureAt?time(structureAt):`首次满足时点未留档${trigger?`；本条使用截至 ${time(trigger)} 的历史结构快照`:''}`);
             if(model==='周线类二买'){
@@ -506,8 +508,8 @@ const historicalBuyConditions=(()=>{
             }else if(model==='周线盘整背驰一买'||monthly){
                 const top=saved.top_fractal||{},a=saved.a||{},b=saved.b||{},c=saved.c||{};
                 if(monthly)row('月线顶分型（最近30根月K）',`中心月 ${time(top.date)}；已收定右侧月K确认 ${time(top.confirmed_at)}`);
-                else if(!dailyMacdRed)row('周线顶分型',`中心周 ${time(top.date)}；右侧确认 ${time(top.confirmed_at)}`);
-                if(dailyMacdRed||monthly)row('同轮负轴参考起点',time(saved.price_reference_start_date||saved.axis_check_start_date));
+                else if(!weeklyModern)row('周线顶分型',`中心周 ${time(top.date)}；右侧确认 ${time(top.confirmed_at)}`);
+                if(weeklyModern||monthly)row('同轮负轴参考起点',time(saved.price_reference_start_date||saved.axis_check_start_date));
                 for(const [label,leg] of [['前段绿柱',a],['中间红柱',b],['后段绿柱',c]])row(label,`${time(leg.start_date)} → ${time(leg.end_date)}`);
                 row('价格新低',`${time(saved.daily_price_low_date||c.low_date)}：${number(c.price_low)}；此前最低 ${number(saved.previous_price_low)}`);
                 row('DIF／DEA未创新低',`DIF ${number(a.dif_min)} → ${number(c.dif_min)}；DEA ${number(a.dea_min)} → ${number(c.dea_min)}`);
@@ -521,8 +523,21 @@ const historicalBuyConditions=(()=>{
                 row('D3／D5价格低点',`${time(saved['Price_A日期'])}／${number(saved.Price_A)} → ${time(saved['Price_B日期']||saved['B日期'])}／${number(saved.Price_B)}`);
                 row('背驰力度',`DIF ${number(saved.DIF_A)} → ${number(saved.DIF_B)}；MACD柱 ${number(saved.Hist_A)} → ${number(saved.Hist_B)}；面积 ${number(saved.Area_A)} → ${number(saved.Area_B)}`);
             }
-            const fractal=event.fractal||(monthly?saved.daily_bottom_fractal:null)||{},bottom=buy['触发底分型']||evidence.bottom_fractal||{};
-            if(dailyMacdRed){
+            const combined=event.daily_confirmation||buy['日线确认']||saved.daily_confirmation||{};
+            const fractal=event.fractal||combined.fractal||((monthly||weeklyEither)?saved.daily_bottom_fractal:null)||{},bottom=buy['触发底分型']||evidence.bottom_fractal||{};
+            if(weeklyEither){
+                row('日线确认方式','已收盘缠论底分型或MACD红柱，任一满足即可；两者同时满足只记一次提醒');
+                if(fractal.confirmed_at||bottom['确认时间']){
+                    row('日线底分型中心K',time(fractal.fractal_date||bottom['发生时间']));
+                    row('日线底分型右侧收盘确认',time(fractal.confirmed_at||bottom['确认时间']));
+                    row('底分型口径','去包含后三K缠论底分型；不另加突破中间K高点或MACD红柱条件');
+                }
+                const confirmation=event.daily_macd_confirmation||combined.daily_macd_confirmation||buy['日线MACD确认']||saved.daily_macd_confirmation||{};
+                if(confirmation.confirmed_at){
+                    row('日线MACD红柱收盘确认',time(confirmation.confirmed_at));
+                    row('已收盘日线MACD',`DIF ${number(confirmation.dif)}；DEA ${number(confirmation.dea)}；MACD ${number(confirmation.macd)}`);
+                }
+            }else if(dailyMacdRed){
                 const confirmation=event.daily_macd_confirmation||buy['日线MACD确认']||saved.daily_macd_confirmation||{};
                 row('日线MACD红柱收盘确认',time(confirmation.confirmed_at||buy['提醒确认时间']));
                 row('已收盘日线MACD',`DIF ${number(confirmation.dif)}；DEA ${number(confirmation.dea)}；MACD ${number(confirmation.macd)}`);
@@ -557,7 +572,7 @@ const historicalBuyConditions=(()=>{
         if(event.baseline_date||event.baseline_close!=null)row('收益基准',`${time(event.baseline_date)} 收盘 ${event.baseline_status?esc(event.baseline_status):number(event.baseline_close)}`);
         if(event.buy_effective_date)row('跟踪池买入生效日',time(event.buy_effective_date));
         row('记录来源',esc(origin||'来源未留档')+(replay?'；历史回放不代表当时实际推送':''));
-        return `<div class="historical-buy-condition" data-buy-event="${esc(event.event_id||'')}" data-buy-model="${esc(model)}" data-buy-rule="${dailyMacdRed?'model-weekly-daily-macd-red-close-v1':monthly?'monthly-consolidation-divergence-v1':daily?'model-daily-bottom-close-v1':esc(versions.join('|'))}" data-buy-trigger="${esc(trigger)}"><div class="m30-condition-result ${passed?'is-triggered':'is-pending'}">${passed?'✅ 买入提醒 '+time(trigger):dailyMacdRed?'待日线MACD红柱收盘确认':'待日线底分型收盘确认'}</div><small>${esc(dailyMacdRed?'周线完整底背离＋日线MACD红柱':daily||monthly?brief[model]||'模型入选＋日线底分型':'按原归档规则')}${monthly?'':` · ${replay?'历史回放':esc(origin||'依据见下方')}`}</small><details class="m30-condition-detail"${options.detailsOpen?' open':''}><summary>${monthly?'查看买入条件':'买入条件与时间点'}</summary><table class="reminder-condition-table"><thead><tr><th>买入条件／关键点</th><th>归档依据／时间</th></tr></thead><tbody>${rows.join('')}</tbody></table><small>结构关键K线日期、确认时间、买入提醒触发时间分别列示；提醒时间不是实际成交时间。</small></details></div>`;
+        return `<div class="historical-buy-condition" data-buy-event="${esc(event.event_id||'')}" data-buy-model="${esc(model)}" data-buy-rule="${weeklyEither?'model-weekly-daily-bottom-or-macd-close-v1':dailyMacdRed?'model-weekly-daily-macd-red-close-v1':monthly?'monthly-consolidation-divergence-v1':daily?'model-daily-bottom-close-v1':esc(versions.join('|'))}" data-buy-trigger="${esc(trigger)}"><div class="m30-condition-result ${passed?'is-triggered':'is-pending'}">${passed?'✅ 买入提醒 '+time(trigger):weeklyEither?'待日线底分型或MACD红柱收盘确认':dailyMacdRed?'待日线MACD红柱收盘确认':'待日线底分型收盘确认'}</div><small>${esc(weeklyEither?'周线完整底背离＋日线底分型或MACD红柱':dailyMacdRed?'周线完整底背离＋日线MACD红柱':daily||monthly?brief[model]||'模型入选＋日线底分型':'按原归档规则')}${monthly?'':` · ${replay?'历史回放':esc(origin||'依据见下方')}`}</small><details class="m30-condition-detail"${options.detailsOpen?' open':''}><summary>${monthly?'查看买入条件':'买入条件与时间点'}</summary><table class="reminder-condition-table"><thead><tr><th>买入条件／关键点</th><th>归档依据／时间</th></tr></thead><tbody>${rows.join('')}</tbody></table><small>结构关键K线日期、确认时间、买入提醒触发时间分别列示；提醒时间不是实际成交时间。</small></details></div>`;
     }
     return {render};
 })();
@@ -2956,12 +2971,17 @@ async function sendD2M30DesktopNotification(observedSnapshot=null){
 function dailyClosePolicyActive(policy){
     return policy?.version==='model-daily-bottom-close-v1'&&Boolean(policy.daily_date)&&String(policy.daily_date).replace(/\D/g,'').slice(0,8)>=String(policy.effective_date||'2026-10-09').replace(/\D/g,'').slice(0,8);
 }
+function weeklyConsolidationRule(version){
+    return ({'weekly-consolidation-divergence-v5':'model-weekly-daily-macd-red-close-v1',
+        'weekly-consolidation-divergence-v6':'model-weekly-daily-bottom-or-macd-close-v1'})[version]||'';
+}
 function weeklyShortCycleEvidence(modelName,code,start,end){
     const close=dailyExtra.navigationSignals?.dailyCloseReminders||dailyExtra.dailyCloseReminders;
-    if(modelName==='周线盘整背驰一买'&&dailyExtra.weeklyConsolidationFirst?.version==='weekly-consolidation-divergence-v5'){
+    const weeklyVersion=dailyExtra.weeklyConsolidationFirst?.version,weeklyRule=weeklyConsolidationRule(weeklyVersion);
+    if(modelName==='周线盘整背驰一买'&&weeklyRule){
         const evidence=close?.signals?.[`${modelName}|${String(code).padStart(6,'0')}`];
-        if(dailyClosePolicyActive(close)&&close.daily_date===dailyExtra.weeklyConsolidationFirst.daily_date&&evidence?.['提醒']?.model_rule_version==='weekly-consolidation-divergence-v5'&&evidence?.['提醒']?.['规则版本']==='model-weekly-daily-macd-red-close-v1')return evidence;
-        return {模型:modelName,代码:String(code).padStart(6,'0'),提醒:{规则版本:'model-weekly-daily-macd-red-close-v1',model_rule_version:'weekly-consolidation-divergence-v5',提醒条件满足:false,提醒状态:'待日线MACD红柱收盘确认'}};
+        if(dailyClosePolicyActive(close)&&close.daily_date===dailyExtra.weeklyConsolidationFirst.daily_date&&evidence?.['提醒']?.model_rule_version===weeklyVersion&&evidence?.['提醒']?.['规则版本']===weeklyRule)return evidence;
+        return {模型:modelName,代码:String(code).padStart(6,'0'),提醒:{规则版本:weeklyRule,model_rule_version:weeklyVersion,提醒条件满足:false,提醒状态:weeklyVersion==='weekly-consolidation-divergence-v6'?'待日线底分型或MACD红柱收盘确认':'待日线MACD红柱收盘确认'}};
     }
     const selected=typeof stateFor==='function'?stateFor(activeDaily).weeklySignalDate||stateFor(activeDaily).signalDate||'latest':'latest';
     if(selected==='latest'&&['周线类二买','日线趋势一买'].includes(modelName)){
@@ -2999,7 +3019,11 @@ function weeklyFirstCandidateRows(model,state={}){
 }
 function shortCycleConditionState(evidence){
     const daily=evidence?.['提醒']||evidence?.['短周期提醒']||{};
-    if(['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1'].includes(daily['规则版本'])){const appeared=daily['提醒条件满足']===true,dailyMacdRed=daily['规则版本']==='model-weekly-daily-macd-red-close-v1';return {dailyClose:true,dailyMacdRed,appeared,signal:daily,one:{},two:{},fractal:dailyMacdRed?{}:daily['触发底分型']||{},m30:'不适用',m60:'不适用',bottom:dailyMacdRed?'不适用':appeared?'是':'否'}}
+    if(['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1','model-weekly-daily-bottom-or-macd-close-v1'].includes(daily['规则版本'])){
+        const appeared=daily['提醒条件满足']===true,dailyMacdRed=daily['规则版本']==='model-weekly-daily-macd-red-close-v1',dailyEither=daily['规则版本']==='model-weekly-daily-bottom-or-macd-close-v1';
+        const fractal=dailyMacdRed?{}:daily['触发底分型']||{};
+        return {dailyClose:true,dailyMacdRed,dailyEither,appeared,signal:daily,one:{},two:{},fractal,m30:'不适用',m60:'不适用',bottom:dailyMacdRed?'不适用':dailyEither?(fractal['确认时间']?'是':'否'):appeared?'是':'否'};
+    }
     const rawSignal=evidence?.['提醒']||evidence?.['短周期提醒']||{},rawOne=evidence?.['30分钟']||evidence?.['30分钟提醒']||{},rawTwo=evidence?.['60分钟']||evidence?.['60分钟提醒']||{};
     const structureDayRule='structure-divergence-fractal-date-order-v12';
     const day=value=>String(value||'').slice(0,10);
@@ -3109,9 +3133,9 @@ function shortCycleDailyBottomState(modelName,code,date){
 }
 function shortCycleConditionCell(evidence,modelName,code,date){
     const signal=evidence?.['提醒']||evidence?.['短周期提醒']||{};
-    if(['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1'].includes(signal['规则版本'])){
-        const event=(dailyExtra.shortCycleAlertRates?.events||[]).find(e=>e.model===modelName&&e.code===String(code).padStart(6,'0')&&e.triggered_at===signal['提醒确认时间']&&(signal['规则版本']!=='model-weekly-daily-macd-red-close-v1'||(e.rule_version?e.rule_version===signal['规则版本']:e.rule_versions?.includes(signal['规则版本']))))||{};
-        const snapshot=signal['规则版本']==='model-weekly-daily-macd-red-close-v1'?(dailyExtra.weeklyConsolidationFirst?.rows||[]).find(row=>String(row.code).padStart(6,'0')===String(code).padStart(6,'0'))||evidence:evidence;
+    if(['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1','model-weekly-daily-bottom-or-macd-close-v1'].includes(signal['规则版本'])){
+        const event=(dailyExtra.shortCycleAlertRates?.events||[]).find(e=>e.model===modelName&&e.code===String(code).padStart(6,'0')&&e.triggered_at===signal['提醒确认时间']&&(signal['规则版本']==='model-daily-bottom-close-v1'||(e.rule_version?e.rule_version===signal['规则版本']:e.rule_versions?.includes(signal['规则版本']))))||{};
+        const snapshot=signal['规则版本']!=='model-daily-bottom-close-v1'?(dailyExtra.weeklyConsolidationFirst?.rows||[]).find(row=>String(row.code).padStart(6,'0')===String(code).padStart(6,'0'))||evidence:evidence;
         return `<td class="short-cycle-condition">${historicalBuyConditions.render(modelName,event,snapshot,signal)}</td>`;
     }
     const flags=shortCycleConditionState(evidence),daily=shortCycleDailyBottomState(modelName,code,date);
@@ -3147,7 +3171,7 @@ function shortCycleConditionCell(evidence,modelName,code,date){
 }
 function weeklyShortCycleCell(modelName,code,start,end,date){return shortCycleConditionCell(weeklyShortCycleEvidence(modelName,code,start,end),modelName,code,date)}
 function shortCycleReminderView(signal={}){
-    if(['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1'].includes(signal['规则版本']))return {live:signal['提醒条件满足']===true,text:signal['状态']||(signal['规则版本']==='model-weekly-daily-macd-red-close-v1'?'待日线MACD红柱':'待日线底分型'),fractal:signal['规则版本']==='model-weekly-daily-macd-red-close-v1'?{}:signal['触发底分型']||{}};
+    if(['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1','model-weekly-daily-bottom-or-macd-close-v1'].includes(signal['规则版本']))return {live:signal['提醒条件满足']===true,text:signal['状态']||(signal['规则版本']==='model-weekly-daily-bottom-or-macd-close-v1'?'待日线底分型或MACD红柱':signal['规则版本']==='model-weekly-daily-macd-red-close-v1'?'待日线MACD红柱':'待日线底分型'),fractal:signal['规则版本']==='model-weekly-daily-macd-red-close-v1'?{}:signal['触发底分型']||{}};
     const low=signal['低点2']||{},fractal=shortCycleMatchedFractal(signal);
     const validRule=['structure-divergence-fractal-date-order-v12','trend-repeat-price-dif-dea-then-m30-fractal-v2'].includes(signal['规则版本'])&&
         signal['提醒条件满足']===true&&low.time&&low.confirm_time&&fractal['发生时间']&&fractal['确认时间']&&
@@ -3185,7 +3209,7 @@ function shortCycleAlertEvent(modelName,row,evidence=row){
     const confirmed=signal['提醒确认时间']||fractal['确认时间']||'',occurred=fractal['发生时间']||confirmed;
     const code=String(row?.['代码']||row?.code||'').padStart(6,'0');
     const identity=[modelName,code,occurred,fractal['确认时间']||confirmed].join('|');
-    return (dailyExtra.shortCycleAlertRates?.events||[]).find(item=>item.event_id===identity||(['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1'].includes(signal['规则版本'])&&item.model===modelName&&item.code===code&&item.triggered_at===confirmed&&(signal['规则版本']!=='model-weekly-daily-macd-red-close-v1'||(item.rule_version?item.rule_version===signal['规则版本']:item.rule_versions?.includes(signal['规则版本'])))))||null;
+    return (dailyExtra.shortCycleAlertRates?.events||[]).find(item=>item.event_id===identity||(['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1','model-weekly-daily-bottom-or-macd-close-v1'].includes(signal['规则版本'])&&item.model===modelName&&item.code===code&&item.triggered_at===confirmed&&(signal['规则版本']==='model-daily-bottom-close-v1'||(item.rule_version?item.rule_version===signal['规则版本']:item.rule_versions?.includes(signal['规则版本'])))))||null;
 }
 function shortCycleTriggerTime(event,evidence){
     const signal=evidence?.['提醒']||evidence?.['短周期提醒']||{};
@@ -3311,14 +3335,14 @@ function shortCycleOutcomePanel(modelName,rows,keyOf,evidenceOf,selection={}){
         const ruleText=dailyRule?'只统计原模型入选＋日线底分型收盘确认的新规则提醒；旧分钟提醒不计入。':'只统计两条独立路径：结构→30分钟底背离→30分钟底分型，或结构→60分钟底背离→60分钟底分型。同日可触发，跨日严格按日期先后；不承接旧背离，也不混用异周期底分型。';
         if(dailyRule){
             const unique=events=>[...new Map(events.map(e=>[e.event_id||`${e.model}|${e.code}|${e.triggered_at}`,e])).values()];
-            const acceptedRules=modelName==='周线盘整背驰一买'?(selection.events?['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1']:['model-weekly-daily-macd-red-close-v1']):['model-daily-bottom-close-v1'];
+            const acceptedRules=modelName==='周线盘整背驰一买'?(selection.events?['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1','model-weekly-daily-bottom-or-macd-close-v1']:[weeklyConsolidationRule(dailyExtra.weeklyConsolidationFirst?.version)||'model-weekly-daily-macd-red-close-v1']):['model-daily-bottom-close-v1'];
             const events=unique((selection.events||audited.events||[]).filter(e=>e.model===modelName&&(e.rule_version?acceptedRules.includes(e.rule_version):acceptedRules.some(rule=>e.rule_versions?.includes(rule)))));
             const dates=events.map(e=>e.triggered_at.slice(0,10)).sort(),range=dates.length?`${formatDate(dates[0])}—${formatDate(dates[dates.length-1])}`:'暂无历史';
             return `<section class="short-cycle-outcomes"><details class="reminder-history-audit" open><summary>收益统计 · ${events.length}次触发</summary>${summary(`统计区间 ${range}`,summarizeReminderEvents(events))}<p class="daily-note">T+N按提醒日收盘至第N个交易日收盘计算；未结算样本不计入上涨比例。</p></details></section>`;
         }
         return `<section class="short-cycle-outcomes"><details class="reminder-history-audit" open><summary>收益统计</summary>${summary('触发收益',current)}<p class="daily-note">${ruleText}T+N按提醒日收盘至第N个交易日收盘计算。</p></details></section>`;
     }
-    if(modelName==='周线盘整背驰一买'&&dailyExtra.weeklyConsolidationFirst?.version==='weekly-consolidation-divergence-v5')return '';
+    if(modelName==='周线盘整背驰一买'&&weeklyConsolidationRule(dailyExtra.weeklyConsolidationFirst?.version))return '';
     const appearing=rows.filter(row=>shortCycleConditionState(evidenceOf(row)).appeared),cases=dailyExtra.shortCycleOutcomes?.cases||{};
     const matched=appearing.map(row=>cases[keyOf(row)]).filter(Boolean),missing=appearing.length-matched.length;
     const actual=Object.values(dailyExtra.shortCycleOutcomes?.actual_history||{}).filter(item=>item.model===modelName&&item.first_for_structure!==false),replay=matched.filter(item=>item.origin==='历史回放');
@@ -3345,11 +3369,11 @@ function weeklyReminderHistory(modelName,state){
     const latestArchive=events.map(event=>shortCycleDate(event.triggered_at)).sort().reverse()[0]||'';
     const selected=!state.weeklySignalDate||state.weeklySignalDate==='latest'?(dataDate||dates[0]||''):state.weeklySignalDate==='all'?'all':shortCycleDate(state.weeklySignalDate);
     const current=Boolean(dataDate&&selected===dataDate);
-    const reminderLabel=date=>events.some(event=>shortCycleDate(event.triggered_at)===date&&['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1'].some(rule=>event.rule_version===rule||event.rule_versions?.includes(rule)))?'历史日线提醒':'历史分钟提醒';
+    const reminderLabel=date=>events.some(event=>shortCycleDate(event.triggered_at)===date&&['model-daily-bottom-close-v1','model-weekly-daily-macd-red-close-v1','model-weekly-daily-bottom-or-macd-close-v1'].some(rule=>event.rule_version===rule||event.rule_versions?.includes(rule)))?'历史日线提醒':'历史分钟提醒';
     // Keep the internal latest alias so current evidence and snapshot navigation use the same rules.
     state.weeklySignalDate=current?'latest':selected;
     const currentCandidates=modelName==='周线类二买'?weeklyFirstCandidateRows(model,state):(model.rows||[]).filter(row=>state.cMaxAge==null||state.cMaxAge==='all'||Number(row.c_age_weeks)<=Number(state.cMaxAge));
-    const currentRows=currentCandidates.filter(row=>{const evidence=weeklyShortCycleEvidence(modelName,row.code,row.markers?.D?.date||row.b?.end_date,row.markers?.E?.date||row.c?.low_date);return shortCycleConditionState(evidence).appeared&&(modelName!=='周线盘整背驰一买'||model.version!=='weekly-consolidation-divergence-v5'||shortCycleDate(shortCycleTriggerTime(null,evidence))===dataDate)}).filter(row=>modelFunnelAccept(modelName==='周线类二买'?'weekly_first':'weekly_consolidation_first',state,row,shortCycleAlertEvent(modelName,row)));
+    const currentRows=currentCandidates.filter(row=>{const evidence=weeklyShortCycleEvidence(modelName,row.code,row.markers?.D?.date||row.b?.end_date,row.markers?.E?.date||row.c?.low_date);return shortCycleConditionState(evidence).appeared&&(modelName!=='周线盘整背驰一买'||!weeklyConsolidationRule(model.version)||shortCycleDate(shortCycleTriggerTime(null,evidence))===dataDate)}).filter(row=>modelFunnelAccept(modelName==='周线类二买'?'weekly_first':'weekly_consolidation_first',state,row,shortCycleAlertEvent(modelName,row)));
     const optionEvents=events.filter(event=>modelFunnelAccept(modelName==='周线类二买'?'weekly_first':'weekly_consolidation_first',state,event,event));
     const sectorEvents=optionEvents.filter(event=>modelSectorAccept(state,event));
     const optionGroups=reminderDateGroups(optionEvents).map(group=>({...group,rows:group.rows.filter(event=>modelSectorAccept(state,event))}));
@@ -3361,8 +3385,9 @@ function weeklyReminderHistory(modelName,state){
     recordDisplayedReminders(state,visible);
     const performance=shortCycleOutcomePanel(modelName,visible,()=>'',row=>({提醒:{提醒条件满足:true}}),{date:selected,events:visible});
     const rows=visible.map((event,index)=>`<tr><td>${index+1}</td><td><b>${safe(event.name||dailyExtra.stockNames?.[event.code]||'名称未归档')}</b><br>${safe(event.code)}</td><td class="short-cycle-condition">${historicalBuyConditions.render(modelName,event)}</td><td>${operationLatestReturnCell(modelName,event.code,event,true)}</td>${SHORT_CYCLE_HORIZONS.map(h=>`<td>${shortCycleFixedReturnCell(event,true,h)}</td>`).join('')}<td>${m30FirstSellConditionCell(event)}</td></tr>`).join('');
+    const eitherHistory=visible.some(event=>event.rule_version?event.rule_version==='model-weekly-daily-bottom-or-macd-close-v1':event.rule_versions?.includes('model-weekly-daily-bottom-or-macd-close-v1'));
     const redHistory=visible.some(event=>event.rule_version?event.rule_version==='model-weekly-daily-macd-red-close-v1':event.rule_versions?.includes('model-weekly-daily-macd-red-close-v1'));
-    const selectionRule=modelName==='周线类二买'?'长期零轴下 → DIF上穿零轴、股价上穿MA55 → 首涨 → 第一次回抽 → 再扩张 → 第二次回抽；原模型入选＋日线底分型收盘确认后提醒。':redHistory?'周线零轴下MACD绿→红→绿 → 价格严格跌破同轮完整前低、DIF与DEA均不创新低 → 已收盘日线MACD红柱确认；旧提醒按各条冻结规则保留。':'55周内严格周线顶分型 → 零轴下MACD绿→红→绿 → 价格创新低而DIF、DEA未创新低 → 日线底分型右侧日K收盘确认后提醒。';
+    const selectionRule=modelName==='周线类二买'?'长期零轴下 → DIF上穿零轴、股价上穿MA55 → 首涨 → 第一次回抽 → 再扩张 → 第二次回抽；原模型入选＋日线底分型收盘确认后提醒。':eitherHistory?'周线完整底背离 → 已收盘日线缠论底分型或MACD红柱，任一确认即可；各条历史提醒仍按其冻结规则保留。':redHistory?'周线零轴下MACD绿→红→绿 → 价格严格跌破同轮完整前低、DIF与DEA均不创新低 → 已收盘日线MACD红柱确认；旧提醒按各条冻结规则保留。':'55周内严格周线顶分型 → 零轴下MACD绿→红→绿 → 价格创新低而DIF、DEA未创新低 → 日线底分型右侧日K收盘确认后提醒。';
     const selectedLabel=selected==='all'?'全部历史提醒':reminderLabel(selected),dateLabel=selected==='all'?'全部日期':formatDate(selected);
     return {controls,html:`<section><div class="two-center-hero"><h2>${safe(modelName)}</h2><p data-model-selection-rule>${selectionRule}</p><p class="daily-note">按数据日期展示${selectedLabel}，历史记录按当时归档条件保留，当前漏斗只筛选展示范围。回放记录不代表当时实际推送。</p></div>${controls}<p class="daily-note">${safe(dateLabel)} ${selectedLabel} ${reminderStockCount(visible)} 只；${selected==='all'?'按触发时间排序。':selectedLabel==='历史日线提醒'?(modelName==='周线盘整背驰一买'?'确认依据以各条冻结记录为准。':'模型入选＋日线底分型收盘确认。'):'该列表使用当时的分钟提醒规则。'}展示提醒依据及收益记录。</p>${performance}<div class="wrap"><table class="focus-table"><thead><tr><th>序号</th><th>股票／ETF</th><th>买入提醒</th><th>提醒后涨跌</th>${SHORT_CYCLE_HORIZONS.map(h=>`<th>T+${h}收益</th>`).join('')}<th>卖出提醒条件</th></tr></thead><tbody>${rows||'<tr><td colspan="8">当前筛选下暂无提醒。</td></tr>'}</tbody></table></div></section>`};
 }
@@ -3494,7 +3519,8 @@ function weeklyConsolidationFirstPanel(state){
     state.displayedAlertCount=0;
     const historyView=weeklyReminderHistory('周线盘整背驰一买',state);if(historyView.html!==null)return historyView.html;
     const model=dailyExtra.weeklyConsolidationFirst||{};
-    if(model.version!=='weekly-consolidation-divergence-v5')return '<section class="two-center-hero"><h2>周线盘整背驰一买</h2><p>尚无新规则的收盘扫描结果；收盘流水线完成后显示。</p></section>';
+    if(!weeklyConsolidationRule(model.version))return '<section class="two-center-hero"><h2>周线盘整背驰一买</h2><p>尚无新规则的收盘扫描结果；收盘流水线完成后显示。</p></section>';
+    const dailyConfirmationText=model.version==='weekly-consolidation-divergence-v6'?'日线缠论底分型或MACD红柱，任一收盘确认后提示':'日线MACD红柱收盘确认后提示';
     const age=state.cMaxAge==null?'all':state.cMaxAge,ageLimit=age==='all'?Infinity:Number(age),chartWeeks=Number(state.chartWeeks||model.default_chart_weeks||150);
     const focusCode=String(state.focusCode||'').padStart(6,'0'),focusRow=(model.rows||[]).find(row=>String(row.code).padStart(6,'0')===focusCode);
     const defaultRows=(model.rows||[]).filter(row=>Number(row.c_age_weeks)<=ageLimit);
@@ -3512,13 +3538,13 @@ function weeklyConsolidationFirstPanel(state){
         return `<tr${focused?' class="stock-lookup-focus-row" data-stock-lookup-focus-row':''}><td>${safe(row.rank??index+1)}${focused?'<br><small>检索定位</small>':''}</td><td><b>${safe(row.name)}</b><br>${safe(row.code)}</td>${shortCycleConditionCell(evidence,'周线盘整背驰一买',row.code,conditionDate)}<td class="focus-reason"><b>周线零轴下绿→红→绿；价格跌破同轮完整前低，DIF、DEA均不创新低</b><small>完整前低 ${safe(row.previous_price_low)} → 新低 ${safe(row.c?.price_low)} · ${safe(formatDate(row.daily_price_low_date||row.c?.low_date))}</small></td><td><span class="two-center-status${!appeared?' alert':''}">${safe(row.status)}</span></td><td><button type="button" class="m30-detail-open" data-weekly-consolidation-open="${safe(row.code)}">▶ 查看绿红绿 / 完整前低</button></td><td>${safe(formatDate(row.c?.low_date))}<br><small>距今${safe(row.c_age_weeks)}周 · 低点后${safe(row.rally_from_c_pct)}%</small></td><td>${appeared&&trigger?safe(formatDateTime(trigger)):appeared?'已触发，时间缺失':'未触发'}${event?.origin?`<br><small>${safe(event.origin)}</small>`:''}</td><td>${operationLatestReturnCell('周线盘整背驰一买',row.code,event,appeared)}</td>${SHORT_CYCLE_HORIZONS.map(h=>`<td>${shortCycleFixedReturnCell(event,appeared,h)}</td>`).join('')}<td class="sell-condition-cell">${strictM30ExitReturnCell('周线盘整背驰一买',row,evidence,conditionDate)}</td></tr>`;
     }).join('');
     const detail=rows.find(row=>String(row.code)===String(state.detailCode||'')),chart=detail?.chart||{},shown=(chart['日期']||[]).slice(-chartWeeks);
-    const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-weekly-consolidation-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="weeklyConsolidationTitle"><header class="second-detail-head"><div><h3 id="weeklyConsolidationTitle">${safe(detail.name)} ${safe(detail.code)} · 周线盘整背驰一买</h3><p>${safe(detail.status)} · 价格新低 ${safe(formatDate(detail.c?.low_date))} · 距今${safe(detail.c_age_weeks)}周</p><p>完整参考前低 ${safe(detail.previous_price_low)} · 后段低点 ${safe(detail.c?.price_low)} · 同轮负轴参考起点 ${safe(formatDate(detail.price_reference_start_date||detail.axis_check_start_date))}</p><p>图表区间：${safe(formatDate(shown[0]))} — ${safe(formatDate(shown[shown.length-1]))}</p><p>日线MACD红柱确认 ${safe(formatDateTime(detail.daily_macd_confirmation?.confirmed_at))} · MACD ${safe(detail.daily_macd_confirmation?.macd??'未留档')}</p></div><button type="button" class="second-detail-close" data-weekly-consolidation-close aria-label="关闭弹窗">×</button></header><label class="macd-zoom">横轴拉伸 <input type="range" min="1200" max="2400" step="200" value="1200" data-macd-zoom></label>${combinedAnnotatedCharts(weeklyConsolidationChart(detail,'价格',chartWeeks),weeklyConsolidationChart(detail,'MACD',chartWeeks))}<p class="macd-shape-note"><strong>入选原因：</strong>周线DIF、DEA均在零轴下形成相邻绿→红→绿；后段DIF、DEA最低值不低于前段完整绿柱，价格须严格跌破完整前段及同一零轴下周期的最低价，不能按局部顶重置前低。图中分段和低点连线用于核验；已收盘日线MACD红柱确认后提示。</p></section></div>`:'';
-    const weekNotice=model.current_week_complete===false?'<p class="preclose-warning">本周周K尚未收定：绿红绿与背驰按实际可见日线计算，后续周内变化可能使候选失效；日线MACD红柱只在日K收盘后确认。</p>':'';
+    const modal=detail?`<div class="second-detail-modal m30-detail-modal" data-weekly-consolidation-modal role="presentation"><section class="second-detail-dialog m30-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="weeklyConsolidationTitle"><header class="second-detail-head"><div><h3 id="weeklyConsolidationTitle">${safe(detail.name)} ${safe(detail.code)} · 周线盘整背驰一买</h3><p>${safe(detail.status)} · 价格新低 ${safe(formatDate(detail.c?.low_date))} · 距今${safe(detail.c_age_weeks)}周</p><p>完整参考前低 ${safe(detail.previous_price_low)} · 后段低点 ${safe(detail.c?.price_low)} · 同轮负轴参考起点 ${safe(formatDate(detail.price_reference_start_date||detail.axis_check_start_date))}</p><p>图表区间：${safe(formatDate(shown[0]))} — ${safe(formatDate(shown[shown.length-1]))}</p>${detail.daily_bottom_fractal?`<p>日线底分型收盘确认 ${safe(formatDateTime(detail.daily_bottom_fractal.confirmed_at))} · 低点日 ${safe(formatDate(detail.daily_bottom_fractal.fractal_date))}</p>`:''}${detail.daily_macd_confirmation?`<p>日线MACD红柱确认 ${safe(formatDateTime(detail.daily_macd_confirmation.confirmed_at))} · MACD ${safe(detail.daily_macd_confirmation.macd??'未留档')}</p>`:''}</div><button type="button" class="second-detail-close" data-weekly-consolidation-close aria-label="关闭弹窗">×</button></header><label class="macd-zoom">横轴拉伸 <input type="range" min="1200" max="2400" step="200" value="1200" data-macd-zoom></label>${combinedAnnotatedCharts(weeklyConsolidationChart(detail,'价格',chartWeeks),weeklyConsolidationChart(detail,'MACD',chartWeeks))}<p class="macd-shape-note"><strong>入选原因：</strong>周线DIF、DEA均在零轴下形成相邻绿→红→绿；后段DIF、DEA最低值不低于前段完整绿柱，价格须严格跌破完整前段及同一零轴下周期的最低价，不能按局部顶重置前低。图中分段和低点连线用于核验；${safe(dailyConfirmationText)}。</p></section></div>`:'';
+    const weekNotice=model.current_week_complete===false?`<p class="preclose-warning">本周周K尚未收定：绿红绿与背驰按实际可见日线计算，后续周内变化可能使候选失效；${safe(dailyConfirmationText)}。</p>`:'';
     const referenceHtml=weekNotice;
     const focusSignal=focusRow?shortCycleConditionState(evidenceOf(focusRow)).signal:null;
     const focusReplayNote=focusSignal?.['周线快照事后生成']?' 此记录是历史规则回放，周线结构快照为事后生成，并非当时实时信号。':'';
     const focusNotice=focusRow?`<p class="stock-lookup-focus"><strong>股票检索定位：</strong>${safe(focusRow.name)} ${safe(focusRow.code)} · 记录日期 ${safe(formatDate(state.focusDate||model.daily_date))}。该结构原始排名 #${safe(focusRow.rank??'--')}，${defaultRows.includes(focusRow)?'在当前时间范围内':'超出当前时间范围，已临时置顶展示'}；下表保留原始排名，并展示该笔买入、卖出条件依据。${safe(focusReplayNote)}</p>`:'';
-    return `<section>${historyView.controls}<div class="two-center-hero"><h2>周线盘整背驰一买</h2><p>周线零轴下MACD绿→红→绿 → 价格严格跌破同轮完整前低、DIF与DEA均不创新低 → 已收盘日线MACD红柱确认后提示。</p></div>${focusNotice}<label class="macd-lookback">价格新低距今上限 <select id="weeklyConsolidationAge">${ageOptions}</select></label><label class="macd-lookback">图表区间 <select id="weeklyConsolidationChartWeeks">${chartOptions}</select></label>${shortCycleFilterPanel(state,allRows,evidenceOf)}${shortCycleOutcomePanel('周线盘整背驰一买',rows,row=>String(row.code),evidenceOf,{date:model.daily_date})}<p class="daily-note">按已收盘日线MACD红柱确认提示；扫描包含股票与ETF，历史统计统一使用最近30个交易日。</p><div class="two-center-stats"><span><b>${rows.length}</b><small>当前展示</small></span><span><b>${safe(model.eligible)}</b><small>符合形态总数</small></span></div><p class="daily-note">周线完整底背离＋已收盘日线MACD红柱确认；仅交易日收盘扫描提醒。提醒后涨跌计算至最新收盘或退出参考价；T+1/3/5只统计已触发买入提醒的股票，按提醒日收盘至后续市场交易日收盘结算；卖出仅由严格30分钟MACD顶背离触发，日线顶分型只作黄色提示。旧历史依据按原冻结规则展示，历史回放并非当时推送，未触发和未结算不计入胜率分母。</p>${referenceHtml}<details class="daily-rules" open><summary>模型条件与计算口径</summary><p>${safe(model.rules||'')}</p><p>${safe(model.implementation||'')}</p></details>${rows.length?`<div class="wrap"><table class="two-center-table focus-table"><thead><tr><th>排名</th><th>股票／ETF</th><th>买入提醒条件</th><th>入选原因</th><th>当前状态</th><th>看图核验</th><th>关键位置</th><th>选出／提醒触发时间</th><th>提醒后涨跌</th>${SHORT_CYCLE_HORIZONS.map(h=>`<th>T+${h}收益</th>`).join('')}<th>卖出提醒条件</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">当前参数下暂无同时满足周线完整底背离与已收盘日线MACD红柱确认的股票或ETF。</p>'}${modal}</section>`;
+    return `<section>${historyView.controls}<div class="two-center-hero"><h2>周线盘整背驰一买</h2><p>周线零轴下MACD绿→红→绿 → 价格严格跌破同轮完整前低、DIF与DEA均不创新低 → ${safe(dailyConfirmationText)}。</p></div>${focusNotice}<label class="macd-lookback">价格新低距今上限 <select id="weeklyConsolidationAge">${ageOptions}</select></label><label class="macd-lookback">图表区间 <select id="weeklyConsolidationChartWeeks">${chartOptions}</select></label>${shortCycleFilterPanel(state,allRows,evidenceOf)}${shortCycleOutcomePanel('周线盘整背驰一买',rows,row=>String(row.code),evidenceOf,{date:model.daily_date})}<p class="daily-note">${safe(dailyConfirmationText)}；扫描包含股票与ETF，历史统计统一使用最近30个交易日。</p><div class="two-center-stats"><span><b>${rows.length}</b><small>当前展示</small></span><span><b>${safe(model.eligible)}</b><small>符合形态总数</small></span></div><p class="daily-note">周线完整底背离＋${safe(dailyConfirmationText)}；仅交易日收盘扫描提醒。提醒后涨跌计算至最新收盘或退出参考价；T+1/3/5只统计已触发买入提醒的股票，按提醒日收盘至后续市场交易日收盘结算；卖出仅由严格30分钟MACD顶背离触发，日线顶分型只作黄色提示。旧历史依据按原冻结规则展示，历史回放并非当时推送，未触发和未结算不计入胜率分母。</p>${referenceHtml}<details class="daily-rules" open><summary>模型条件与计算口径</summary><p>${safe(model.rules||'')}</p><p>${safe(model.implementation||'')}</p></details>${rows.length?`<div class="wrap"><table class="two-center-table focus-table"><thead><tr><th>排名</th><th>股票／ETF</th><th>买入提醒条件</th><th>入选原因</th><th>当前状态</th><th>看图核验</th><th>关键位置</th><th>选出／提醒触发时间</th><th>提醒后涨跌</th>${SHORT_CYCLE_HORIZONS.map(h=>`<th>T+${h}收益</th>`).join('')}<th>卖出提醒条件</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">当前参数下暂无已确认提醒的股票或ETF。</p>'}${modal}</section>`;
 }
 function compoundPanel(state){
     const payload=dailyExtra.compound;
@@ -4259,7 +4285,7 @@ function currentEffectiveAlertCount(modelId){
     if(modelId!=='d2_alert'&&globalCounts&&Object.prototype.hasOwnProperty.call(globalCounts,modelId))return Number(globalCounts[modelId]);
     const currentWeekly=modelId==='weekly_first'?dailyExtra.weeklyFirst:modelId==='weekly_consolidation_first'?dailyExtra.weeklyConsolidationFirst:null;
     if(currentWeekly){
-        if(modelId==='weekly_consolidation_first'&&currentWeekly.version!=='weekly-consolidation-divergence-v5')return 0;
+        if(modelId==='weekly_consolidation_first'&&!weeklyConsolidationRule(currentWeekly.version))return 0;
         const name=modelId==='weekly_first'?'周线类二买':'周线盘整背驰一买';
         const candidates=modelId==='weekly_first'?weeklyFirstCandidateRows(currentWeekly,{}):currentWeekly.rows||[];
         return reminderStockCount(candidates.filter(row=>{const evidence=weeklyShortCycleEvidence(name,row.code,row.markers?.D?.date||row.b?.end_date,row.markers?.E?.date||row.c?.low_date);return shortCycleConditionState(evidence).appeared&&(modelId!=='weekly_consolidation_first'||String(shortCycleTriggerTime(null,evidence)).replace(/\D/g,'').slice(0,8)===String(data.daily_date||currentWeekly.daily_date).replace(/\D/g,'').slice(0,8))&&modelFunnelAccept(modelId,{funnelLevel:'raw'},row,shortCycleAlertEvent(name,row))}));
@@ -4279,8 +4305,8 @@ function currentEffectiveAlertCount(modelId){
     const closeNames={daily_consolidation_first:'日线盘整背驰一买',two_centers:'日线趋势一买',weekly_first:'周线类二买',weekly_consolidation_first:'周线盘整背驰一买'};
     if(modelId==='weekly_consolidation_first'){
         const model=dailyExtra.weeklyConsolidationFirst||dailyExtra.navigationSignals?.weeklyConsolidationFirst;
-        if(model?.version!=='weekly-consolidation-divergence-v5'||!dailyClosePolicyActive(close)||close.daily_date!==model.daily_date)return 0;
-        return reminderStockCount(Object.values(close.signals||{}).filter(item=>item['模型']==='周线盘整背驰一买'&&item['提醒']?.model_rule_version===model.version&&item['提醒']?.['规则版本']==='model-weekly-daily-macd-red-close-v1'&&item['提醒']?.['提醒条件满足']===true&&String(item['提醒']?.['提醒确认时间']||'').replace(/\D/g,'').slice(0,8)===String(model.daily_date).replace(/\D/g,'').slice(0,8)));
+        if(!weeklyConsolidationRule(model?.version)||!dailyClosePolicyActive(close)||close.daily_date!==model.daily_date)return 0;
+        return reminderStockCount(Object.values(close.signals||{}).filter(item=>item['模型']==='周线盘整背驰一买'&&item['提醒']?.model_rule_version===model.version&&item['提醒']?.['规则版本']===weeklyConsolidationRule(model.version)&&item['提醒']?.['提醒条件满足']===true&&String(item['提醒']?.['提醒确认时间']||'').replace(/\D/g,'').slice(0,8)===String(model.daily_date).replace(/\D/g,'').slice(0,8)));
     }
     if(['daily_consolidation_first','two_centers','weekly_first'].includes(modelId)){
         if(!dailyClosePolicyActive(close))return 0;
@@ -4418,18 +4444,23 @@ function stockLookupEntries(primary=data,extra=dailyExtra){
     for(const [model,payload] of [['周线类二买',extra.weeklyFirst],['周线盘整背驰一买',extra.weeklyConsolidationFirst]])
         for(const row of payload?.rows||[]){
             if(model==='周线盘整背驰一买'){
-                const confirmation=row.daily_macd_confirmation;
+                const version=payload.version||row.rule_version,rule=weeklyConsolidationRule(version);
+                const confirmation=version==='weekly-consolidation-divergence-v6'?row.daily_confirmation:row.daily_macd_confirmation;
+                const red=version==='weekly-consolidation-divergence-v6'?confirmation?.daily_macd_confirmation:confirmation;
+                const bottom=version==='weekly-consolidation-divergence-v6'?confirmation?.fractal:null;
+                const ready=(red?.confirmed_at&&Number.isFinite(Number(red.macd))&&Number(red.macd)>0)||
+                    (bottom?.type==='底'&&dateKey(bottom.confirmed_at)===dateKey(payload.daily_date));
                 const close=extra.dailyCloseReminders||extra.navigationSignals?.dailyCloseReminders;
                 const signal=close?.signals?.[`${model}|${String(row.code).padStart(6,'0')}`]?.['提醒'];
-                if((payload.version||row.rule_version)!=='weekly-consolidation-divergence-v5'||row.bottom_confirmed!==true||!confirmation?.confirmed_at||!Number.isFinite(Number(confirmation.macd))||Number(confirmation.macd)<=0||dateKey(confirmation.confirmed_at)!==dateKey(payload.daily_date)||dateKey(close?.daily_date)!==dateKey(payload.daily_date)||signal?.['规则版本']!=='model-weekly-daily-macd-red-close-v1'||signal.model_rule_version!=='weekly-consolidation-divergence-v5'||signal['提醒条件满足']!==true||!signal['提醒确认时间'])continue;
-                if((extra.shortCycleAlertRates?.events||[]).some(event=>event.model===model&&String(event.code).padStart(6,'0')===String(row.code).padStart(6,'0')&&event.rule_version==='model-weekly-daily-macd-red-close-v1'&&event.triggered_at===signal['提醒确认时间']))continue;
-                add(model,row,signal['提醒确认时间'],'日线MACD红柱已确认','收盘确认',signal['提醒事件ID']||'');
+                if(!rule||row.bottom_confirmed!==true||!ready||!confirmation?.confirmed_at||dateKey(confirmation.confirmed_at)!==dateKey(payload.daily_date)||dateKey(close?.daily_date)!==dateKey(payload.daily_date)||signal?.['规则版本']!==rule||signal.model_rule_version!==version||signal['提醒条件满足']!==true||!signal['提醒确认时间'])continue;
+                if((extra.shortCycleAlertRates?.events||[]).some(event=>event.model===model&&String(event.code).padStart(6,'0')===String(row.code).padStart(6,'0')&&event.rule_version===rule&&event.triggered_at===signal['提醒确认时间']))continue;
+                add(model,row,signal['提醒确认时间'],signal['状态']||row.status,'收盘确认',signal['提醒事件ID']||'');
             }else add(model,row,payload.daily_date,row.status||'当前候选','当前快照');
         }
     for(const event of extra.shortCycleAlertRates?.events||[]){
         if(event.model==='日线盘整背驰一买')continue;
         if(['周线类二买','周线盘整背驰一买'].includes(event.model)&&
-            !['model-daily-bottom-close-v1',...(event.model==='周线盘整背驰一买'?['model-weekly-daily-macd-red-close-v1']:[])].some(rule=>event.rule_version===rule||event.rule_versions?.includes(rule)))continue;
+            !['model-daily-bottom-close-v1',...(event.model==='周线盘整背驰一买'?['model-weekly-daily-macd-red-close-v1','model-weekly-daily-bottom-or-macd-close-v1']:[])].some(rule=>event.rule_version===rule||event.rule_versions?.includes(rule)))continue;
         add(event.model,event,event.triggered_at,
             String(event.origin||'').includes('回放')?'回放推定提醒':'提醒触发',
             event.origin||'提醒归档',event.event_id||'');
@@ -5827,7 +5858,7 @@ async function refreshWeeklyConsolidationData(){
         const response=publicCloudPage?await publicCloudFetch('weekly_consolidation_first_latest.json'):await fetch(`data/weekly_consolidation_first_latest.json?v=${Date.now()}`,{cache:'no-store'});
         if(!response.ok)return;
         const payload=await response.json();
-        if(!payload||payload.version!=='weekly-consolidation-divergence-v5'||String(payload.generated_at||'')<=String(lastWeeklyConsolidationRefresh||''))return;
+        if(!payload||!weeklyConsolidationRule(payload.version)||String(payload.generated_at||'')<=String(lastWeeklyConsolidationRefresh||''))return;
         dailyExtra.weeklyConsolidationFirst=payload;
         lastWeeklyConsolidationRefresh=payload.generated_at||'';
         if(activeDaily==='weekly_consolidation_first')draw();
