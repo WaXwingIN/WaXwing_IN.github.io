@@ -23,7 +23,7 @@ body.waxwing-ui main th{color:var(--wx-muted);font:500 13px/1.7 var(--wx-font)}
 body.waxwing-ui .daily-tabs,body.waxwing-ui .tabs{gap:8px}
 body.waxwing-ui .daily-tabs button[aria-selected=false],body.waxwing-ui .tabs button[aria-selected=false]{color:var(--wx-ink)}
 body.waxwing-ui button,body.waxwing-ui input,body.waxwing-ui select{box-sizing:border-box;font-family:var(--wx-font);font-size:14px;line-height:20px}
-body.waxwing-ui .actions button,body.waxwing-ui .tabs button,body.waxwing-ui .daily-tabs button,
+body.waxwing-ui .actions button,body.waxwing-ui .tabs button,body.waxwing-ui .daily-tabs button,body.waxwing-ui .daily-tabs>.daily-model-link,
 body.waxwing-ui .daily-quick-actions button,body.waxwing-ui .daily-quick-actions a,
 body.waxwing-ui .wx-table-action,
 body.waxwing-ui .rolling-field input,body.waxwing-ui .rolling-field select,body.waxwing-ui .rolling-apply{height:36px;min-height:36px;border-radius:7px;padding:7px 12px;font:400 14px/20px var(--wx-font)}
@@ -31,6 +31,8 @@ body.waxwing-ui .rolling-field label,body.waxwing-ui .daily-filters label{font:4
 body.waxwing-ui .daily-sticky-controls,body.waxwing-ui .d2-sticky-history-filter{background:var(--wx-bg)}
 body.waxwing-ui .market-rolling-plan-link{color:var(--wx-blue);font:400 14px/1.5 var(--wx-font)}
 body.waxwing-ui .daily-quick-actions a,body.waxwing-ui .daily-quick-actions button{color:var(--wx-blue)}
+body.waxwing-ui .daily-tabs>.daily-model-link{border:1px solid #ccd5e1;background:#fff;color:var(--wx-ink);text-decoration:none}
+body.waxwing-ui .daily-tabs>.daily-model-link:focus-visible{outline:2px solid var(--wx-blue);outline-offset:2px}
 body.waxwing-ui .wx-table-action{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;margin:0;border:1px solid var(--wx-line);background:#fff;color:var(--wx-blue);text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .15s,border-color .15s}
 body.waxwing-ui .wx-table-action:hover{background:#eff6ff;border-color:#93b4ed}
 body.waxwing-ui .wx-table-action:active{background:#dbeafe}
