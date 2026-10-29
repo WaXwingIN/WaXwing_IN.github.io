@@ -1588,10 +1588,9 @@ function renderDailyNavigation(id){
     }).join('')+(publicCloudPage&&!publicStaticPage?'<button type="button" id="publicCloudNotifyToggle" aria-label="开启所有模型桌面提醒">🔔 开启桌面提醒</button>':'');
     const quickActions=document.createElement('div');quickActions.className='daily-quick-actions';quickActions.setAttribute('aria-label','常用入口');
     quickActions.innerHTML=`${publicCloudPage?'<button type="button" data-daily="holding_pool" data-public-holding-view="returns">模型收益</button><button type="button" data-daily="holding_pool" data-public-holding-view="simulation">每日买入试算</button>':'<button type="button" data-daily="holding_pool">持有跟踪池</button>'}<button type="button" data-daily="stock_lookup">股票检索</button><button type="button" data-daily="legacy_history">已停用模型历史</button>`;
-    if(id==='legacy_history')quickActions.insertAdjacentHTML('beforeend','<a href="momentum-v6.html">V6研究档案 ↗</a>');
+    quickActions.insertAdjacentHTML('beforeend','<a href="momentum-v6.html">V6动量 ↗</a>');
     if(publicCloudPage&&id==='holding_pool')quickActions.querySelectorAll('[data-public-holding-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.publicHoldingView===(stateFor('holding_pool').publicHoldingView||'simulation'))));
-    const priorityState=stateFor('daily_priority');
-    quickActions.insertAdjacentHTML('afterbegin','<button type="button" data-daily="daily_priority" data-priority-view="live" aria-pressed="'+String(id==='daily_priority'&&priorityState.priorityScope!=='research')+'">每日优选</button><button type="button" data-daily="daily_priority" data-priority-view="research" aria-pressed="'+String(id==='daily_priority'&&priorityState.priorityScope==='research')+'">近30日研究</button>');
+    quickActions.insertAdjacentHTML('afterbegin','<button type="button" data-daily="daily_priority" aria-pressed="'+String(id==='daily_priority')+'">每日优选</button>');
     dailyNav.append(quickActions);
     if(publicCloudPage&&!publicStaticPage){
         const button=document.getElementById('publicCloudNotifyToggle');
@@ -1620,10 +1619,10 @@ async function loadDailyData(id,{checkVersion=true}={}){
             try{
                 if(dailyExtra.pageManifest&&!dailyExtra.pageManifest.assets?.[spec.asset])throw new Error('当前数据版本尚未包含所选方案');
                 await loadDailyBundle(spec.asset);
-                if(state.priorityScope==='research')await loadPriorityResearch(state);
                 if(activeDaily===id)draw();
+                await loadPriorityResearch(state);
             }catch(error){
-                if(activeDaily===id)content.innerHTML=`<section class="holding-pool"><h2>${state.priorityScope==='research'?'近30日研究':'每日优选'}</h2><p class="daily-error">所选方案暂未载入，请刷新重试。其他模型仍可查看。</p></section>`;
+                if(activeDaily===id)content.innerHTML=`<section class="holding-pool"><h2>每日优选</h2><p class="daily-error">所选方案暂未载入，请刷新重试。其他模型仍可查看。</p></section>`;
             }
             return;
         }
@@ -1758,7 +1757,7 @@ if(location.hash==='#d2-ai'){activeDaily='d2_alert';stateFor('d2_alert').d2Secti
 if(location.hash==='#d2-ideal')stateFor('d2_alert').d2Section='ideal';
 if(location.hash==='#d2-bottom'){activeDaily='d2_alert';stateFor('d2_alert').d2Section='bottom'}
 if(location.hash==='#d2-second-bottom'){activeDaily='d2_alert';stateFor('d2_alert').d2Section='second-bottom'}
-if(location.hash==='#daily-priority-research'){stateFor('daily_priority').priorityScope='research';stateFor('daily_priority').date='all'}
+if(location.hash==='#daily-priority-research')stateFor('daily_priority').date='all';
 const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const formatDate=value=>{const digits=String(value??'').replace(/\D/g,'');return digits.length>=8?`${digits.slice(0,4)}/${digits.slice(4,6)}/${digits.slice(6,8)}`:'--'};
 const formatDateTime=value=>{const text=String(value??''),date=formatDate(text),match=text.match(/(?:T|\s)(\d{2}:\d{2}:\d{2})/);return date==='--'?'--':date+(match?' '+match[1]:'')};
@@ -1892,12 +1891,12 @@ else window.addEventListener('resize',syncDailyStickyOffset);
 requestAnimationFrame(syncDailyStickyOffset);
 function selectDaily(id){
     activeDaily=id;
-    if(id==='daily_priority')history.replaceState(null,'',stateFor(id).priorityScope==='research'?'#daily-priority-research':'#daily-priority');
+    if(id==='daily_priority')history.replaceState(null,'','#daily-priority');
     const routes={d2_alert:'d2-alert',holding_pool:'holding-pool',stock_lookup:'stock-lookup',second:'class-ii',legacy_history:'legacy-model-history',daily_macd:'daily-macd',sixty_minute_macd:'sixty-minute-macd',weekly_first:'weekly-first-buy',weekly_consolidation_first:'weekly-consolidation-first',monthly_consolidation_first:'monthly-consolidation-first',two_centers:'daily-first-buy'};
     if(routes[id])history.replaceState(null,'','#'+routes[id]);
     showDailyLoading(id);ensureDailyData(id);document.getElementById('daily-'+id)?.focus()
 }
-dailyNav.onclick=e=>{const b=e.target.closest('[data-daily]');if(b){if(b.dataset.publicHoldingView)stateFor('holding_pool').publicHoldingView=b.dataset.publicHoldingView;if(b.dataset.priorityView){const state=stateFor('daily_priority');state.priorityScope=b.dataset.priorityView;state.date=state.priorityScope==='research'?'all':'latest'}selectDaily(b.dataset.daily)}};
+dailyNav.onclick=e=>{const b=e.target.closest('[data-daily]');if(b){if(b.dataset.publicHoldingView)stateFor('holding_pool').publicHoldingView=b.dataset.publicHoldingView;selectDaily(b.dataset.daily)}};
 dailyNav.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const tabs=dailyModels.filter(([key])=>!['holding_pool','legacy_history','stock_lookup'].includes(key));let i=tabs.findIndex(x=>x[0]===activeDaily),n=tabs.length;i=e.key==='Home'?0:e.key==='End'?n-1:(i+(e.key==='ArrowRight'?1:-1)+n)%n;selectDaily(tabs[i][0])};
 function dailyChart(path=[],ref=[]){
     const values=[...path,...ref].filter(Number.isFinite);
@@ -5363,28 +5362,27 @@ async function loadPriorityResearch(state){
 }
 async function selectPriorityDate(state,value){
     const match=/^(research|live):(.+)$/.exec(value);
-    if(match){state.priorityScope=match[1];state.date=match[2]}
-    else state.date=value;
+    state.date=match?match[2]:value;
     state.priorityDetailDate=null;state.priorityDetailModel=null;
-    if(state.priorityScope==='research')await loadPriorityResearch(state);
+    await loadPriorityResearch(state);
 }
 function dailyPriorityPanel(state){
     const spec=priorityViewSpec(state),close=spec.close,live=dailyExtra[spec.liveKey];
-    const research=state.priorityScope==='research',title=research?'近30日研究':'每日优选';
+    const title='每日优选';
     if(!live)return `<section class="holding-pool"><h2>${title}</h2><p class="daily-note">所选方案尚未载入，请刷新重试。</p></section>`;
-    const payload=research?(dailyExtra[spec.researchKey]||live.backtest):live;
-    if(!payload)return `<section class="holding-pool"><h2>${title}</h2><p class="daily-note">${state.priorityResearchLoading?'正在加载所选方案的近30日研究…':state.priorityResearchError?'研究数据加载失败，可点击重试。':'所选方案的近30日研究尚未发布。'}</p>${state.priorityResearchError?'<button type="button" data-priority-retry>重试</button>':''}</section>`;
-    const sessions=payload.sessions||[],models=payload.models||[];
-    const dates=[...new Set([...sessions.map(row=>row.date),...(payload.latest_attempt?.date?[payload.latest_attempt.date]:[])])].sort().reverse();
+    const payload=live,study=dailyExtra[spec.researchKey]||live.backtest;
+    const byDate=new Map((study?.sessions||[]).map(row=>[row.date,{...row,priorityOrigin:'research'}]));
+    if(live.latest_attempt?.date)byDate.delete(live.latest_attempt.date);
+    for(const row of live.sessions||[])byDate.set(row.date,{...row,priorityOrigin:'live'});
+    const sessions=[...byDate.values()],models=[...new Set([...(live.models||[]),...(study?.models||[])])];
+    const dates=[...new Set([...sessions.map(row=>row.date),...(live.research_dates||[]),...(live.latest_attempt?.date?[live.latest_attempt.date]:[])])].sort().reverse();
     const selected=state.date==='all'?'all':state.date==='latest'?dates[0]:state.date;
     const shown=sessions.filter(row=>selected==='all'||row.date===selected).slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
     const model=state.priorityModel||'all',visibleModels=models.filter(name=>model==='all'||name===model);
     const number=(value,digits=2)=>value==null?'--':Number(value).toFixed(digits);
-    const studyDates=[...new Set(live.research_dates||(dailyExtra[spec.researchKey]||live.backtest)?.sessions?.map(row=>row.date)||[])].sort().reverse();
-    const liveDates=[...new Set([...(live.sessions||[]).map(row=>row.date),...(live.latest_attempt?.date?[live.latest_attempt.date]:[])])].sort().reverse();
-    const extraDates=research?liveDates:studyDates,extraScope=research?'live':'research';
-    const extraOptions=extraDates.length?`<optgroup label="${research?'实际发布名单':'近30日研究 · '+extraDates.length+'个交易日'}">${!research?'<option value="research:all">全部研究日期</option>':''}${extraDates.map(day=>`<option value="${extraScope}:${safe(day)}">${safe(formatDate(day))} · ${research?'实际发布':'研究'}</option>`).join('')}</optgroup>`:'';
-    const filters=`<div class="daily-filter-row daily-filters"><label>优选日期 <select id="dailyDate"><option value="all" ${selected==='all'?'selected':''}>全部历史 · ${research?'研究':'实际发布'}${sessions.length}日</option>${dates.length?dates.map(day=>`<option value="${safe(day)}" ${selected===day?'selected':''}>${safe(formatDate(day))}${research?' · 研究':sessions.some(row=>row.date===day)?'':' · 尚未形成'}</option>`).join(''):'<option value="latest" selected>尚未形成名单</option>'}${extraOptions}</select></label><label>方案 <select data-priority-timing><option value="close" ${close?'selected':''}>收盘后生成 → 次交易日开盘</option><option value="noon" ${!close?'selected':''}>11:30后生成 → 当日13:00</option></select></label><label>来源模型 <select data-priority-model><option value="all">全部模型</option>${models.map(name=>`<option ${name===model?'selected':''}>${safe(name)}</option>`).join('')}</select></label></div>`;
+    const filters=`<div class="daily-filter-row daily-filters"><label>优选日期 <select id="dailyDate"><option value="all" ${selected==='all'?'selected':''}>全部历史 · ${dates.length}日</option>${dates.length?dates.map(day=>`<option value="${safe(day)}" ${selected===day?'selected':''}>${safe(formatDate(day))}</option>`).join(''):'<option value="latest" selected>尚未形成名单</option>'}</select></label><label>方案 <select data-priority-timing><option value="close" ${close?'selected':''}>收盘后生成 → 次交易日开盘</option><option value="noon" ${!close?'selected':''}>11:30后生成 → 当日13:00</option></select></label><label>来源模型 <select data-priority-model><option value="all">全部模型</option>${models.map(name=>`<option ${name===model?'selected':''}>${safe(name)}</option>`).join('')}</select></label></div>`;
+    const needsHistory=!study&&(selected==='all'||(!byDate.has(selected)&&(live.research_dates||[]).includes(selected)&&selected!==live.latest_attempt?.date))&&Boolean((live.research_dates||[]).length||dailyExtra.pageManifest?.assets?.[spec.asset+'_research']);
+    if(needsHistory)return `<section class="holding-pool priority-panel"><h2>${title}</h2>${filters}<p class="daily-note">${state.priorityResearchError?'历史名单加载失败，请重试。':state.priorityResearchLoading?'正在加载历史名单…':dailyExtra.pageManifest?.assets?.[spec.asset+'_research']?'正在加载历史名单…':'所选方案的历史名单暂未载入。'}</p>${state.priorityResearchError?'<button type="button" data-priority-retry>重试</button>':''}</section>`;
     const shortPick=row=>{
         if(!row)return '<span class="daily-note">无第二只</span>';
         const outcome=row.outcome||{},status=outcome.status||'待核验';
@@ -5394,7 +5392,7 @@ function dailyPriorityPanel(state){
         const picks=(session.models?.[name]?.picks||[]).slice().sort((a,b)=>Number(a.rank)-Number(b.rank));
         return `<tr><td>${safe(formatDate(session.date))}<small>${safe(session.selection_policy?.label||'原评分版本')}</small></td><td>${safe(name)}</td><td>${picks[0]?shortPick(picks[0]):`<span class="daily-note">${safe(session.models?.[name]?.empty_reason||'本日无可核验优选')}</span>`}</td><td>${picks[0]?shortPick(picks[1]):'--'}</td><td>${picks.length||session.selection_version?`<button type="button" class="wx-table-action" data-priority-detail-date="${safe(session.date)}" data-priority-detail-model="${safe(name)}">查看分析</button>`:'--'}</td></tr>`;
     })).join('');
-    const roster=`<h3>${selected==='all'?'各日':'所选日期'} · 各模型优选名单</h3><p class="daily-note">${research?'历史研究重建名单，并非当时实际发布。':'实际发布名单。'}每个模型分别最多2只；不足2只按实际数量展示。</p>${rosterRows?`<div class="wrap priority-roster-wrap"><table class="priority-roster"><thead><tr><th>优选日期</th><th>来源模型</th><th>优先1 · 名称 / 代码</th><th>优先2 · 名称 / 代码</th><th>量价时空</th></tr></thead><tbody>${rosterRows}</tbody></table></div>`:`<p class="daily-note">${safe(payload.latest_attempt?.status||'所选日期尚无可核验的优选名单。')}${!research&&studyDates.length?' 可在日期选项中查看近30日研究名单。':''}</p>`}`;
+    const roster=`<h3>${selected==='all'?'各日':'所选日期'} · 各模型优选名单</h3><p class="daily-note">每个模型分别最多2只；不足2只按实际数量展示。</p>${rosterRows?`<div class="wrap priority-roster-wrap"><table class="priority-roster"><thead><tr><th>优选日期</th><th>来源模型</th><th>优先1 · 名称 / 代码</th><th>优先2 · 名称 / 代码</th><th>量价时空</th></tr></thead><tbody>${rosterRows}</tbody></table></div>`:`<p class="daily-note">${safe(selected===live.latest_attempt?.date?live.latest_attempt?.status||'所选日期尚无可核验的优选名单。':'所选日期尚无可核验的优选名单。')}</p>`}`;
     const summaryRow=(name,picks)=>{
         const outcomes=picks.map(row=>row.outcome||{status:'待核验'});
         const closed=outcomes.filter(row=>row.status==='已退出'),wins=closed.filter(row=>Number(row.net_return_pct)>0).length;
@@ -5433,10 +5431,12 @@ function dailyPriorityPanel(state){
             return `<section class="priority-model"><h3>${safe(name)}</h3><p class="daily-note">本轮可核验 ${Number(group.eligible||0)}只${group.qualified==null?'':`，质量通过 ${Number(group.qualified)}只`}，优选 ${picks.length}只${missing?`；${missing}条提醒因资料或时序未完成核验` : ''}。</p>${rejected?`<p class="daily-note">未通过原因：${rejected}；同一候选可有多个原因，不相加作为剔除总数。</p>`:''}<div class="priority-grid">${items||`<p class="daily-note">${safe(group.empty_reason||'本轮无可核验的优选，不补入旧名单。')}</p>`}</div></section>`;
         }).join('');
         const sectors=(market.sectors||[]).map(row=>`<tr><td>${safe(row.name)}</td><td>${returnPct(row.return_5_pct)}</td><td>${returnPct(row.relative_5_pct)}</td><td>${number(row.above_ma20_ratio*100)}%</td><td>${safe(row.verified)}/${safe(row.total)}</td></tr>`).join('');
-        return `<section class="priority-session"><h3>${safe(formatDate(session.date))} · 每日名单</h3><p class="daily-note">行情截止 ${safe(formatDateTime(session.cutoff))}${research?' · 历史规则时点重建':` · 名单形成 ${safe(formatDateTime(session.frozen_at))}`}。</p><div class="priority-market">${index}<p class="daily-note">${safe(market.method)} ${safe(market.membership_method||'')}。${session.selection_version?`${safe(session.selection_policy?.label)}：${safe(session.selection_decision?.message)}。ETF标的板块未核验时不进入优选。`:'ETF未核验标的板块时只引用全行业环境。'}</p></div>${groups}<details><summary>当日各板块强弱与覆盖</summary><div class="wrap"><table><thead><tr><th>板块</th><th>5日表现</th><th>相对三指数</th><th>站上MA20</th><th>成分覆盖</th></tr></thead><tbody>${sectors}</tbody></table></div></details></section>`;
+        return `<section class="priority-session"><h3>${safe(formatDate(session.date))} · 每日名单</h3><p class="daily-note">行情截止 ${safe(formatDateTime(session.cutoff))}${session.priorityOrigin==='live'?` · 名单形成 ${safe(formatDateTime(session.frozen_at))}`:''}。</p><div class="priority-market">${index}<p class="daily-note">${safe(market.method)} ${safe(market.membership_method||'')}。${session.selection_version?`${safe(session.selection_policy?.label)}：${safe(session.selection_decision?.message)}。ETF标的板块未核验时不进入优选。`:'ETF未核验标的板块时只引用全行业环境。'}</p></div>${groups}<details><summary>当日各板块强弱与覆盖</summary><div class="wrap"><table><thead><tr><th>板块</th><th>5日表现</th><th>相对三指数</th><th>站上MA20</th><th>成分覆盖</th></tr></thead><tbody>${sectors}</tbody></table></div></details></section>`;
     }).join('');
-    const coverage=research?`研究窗口 ${safe(formatDate(payload.research?.from))}—${safe(formatDate(payload.research?.through))}，请求30个交易日，可核验 ${Number(payload.research?.covered_sessions||0)}日。${safe(payload.research?.scope||'')}`:(close?'每天收盘后形成，次交易日开盘参考买入，各模型分别最多2只。':'每天11:30后形成，当日13:00参考买入，各模型分别最多2只。')+'当前还未形成名单时不展示旧名单代替。';
-    return `<section class="holding-pool priority-panel"><h2>${title}</h2><p class="daily-note">${coverage}</p>${filters}${roster}${payload.selection_policy?`<details><summary>当前优选条件 · ${safe(payload.selection_policy.label)}</summary><p class="daily-note">${safe(payload.selection_policy.description)} 已冻结名单按各自原版本保留，新条件仅用于后续生成；历史研究如有旧版本，以名单所示版本为准。</p></details>`:''}<h3>${selected==='all'?'全部历史':'所选优选日'} · 成功率</h3><p class="daily-note">${safe(payload.definition)} 退出核验截至 ${safe(formatDate(payload.evaluation_through))}。成功率＝已退出且扣费盈利笔数÷已退出笔数，浮盈不计入；同股跨模型分别计数，不代表独立样本。持有平均净收益按已买入未退出、有可核验估值的样本等权平均，缺估值不作0；估值日期与覆盖见数字提示，未计尚未发生的卖出费用。全部操作平均净收益合并已退出与持有中各笔可核验净收益，逐笔等权平均，计入笔数见表中；未买入及未知收益不计入，不是账户累计收益。</p><div class="wrap"><table class="priority-summary"><thead><tr><th>来源模型</th><th>优选</th><th>退出 / 成功</th><th>成功率</th><th>退出平均净收益</th><th>持有中</th><th>持有平均净收益</th><th>全部操作平均净收益</th><th>待买入</th><th>未买入</th><th>待核验</th></tr></thead><tbody>${summary}</tbody>${summaryTotal}</table></div>${cards?`<div id="priority-analysis"><h3>量价时空分析 · ${safe(formatDate(detailDate))}</h3>${selected==='all'?'<p class="daily-note">当前展开一个日期的分析；其他日期及模型可点上表“查看分析”。</p>':''}${cards}</div>`:''}<details><summary>评分、成本与统计口径</summary><p class="daily-note">指数15、板块25、量20、价20、时10、空10分。${close?'只用当日收盘及以前可见行情':'只用本日11:30及以前可见行情'}，原模型条件与退出规则保持。${safe(payload.fees)} 停牌、一字板或无法核验的参考进场不算已买入。历史研究名单与实际发布名单分别统计。</p></details></section>`;
+    const coverage=(close?'每天收盘后形成，次交易日开盘参考买入，各模型分别最多2只。':'每天11:30后形成，当日13:00参考买入，各模型分别最多2只。')+'当前还未形成名单时不展示旧名单代替。';
+    const evaluations=[...new Set([live.evaluation_through,study?.evaluation_through].filter(Boolean))].sort();
+    const evaluationScope=evaluations.map(day=>safe(formatDate(day))).join('—');
+    return `<section class="holding-pool priority-panel"><h2>${title}</h2><p class="daily-note">${coverage}</p>${filters}${roster}${payload.selection_policy?`<details><summary>当前优选条件 · ${safe(payload.selection_policy.label)}</summary><p class="daily-note">${safe(payload.selection_policy.description)} 已冻结名单按各自原版本保留，新条件仅用于后续生成；历史研究如有旧版本，以名单所示版本为准。</p></details>`:''}<h3>${selected==='all'?'全部历史':'所选优选日'} · 成功率</h3><p class="daily-note">${safe(payload.definition)} 核验日期 ${evaluationScope||'--'}，各笔沿用可核验的最新结果。成功率＝已退出且扣费盈利笔数÷已退出笔数，浮盈不计入；同股跨模型分别计数，不代表独立样本。持有平均净收益按已买入未退出、有可核验估值的样本等权平均，缺估值不作0；估值日期与覆盖见数字提示，未计尚未发生的卖出费用。全部操作平均净收益合并已退出与持有中各笔可核验净收益，逐笔等权平均，计入笔数见表中；未买入及未知收益不计入，不是账户累计收益。</p><div class="wrap"><table class="priority-summary"><thead><tr><th>来源模型</th><th>优选</th><th>退出 / 成功</th><th>成功率</th><th>退出平均净收益</th><th>持有中</th><th>持有平均净收益</th><th>全部操作平均净收益</th><th>待买入</th><th>未买入</th><th>待核验</th></tr></thead><tbody>${summary}</tbody>${summaryTotal}</table></div>${cards?`<div id="priority-analysis"><h3>量价时空分析 · ${safe(formatDate(detailDate))}</h3>${selected==='all'?'<p class="daily-note">当前展开一个日期的分析；其他日期及模型可点上表“查看分析”。</p>':''}${cards}</div>`:''}<details><summary>评分、成本与统计口径</summary><p class="daily-note">指数15、板块25、量20、价20、时10、空10分。${close?'只用当日收盘及以前可见行情':'只用本日11:30及以前可见行情'}，原模型条件与退出规则保持。${safe(payload.fees)} 停牌、一字板或无法核验的参考进场不算已买入。按所选日期合并统计，同日优先使用实际名单，不重复计入。</p></details></section>`;
 }
 style.textContent+=`.priority-panel details{margin:14px 0}.priority-session{margin-top:24px}.priority-market{border:1px solid #0f817e;background:#f0fafa;border-radius:9px;padding:14px 16px}.priority-model{margin:20px 0}.priority-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.priority-pick{min-width:0;background:#fff;border:1px solid #dbe3ed;border-radius:9px;padding:16px}.priority-pick h4{margin:0 0 10px;font-size:16px;color:#203247}.priority-pick h4 small{font-size:12px;font-weight:400;color:#64748b}.priority-pick dl{margin:12px 0}.priority-pick dl>div{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;margin:8px 0}.priority-pick dt{color:#0f817e;font-weight:700}.priority-pick dd{margin:0;line-height:1.6;overflow-wrap:anywhere}.priority-pick p{line-height:1.7;overflow-wrap:anywhere}.priority-summary{min-width:1180px}.priority-held-average small,.priority-operation-average small{display:block}.priority-summary tfoot{background:#edf2f8;font-weight:600}.priority-roster{min-width:760px}.priority-roster td{vertical-align:top}.priority-roster td small{display:block;margin-top:4px;color:#64758a}.priority-roster button{white-space:nowrap}#priority-analysis{scroll-margin-top:180px}.priority-pick details{border-top:1px solid #e2e8f0;padding-top:10px}.priority-panel summary{cursor:pointer;color:#2563eb}@media(max-width:760px){.priority-grid{grid-template-columns:1fr}.priority-pick{padding:14px}.priority-market{padding:12px}}`;
 draw=function(){
@@ -5581,9 +5581,9 @@ draw=function(){
     renderDailyNavigation(id);updatePageMeta();
     content.setAttribute('role','tabpanel');content.setAttribute('tabindex','0');
     if(dailyModels.some(x=>x[0]===id))content.setAttribute('aria-labelledby','daily-'+id);else content.removeAttribute('aria-labelledby');
-    const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=async()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;try{if(id==='daily_priority'){await selectPriorityDate(state,date.value);history.replaceState(null,'',state.priorityScope==='research'?'#daily-priority-research':'#daily-priority')}if(id==='daily_consolidation_first')await loadDailyConsolidationDate(state.date);draw()}catch(error){content.innerHTML=`<p class="daily-error">详情加载失败：${safe(error.message)}</p>`}}};
+    const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=async()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;try{if(id==='daily_priority'){await selectPriorityDate(state,date.value);history.replaceState(null,'','#daily-priority')}if(id==='daily_consolidation_first')await loadDailyConsolidationDate(state.date);draw()}catch(error){content.innerHTML=`<p class="daily-error">详情加载失败：${safe(error.message)}</p>`}}};
     stickyControls.querySelector('[data-priority-model]')?.addEventListener('change',event=>{state.priorityModel=event.target.value;draw()});
-    stickyControls.querySelector('[data-priority-timing]')?.addEventListener('change',event=>{state.priorityTiming=event.target.value;state.date=state.priorityScope==='research'?'all':'latest';showDailyLoading('daily_priority');loadDailyData('daily_priority',{checkVersion:false})});
+    stickyControls.querySelector('[data-priority-timing]')?.addEventListener('change',event=>{state.priorityTiming=event.target.value;state.date='latest';showDailyLoading('daily_priority');loadDailyData('daily_priority',{checkVersion:false})});
     content.querySelector('[data-priority-retry]')?.addEventListener('click',()=>loadPriorityResearch(state));
     content.querySelectorAll('[data-priority-detail-date]').forEach(button=>button.addEventListener('click',()=>{state.priorityDetailDate=button.dataset.priorityDetailDate;state.priorityDetailModel=button.dataset.priorityDetailModel;draw();document.getElementById('priority-analysis')?.scrollIntoView({block:'start'})}));
     const macdDate=content.querySelector('[data-integrated-macd-date]');
