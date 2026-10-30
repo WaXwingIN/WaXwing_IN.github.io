@@ -9315,7 +9315,449 @@
         }
       },
       "settlement_status": "已结算"
+    },
+    {
+      "model": "T+1 momentum v6",
+      "generated_at": "2026-10-30T08:13:01.772749+00:00",
+      "signal_date": "2026-10-30",
+      "execution": "下一交易日开盘确认可买性与整手金额，T+2按规则退出",
+      "status": "research_only",
+      "deployment_ready": false,
+      "capital": 50000,
+      "universe": "主板+创业板+沪深场内ETF；排除科创板、北交所、ST/退市和少于250日样本的品种",
+      "regime": {
+        "scale": 0.0,
+        "label": "弱市",
+        "market_ret_20": -0.13254904452928268,
+        "breadth_5": 0.32135500485368007,
+        "volatility_rank_120": 0.3416666666666667
+      },
+      "profiles": {
+        "balanced": {
+          "action": "空仓",
+          "top_k": 0,
+          "exposure": 0.0,
+          "reason": "弱市门控",
+          "gate": {
+            "active": true,
+            "observations": 20,
+            "required_observations": 16,
+            "window": 20,
+            "win_rate": 0.65,
+            "required_win_rate": 0.5,
+            "mean_return": 0.001632468035677448,
+            "through": "2026-09-16"
+          }
+        },
+        "profit_boost": {
+          "action": "空仓",
+          "top_k": 0,
+          "exposure": 0.0,
+          "reason": "弱市门控",
+          "gate": {
+            "active": false,
+            "observations": 40,
+            "required_observations": 16,
+            "window": 40,
+            "win_rate": 0.475,
+            "required_win_rate": 0.55,
+            "mean_return": 0.001434815942775458,
+            "through": "2026-09-16"
+          }
+        }
+      },
+      "candidates": [
+        {
+          "rank": 1,
+          "code": "000678",
+          "name": "襄阳轴承",
+          "asset_type": "股票",
+          "close": 18.08,
+          "score": 0.991,
+          "base_rank": 0.99,
+          "stable_rank": 1.0,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 2,
+          "code": "001219",
+          "name": "青岛食品",
+          "asset_type": "股票",
+          "close": 19.94,
+          "score": 0.987,
+          "base_rank": 1.0,
+          "stable_rank": 0.87,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 3,
+          "code": "000530",
+          "name": "冰山冷热",
+          "asset_type": "股票",
+          "close": 7.92,
+          "score": 0.972,
+          "base_rank": 0.98,
+          "stable_rank": 0.9,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 4,
+          "code": "300949",
+          "name": "奥雅股份",
+          "asset_type": "股票",
+          "close": 41.33,
+          "score": 0.943,
+          "base_rank": 0.97,
+          "stable_rank": 0.7,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 5,
+          "code": "301502",
+          "name": "华阳智能",
+          "asset_type": "股票",
+          "close": 67.0,
+          "score": 0.932,
+          "base_rank": 0.96,
+          "stable_rank": 0.68,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 6,
+          "code": "301313",
+          "name": "凡拓数创",
+          "asset_type": "股票",
+          "close": 59.6,
+          "score": 0.929,
+          "base_rank": 0.93,
+          "stable_rank": 0.92,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 7,
+          "code": "301428",
+          "name": "世纪恒通",
+          "asset_type": "股票",
+          "close": 40.99,
+          "score": 0.924,
+          "base_rank": 0.95,
+          "stable_rank": 0.69,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 8,
+          "code": "600838",
+          "name": "上海九百",
+          "asset_type": "股票",
+          "close": 12.27,
+          "score": 0.917,
+          "base_rank": 0.92,
+          "stable_rank": 0.89,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 9,
+          "code": "300839",
+          "name": "博汇股份",
+          "asset_type": "股票",
+          "close": 17.82,
+          "score": 0.907,
+          "base_rank": 0.94,
+          "stable_rank": 0.61,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 10,
+          "code": "002696",
+          "name": "百洋股份",
+          "asset_type": "股票",
+          "close": 11.12,
+          "score": 0.9,
+          "base_rank": 0.89,
+          "stable_rank": 0.99,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        }
+      ],
+      "candidate_pool_size": 100,
+      "eligible_candidates": 99,
+      "stable_weight": 0.10000000149011612,
+      "stable_weight_source": "v5_score_artifact",
+      "cache_failures": 0,
+      "live_cache": {
+        "training_cache_end": "20260921",
+        "scanner_updated_codes": 5874,
+        "signal_date_coverage": 5870,
+        "gate_source": "v5_score_artifacts",
+        "backtest_source": "previous_v6_snapshot"
+      },
+      "backtest": {
+        "balanced": {
+          "2024": {
+            "cost_0.30pct": {
+              "samples": 94,
+              "days": 242,
+              "coverage": 0.3884297520661157,
+              "net_win_rate": 0.5851063829787234,
+              "win_rate_ci_low": 0.48407836075523214,
+              "win_rate_ci_high": 0.6794512626360452,
+              "avg_net_return": 0.0012862143498337405,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.11431497165063564,
+              "compound_return": 0.33890447232211596,
+              "annualized_return": 0.35514940481290025,
+              "annualized_volatility": 0.20109206105704416,
+              "sharpe": 1.61182900237,
+              "profit_factor": 1.5724848261389077,
+              "trading_days": 94
+            },
+            "cost_0.50pct": {
+              "samples": 94,
+              "days": 242,
+              "coverage": 0.3884297520661157,
+              "net_win_rate": 0.5851063829787234,
+              "win_rate_ci_low": 0.48407836075523214,
+              "win_rate_ci_high": 0.6794512626360452,
+              "avg_net_return": 0.0011241135381312255,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.11622082669244449,
+              "compound_return": 0.2875795122065967,
+              "annualized_return": 0.3010984986036902,
+              "annualized_volatility": 0.20047585834274398,
+              "sharpe": 1.4130210687252147,
+              "profit_factor": 1.4863052969060135,
+              "trading_days": 94
+            },
+            "dynamic_signal_days": 54
+          },
+          "2025": {
+            "cost_0.30pct": {
+              "samples": 115,
+              "days": 243,
+              "coverage": 0.4732510288065844,
+              "net_win_rate": 0.5652173913043478,
+              "win_rate_ci_low": 0.4739559762173702,
+              "win_rate_ci_high": 0.6522624523463649,
+              "avg_net_return": 0.0013669849914276337,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.1281958787944928,
+              "compound_return": 0.37558968655657243,
+              "annualized_return": 0.3919323549858922,
+              "annualized_volatility": 0.1655068044983222,
+              "sharpe": 2.081365892380913,
+              "profit_factor": 1.6607325734378682,
+              "trading_days": 115
+            },
+            "cost_0.50pct": {
+              "samples": 115,
+              "days": 243,
+              "coverage": 0.4732510288065844,
+              "net_win_rate": 0.5304347826086957,
+              "win_rate_ci_low": 0.43971596277968295,
+              "win_rate_ci_high": 0.6191859705500602,
+              "avg_net_return": 0.0010998568254706944,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.13558543439536241,
+              "compound_return": 0.28956978865467753,
+              "annualized_return": 0.3017734212827996,
+              "annualized_volatility": 0.1637553363994815,
+              "sharpe": 1.692548933748779,
+              "profit_factor": 1.506081387230761,
+              "trading_days": 115
+            },
+            "dynamic_signal_days": 40
+          },
+          "2026": {
+            "cost_0.30pct": {
+              "samples": 53,
+              "days": 172,
+              "coverage": 0.3081395348837209,
+              "net_win_rate": 0.5849056603773585,
+              "win_rate_ci_low": 0.45094182384453757,
+              "win_rate_ci_high": 0.7073929169087134,
+              "avg_net_return": 0.000790617199781145,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.06142444198682362,
+              "compound_return": 0.13961826701735025,
+              "annualized_return": 0.21104177324098528,
+              "annualized_volatility": 0.12503175089477087,
+              "sharpe": 1.5934795195544296,
+              "profit_factor": 1.6305164811463704,
+              "trading_days": 53
+            },
+            "cost_0.50pct": {
+              "samples": 53,
+              "days": 172,
+              "coverage": 0.3081395348837209,
+              "net_win_rate": 0.5660377358490566,
+              "win_rate_ci_low": 0.4326511497976876,
+              "win_rate_ci_high": 0.6904980930103964,
+              "avg_net_return": 0.0007435766572936785,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.06045589587070899,
+              "compound_return": 0.13042017536063422,
+              "annualized_return": 0.19674781785070405,
+              "annualized_volatility": 0.1251973041740121,
+              "sharpe": 1.4966881186001033,
+              "profit_factor": 1.5677162927217525,
+              "trading_days": 53
+            },
+            "dynamic_signal_days": 27
+          }
+        },
+        "profit_boost": {
+          "2024": {
+            "cost_0.30pct": {
+              "samples": 143,
+              "days": 242,
+              "coverage": 0.5909090909090909,
+              "net_win_rate": 0.5664335664335665,
+              "win_rate_ci_low": 0.4845211293810815,
+              "win_rate_ci_high": 0.6448699968392811,
+              "avg_net_return": 0.0016538424798372116,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.11594476604281456,
+              "compound_return": 0.45514388139750483,
+              "annualized_return": 0.477874609469239,
+              "annualized_volatility": 0.2285227653905238,
+              "sharpe": 1.823749612896377,
+              "profit_factor": 1.5181017812324749,
+              "trading_days": 143
+            },
+            "cost_0.50pct": {
+              "samples": 143,
+              "days": 242,
+              "coverage": 0.5909090909090909,
+              "net_win_rate": 0.5594405594405595,
+              "win_rate_ci_low": 0.47757133478487557,
+              "win_rate_ci_high": 0.6381996728859753,
+              "avg_net_return": 0.0013765771382619157,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.12156038327729168,
+              "compound_return": 0.3609306584875289,
+              "annualized_return": 0.3783719002679735,
+              "annualized_volatility": 0.2280977791645403,
+              "sharpe": 1.5208277788262257,
+              "profit_factor": 1.4144491275142759,
+              "trading_days": 143
+            },
+            "dynamic_signal_days": 100
+          },
+          "2025": {
+            "cost_0.30pct": {
+              "samples": 179,
+              "days": 243,
+              "coverage": 0.7366255144032922,
+              "net_win_rate": 0.547486033519553,
+              "win_rate_ci_low": 0.47433396250553805,
+              "win_rate_ci_high": 0.6186426905099682,
+              "avg_net_return": 0.0015692215368780212,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.13924978154000767,
+              "compound_return": 0.438648442160392,
+              "annualized_return": 0.45815890049801444,
+              "annualized_volatility": 0.19045787457050198,
+              "sharpe": 2.0762797452456057,
+              "profit_factor": 1.5202235220908433,
+              "trading_days": 179
+            },
+            "cost_0.50pct": {
+              "samples": 179,
+              "days": 243,
+              "coverage": 0.7366255144032922,
+              "net_win_rate": 0.5307262569832403,
+              "win_rate_ci_low": 0.4577397208888863,
+              "win_rate_ci_high": 0.6024216428270297,
+              "avg_net_return": 0.0011826555020417327,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.14744815469981076,
+              "compound_return": 0.31016205410957,
+              "annualized_return": 0.323336794436031,
+              "annualized_volatility": 0.18893240966181132,
+              "sharpe": 1.5774381274657343,
+              "profit_factor": 1.3727233314871026,
+              "trading_days": 179
+            },
+            "dynamic_signal_days": 94
+          },
+          "2026": {
+            "cost_0.30pct": {
+              "samples": 111,
+              "days": 172,
+              "coverage": 0.6453488372093024,
+              "net_win_rate": 0.5045045045045045,
+              "win_rate_ci_low": 0.4129089369409994,
+              "win_rate_ci_high": 0.5957987090688087,
+              "avg_net_return": 0.0008630444367448691,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.11399692647207649,
+              "compound_return": 0.15073462571639906,
+              "annualized_return": 0.2283884680026118,
+              "annualized_volatility": 0.15395491005957948,
+              "sharpe": 1.4126681505353806,
+              "profit_factor": 1.3464847812268967,
+              "trading_days": 111
+            },
+            "cost_0.50pct": {
+              "samples": 111,
+              "days": 172,
+              "coverage": 0.6453488372093024,
+              "net_win_rate": 0.4864864864864865,
+              "win_rate_ci_low": 0.39552234608017617,
+              "win_rate_ci_high": 0.578354715890399,
+              "avg_net_return": 0.0006773507900720159,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.12096413262028505,
+              "compound_return": 0.11460054434017208,
+              "annualized_return": 0.17229032687503643,
+              "annualized_volatility": 0.15378243194718647,
+              "sharpe": 1.109960331208502,
+              "profit_factor": 1.2590319166667208,
+              "trading_days": 111
+            },
+            "dynamic_signal_days": 23
+          }
+        }
+      },
+      "warning": "候选按收盘价估算整手可负担性；真实名单必须在下一交易日开盘后按实际开盘价、涨停可买性和流动性再次确认。ETF使用共享日线缓存推导成交量，缺少基金份额口径时换手率按中性值处理；股票回测指标不能直接代表ETF表现。2026参与过方案选择，本信号仅供前瞻记录，不代表收益保证。",
+      "research_reconstruction": false,
+      "market_cutoff": "2026-10-30 15:00:00",
+      "training_through": "2026-09-17",
+      "training_cache_source": "training.parquet",
+      "signal_price_basis": "shared_qfq_daily",
+      "history_origin": "收盘实际生成",
+      "producer": "tencent-cloud-v6-v1",
+      "execution_date": "2026-11-02",
+      "planned_exit_date": "2026-11-03",
+      "settlement": {
+        "balanced": {
+          "status": "已结算",
+          "trades": [],
+          "invested_cash": 0.0,
+          "portfolio_gross_pnl": 0.0,
+          "portfolio_gross_return_pct": 0.0,
+          "portfolio_net_return_pct": 0.0
+        },
+        "profit_boost": {
+          "status": "已结算",
+          "trades": [],
+          "invested_cash": 0.0,
+          "portfolio_gross_pnl": 0.0,
+          "portfolio_gross_return_pct": 0.0,
+          "portfolio_net_return_pct": 0.0
+        }
+      },
+      "settlement_status": "已结算"
     }
   ],
-  "updated_at": "2026-10-29T09:15:29.051750+00:00"
+  "updated_at": "2026-10-30T08:13:02.684888+00:00"
 }
