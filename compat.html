@@ -1494,6 +1494,10 @@ if(!e||"file"!==e.scheme){h=Zt;continue}switch(o){case gt:l.host=e.host,l.path=d
     if (w.NodeList && !w.NodeList.prototype.forEach) w.NodeList.prototype.forEach=Array.prototype.forEach;
     if (w.Element) {
         var p=w.Element.prototype;
+        if (!p.replaceChildren) p.replaceChildren=function(){
+            while(this.firstChild)this.removeChild(this.firstChild);
+            for(var i=0;i<arguments.length;i++)this.appendChild(arguments[i]&&arguments[i].nodeType?arguments[i]:document.createTextNode(String(arguments[i])));
+        };
         if (!p.matches) p.matches=p.msMatchesSelector||p.webkitMatchesSelector||function(s){var a=(this.ownerDocument||document).querySelectorAll(s),i;for(i=0;i<a.length;i++)if(a[i]===this)return true;return false;};
         if (!p.closest) p.closest=function(s){var e=this;while(e&&e.nodeType===1){if(e.matches(s))return e;e=e.parentElement;}return null;};
         if (!p.remove) p.remove=function(){if(this.parentNode)this.parentNode.removeChild(this);};
