@@ -2,6 +2,31 @@
 (function () {
     if (window.__waxwingStockCodeCopy) return;
     window.__waxwingStockCodeCopy = true;
+    window.waxwingModelLabel = function (value) {
+        return String(value == null ? '' : value)
+            .replace(/60分钟\s*MACD底背离(?:选股法)?/gi, '60分钟盘背一买')
+            .replace(/日线\s*MACD底背离(?:选股法)?/gi, '日线盘背一买');
+    };
+    function labelModels(root) {
+        var walker=document.createTreeWalker(root,4,null,false),node,parent,text,updated,i,attribute;
+        while ((node=walker.nextNode())) {
+            parent=node.parentElement;
+            if (!parent || closest(parent,'script,style,textarea,input')) continue;
+            text=node.nodeValue;updated=window.waxwingModelLabel(text);
+            if (updated===text) continue;
+            if (parent.tagName==='OPTION' && !parent.hasAttribute('value')) parent.setAttribute('value',parent.textContent);
+            node.nodeValue=updated;
+        }
+        if (root.querySelectorAll) {
+            var labels=root.querySelectorAll('[title],[aria-label],[placeholder]');
+            for (i=0;i<labels.length;i++) for (var j=0;j<3;j++) {
+                attribute=['title','aria-label','placeholder'][j];text=labels[i].getAttribute(attribute);
+                if (text && (updated=window.waxwingModelLabel(text))!==text) labels[i].setAttribute(attribute,updated);
+            }
+        }
+        text=document.title;updated=window.waxwingModelLabel(text);
+        if(updated!==text)document.title=updated;
+    }
     function closest(node, selector) {
         while (node && node.nodeType === 1) {
             var matches = node.matches || node.msMatchesSelector || node.webkitMatchesSelector;
@@ -15,6 +40,7 @@
         return null;
     }
     function enhance(root) {
+        labelModels(root);
         var walker = document.createTreeWalker(root, 4, null, false), nodes = [], node, parent, i;
         while ((node = walker.nextNode())) {
             parent = node.parentElement;
