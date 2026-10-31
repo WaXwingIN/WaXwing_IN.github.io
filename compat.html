@@ -1431,6 +1431,27 @@ if(!e||"file"!==e.scheme){h=Zt;continue}switch(o){case gt:l.host=e.host,l.path=d
 
 /* Additional browser interfaces used by the scanner page. ES5 only. */
 (function (w) {
+    // Older fetch/cache implementations can expose a 304 without its cached
+    // body. Private JSON must include the existing session and a fresh body.
+    if (typeof w.fetch === 'function') {
+        var originalFetch=w.fetch,requestNumber=0;
+        w.fetch=function(input,options){
+            if (w.__waxwingPrivateNotifications && typeof input==='string' &&
+                    /(?:^|\/)data\/.*\.json(?:[?#]|$)/.test(input) &&
+                    (!options || !options.method || String(options.method).toUpperCase()==='GET')) {
+                var link=document.createElement('a');link.href=input;
+                if (link.protocol===location.protocol && link.host===location.host) {
+                    var copy={},key;
+                    for(key in options||{})if(Object.prototype.hasOwnProperty.call(options,key))copy[key]=options[key];
+                    copy.credentials='same-origin';copy.cache='no-store';
+                    var parts=input.split('#'),url=parts[0];
+                    url+=(url.indexOf('?')<0?'?':'&')+'_waxwing_compat=1&_waxwing_nonce='+Date.now()+'_'+(++requestNumber);
+                    return originalFetch.call(w,url+(parts.length>1?'#'+parts.slice(1).join('#'):''),copy);
+                }
+            }
+            return originalFetch.call(w,input,options);
+        };
+    }
     if (!w.requestAnimationFrame) w.requestAnimationFrame=function(fn){return setTimeout(fn,16);};
     if (!w.cancelAnimationFrame) w.cancelAnimationFrame=clearTimeout;
     if (!w.AbortSignal.timeout) w.AbortSignal.timeout=function(ms){var c=new w.AbortController();setTimeout(function(){c.abort();},ms);return c.signal;};
