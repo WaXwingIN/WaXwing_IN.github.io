@@ -14,7 +14,9 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f6f8fb;color:#172033;m
 .focus-review{padding:10px 12px;border-left:3px solid #2563eb;background:#eff6ff;margin:8px 0;font-size:14px;line-height:1.8}
 .focus-history-row{background:#fff7ed}.focus-history-badge{display:inline-flex;padding:3px 8px;border:1px solid #f59e0b;border-radius:999px;background:#fef3c7;color:#92400e;font-weight:700}
 .review-date-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.review-date-tabs button{display:flex;gap:7px;align-items:center;padding:9px 13px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#475569;font:inherit;cursor:pointer}.review-date-tabs button[aria-selected="true"]{border-color:#2563eb;background:#eff6ff;color:#1d4ed8;box-shadow:inset 0 0 0 1px #2563eb}.session-title{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px 0}.active-session{padding:0 12px 12px}@media(max-width:640px){.review-date-tabs button{flex:1 1 100%;justify-content:space-between}}
-.daily-ui-booting #content{min-height:320px}#ruleGate{display:none!important}.daily-loading{display:flex;align-items:center;gap:12px;min-height:100px;padding:20px;color:#64748b;background:#fff;border:1px solid #dce3ec;border-radius:10px;margin:16px 0;box-sizing:border-box}.daily-loading-spinner{display:inline-block;width:22px;height:22px;flex-shrink:0;border:3px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:daily-loading-spin .8s linear infinite}@keyframes daily-loading-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.daily-loading-spinner{animation:none}}</style><style id="waxwingMarketPageStyle">/* Shared WaXwing typography, header rhythm and control sizing. */
+.daily-ui-booting #content{min-height:320px}#ruleGate{display:none!important}.daily-loading{display:flex;align-items:center;gap:12px;min-height:100px;padding:20px;color:#64748b;background:#fff;border:1px solid #dce3ec;border-radius:10px;margin:16px 0;box-sizing:border-box}.daily-loading-spinner{display:inline-block;width:22px;height:22px;flex-shrink:0;border:3px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:daily-loading-spin .8s linear infinite}@keyframes daily-loading-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.daily-loading-spinner{animation:none}}</style><script data-browser-compat>
+(function(){try{new Function('var x={};return x?.a??0;');new Function('return async function(){};');if(!window.Promise||!Promise.any||!window.AbortController||!window.fetch||!window.Element||!Element.prototype.replaceChildren)throw new Error('legacy');}catch(e){if(location.protocol!=='file:')location.replace('compat.html'+location.search+location.hash);}})();
+</script><style id="waxwingMarketPageStyle">/* Shared WaXwing typography, header rhythm and control sizing. */
 :root{
  --wx-font:system-ui,"Microsoft YaHei",sans-serif;
  --wx-bg:#f3f6fa;--wx-ink:#203247;--wx-muted:#64758a;
@@ -138,9 +140,7 @@ dialog[data-d2-bottom-dialog] .wx-reminder-details summary{color:var(--wx-blue);
  body.waxwing-ui .second-buy-bottom-card .d2-condition-table td:last-child{grid-column:1/-1;padding-top:0!important}
 }
 body.waxwing-ui .d2-bottom-reminders{margin-top:4px;color:#64758a;font-size:12px}body.waxwing-ui .d2-bottom-reminders summary{cursor:pointer;color:#2563eb}body.waxwing-ui .d2-bottom-reminders ul{margin:6px 0;padding-left:16px}body.waxwing-ui .d2-bottom-reminders li{margin:6px 0}body.waxwing-ui .d2-bottom-reminders small{display:block}
-</style><script data-browser-compat>
-(function(){try{new Function('var x={};return x?.a??0;');new Function('return async function(){};');if(!window.Promise||!Promise.any||!window.AbortController||!window.fetch||!window.Element||!Element.prototype.replaceChildren)throw new Error('legacy');}catch(e){if(location.protocol!=='file:')location.replace('compat.html'+location.search+location.hash);}})();
-</script></head><body class="daily-ui-booting waxwing-ui"><script>/* Shared ES5 controls for model, holding and history pages. */
+</style></head><body class="daily-ui-booting waxwing-ui"><script>/* Shared ES5 controls for model, holding and history pages. */
 (function () {
     if (window.__waxwingStockCodeCopy) return;
     window.__waxwingStockCodeCopy = true;
@@ -1656,7 +1656,7 @@ async function loadDailyData(id,{checkVersion=true}={}){
                 if(dailyExtra.pageManifest&&!dailyExtra.pageManifest.assets?.[spec.asset])throw new Error('当前数据版本尚未包含所选方案');
                 await loadDailyBundle(spec.asset);
                 if(activeDaily===id)draw();
-                await loadPriorityResearch(state);
+                if(state.priorityArchive||!dailyExtra.dailyPriorityConfluence)await loadPriorityResearch(state);
             }catch(error){
                 if(activeDaily===id)content.innerHTML=`<section class="holding-pool"><h2>每日优选</h2><p class="daily-error">所选方案暂未载入，请刷新重试。其他模型仍可查看。</p></section>`;
             }
@@ -2593,6 +2593,7 @@ function d2SellConditionTable(event,date){
 }
 function d2OutcomeResults(event,date=String(event?.confirmed_at||'').slice(0,10)){return `<div class="d2-outcome-list">${d2SellConditionTable(event,date)}${d2OutcomeTable(event)}</div>`}
 function d2ExitOutcomeSummary(rows){
+    if(typeof preferredPolicyActive==='function'&&preferredPolicyActive())return '';
     const items=(rows||[]).map(row=>row?.outcomes?.m30_macd_top_divergence_exit||{}),triggered=items.filter(item=>item.status==='已触发'),settled=triggered.filter(item=>item.return_pct!=null&&item.return_pct!==''&&Number.isFinite(Number(item.return_pct))),wins=settled.filter(item=>Number(item.return_pct)>0).length;
     const returns=settled.map(item=>Number(item.return_pct)),average=returns.length?returns.reduce((sum,value)=>sum+value,0)/returns.length:null;
     const horizons=triggered.map(item=>Number(item.horizon)).filter(Number.isFinite).sort((a,b)=>a-b),averageHorizon=horizons.length?horizons.reduce((sum,value)=>sum+value,0)/horizons.length:null,medianHorizon=horizons.length?(horizons.length%2?horizons[(horizons.length-1)/2]:(horizons[horizons.length/2-1]+horizons[horizons.length/2])/2):null;
@@ -2848,6 +2849,7 @@ async function testD2DesktopNotification(){
     }catch(error){setD2PushStatus(`发送失败：${error?.message||'浏览器未能创建系统通知'}。请刷新页面后重试。`,'error')}
 }
 function rollingTemplateEntry(){
+    if(typeof preferredPolicyActive==='function'&&preferredPolicyActive())return '';
     const rolling=dailyExtra.rollingTemplate||{};
     if(rolling.version!=='rolling-second-buy-template-v1')return '';
     const rows=(rolling.summary||[]).filter(item=>item.sample_unit==='first_episode');
@@ -3378,6 +3380,7 @@ function summarizeReminderEvents(events){
         median_return_pct:median(returns),median_trigger_horizon:median(triggered.filter(e=>e.horizon!=null).map(e=>Number(e.horizon)))}};
 }
 function reminderReturnTable(label,result){
+    if(typeof preferredPolicyActive==='function'&&preferredPolicyActive())return '';
     const horizons=result.horizons||{};
     if(!Object.values(horizons).some(one=>Number(one.settled)>0)&&!Number(result.strict_m30_top_divergence_exit?.executable||0))return '';
     const rows=SHORT_CYCLE_HORIZONS.map(h=>{
@@ -3389,6 +3392,7 @@ function reminderReturnTable(label,result){
     return `<section class="return-summary"><h3>${safe(label)}</h3><div class="wrap"><table class="return-summary-table"><thead><tr><th>统计项目</th><th>平均收益</th><th>上涨比例</th><th>已结算样本</th></tr></thead><tbody>${rows.join('')}</tbody></table></div></section>`;
 }
 function shortCycleOutcomePanel(modelName,rows,keyOf,evidenceOf,selection={}){
+    if(typeof preferredPolicyActive==='function'&&preferredPolicyActive())return '';
     const dailyRule=dailyClosePolicyActive(dailyExtra.dailyCloseReminders);
     const audited=dailyExtra.shortCycleAlertRates;
     if(['short-cycle-alert-only-win-rates-v1','short-cycle-alert-only-win-rates-v2'].includes(audited?.version)){
@@ -3541,6 +3545,7 @@ function monthlyTrackingCells(row){
     }).join('');
 }
 function threeModelComparisonPanel(){
+    if(typeof preferredPolicyActive==='function'&&preferredPolicyActive())return '';
     const data=dailyExtra.threeModelComparison;
     if(!data?.models)return '';
     const horizons=[1,3,5];
@@ -3552,6 +3557,7 @@ function threeModelComparisonPanel(){
     return `<details class="daily-rules" open><summary>三个模型成功率对比 · 最近30个交易日</summary><p class="daily-note">${safe(formatDate(data.from))} 至 ${safe(formatDate(data.through))} · 股票与ETF · 现行规则全量回放（不随页面筛选变化），旧版本冻结提醒不参与本表。同一提醒日收盘基准，收益大于0为成功；仅已结算样本计入分母。历史回放不代表当时实际推送，小样本结果仅供核验。</p><div class="wrap"><table class="focus-table"><thead><tr><th>模型</th>${horizons.map(h=>`<th>T+${h}成功率</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
 }
 function monthlyTrackingSummary(model,rows){
+    if(typeof preferredPolicyActive==='function'&&preferredPolicyActive())return '';
     const events=rows.map(row=>row.confirmed_event).filter(Boolean);
     const columns=[1,3,5].map(h=>{
         const settled=events.map(event=>event.outcomes?.[String(h)]).filter(o=>o?.status==='已结算'&&o.return_pct!=null);
@@ -3621,9 +3627,9 @@ function compoundPanel(state){
     let html=filterBar(state,sessions)+`<h2>双模型复合 · 可交易优先</h2><p class="daily-summary"><span>选股日 ${formatDate(session.date)}</span><span>预测日 ${formatDate(session.prediction_date)}</span><span>${safe(session.kind)}</span><span>重合 ${rows.length}只</span></p>${dateScopeNote(session.date,session.prediction_date)}`;
     html+=`<div class="stage-flow"><span>昨夜候选 ${safe(counts['昨夜候选']??rows.length)}</span><i>→</i><span>9:25竞价通过 ${safe(counts['竞价通过']??0)}</span><i>→</i><span>9:30承接确认 ${safe(counts['承接通过']??0)}</span><i>→</i><span class="stage-pass">最终可买 ${safe(counts['最终可买']??0)}</span></div>`;
     html+='<p class="daily-note">竞价只接受 +1%～+4%；承接观察至09:40，最终名单允许为0只。一字、高开秒板或承接失败均不进入最终名单。</p>';
-    if(session.kind==='历史规则重算'&&summary['样本数'])html+=`<p class="daily-note"><strong>本日开盘代理复盘：</strong>可介入 ${safe(summary['可介入数'])}/${safe(summary['样本数'])}，可买入成功率 ${safe(summary['可买入成功率%'])}%，平均最高 ${pct(summary['平均最高收益%'])}，平均收盘 ${pct(summary['平均收盘收益%'])}，平均回撤 ${pct(summary['平均最大回撤%'])}；涨停 ${safe(summary['涨停数'])}只，其中不可复制 ${safe(summary['不可复制涨停数'])}只。</p>`;
+    if(!(typeof preferredPolicyActive==='function'&&preferredPolicyActive())&&session.kind==='历史规则重算'&&summary['样本数'])html+=`<p class="daily-note"><strong>本日开盘代理复盘：</strong>可介入 ${safe(summary['可介入数'])}/${safe(summary['样本数'])}，可买入成功率 ${safe(summary['可买入成功率%'])}%，平均最高 ${pct(summary['平均最高收益%'])}，平均收盘 ${pct(summary['平均收盘收益%'])}，平均回撤 ${pct(summary['平均最大回撤%'])}；涨停 ${safe(summary['涨停数'])}只，其中不可复制 ${safe(summary['不可复制涨停数'])}只。</p>`;
     const settled=(payload.snapshots||[]).filter(item=>item.status==='已结算').length,pending=(payload.snapshots||[]).filter(item=>item.status==='待结算').length;
-    html+=`<p class="daily-note"><strong>正式观察累计：</strong>已结算 ${settled}期，待结算 ${pending}期${forward['样本数']?`；可介入率 ${safe(forward['可介入率%'])}%，可买入成功率 ${safe(forward['可买入成功率%'])}%，平均收盘 ${pct(forward['平均收盘收益%'])}，平均回撤 ${pct(forward['平均最大回撤%'])}`:''}。</p>`;
+    if(!(typeof preferredPolicyActive==='function'&&preferredPolicyActive()))html+=`<p class="daily-note"><strong>正式观察累计：</strong>已结算 ${settled}期，待结算 ${pending}期${forward['样本数']?`；可介入率 ${safe(forward['可介入率%'])}%，可买入成功率 ${safe(forward['可买入成功率%'])}%，平均收盘 ${pct(forward['平均收盘收益%'])}，平均回撤 ${pct(forward['平均最大回撤%'])}`:''}。</p>`;
     if(rulesUnlocked)html+=`<details class="daily-rules" open><summary>模型条件与执行口径</summary><p>${safe(payload.rules)}</p><p>${safe(payload.intraday_definition)}</p><p>${safe(payload.execution_definition)}</p><p>${safe(payload.warning)}</p></details>`;else html+='<p class="daily-note">选股依据已隐藏，输入口令后查看。</p>';
     html+='<h3 class="final-list-title">最终可买名单</h3><div class="wrap"><table><thead><tr><th class="stock-sticky">股票</th><th>当前收益</th><th>最高收益</th><th>最大回撤</th><th>确认价</th></tr></thead><tbody>';
     html+=finalRows.map(row=>`<tr><td class="stock-sticky"><b>${safe(row['名称'])}</b><br>${safe(row['代码'])}</td><td>${pct(row['确认后当前收益%'])}</td><td>${pct(row['确认后最高收益%'])}</td><td>${pct(row['确认后最大回撤%'])}</td><td>${safe(row['确认价'])}</td></tr>`).join('')||'<tr><td colspan="5">当前没有同时通过竞价和承接确认的股票。</td></tr>';
@@ -4949,6 +4955,7 @@ style.textContent+=`
 .wrap>table>tbody>tr>td:is(.buy-condition-cell,.sell-condition-cell) .reminder-condition-table{margin-top:8px}
 `;
 function holdingTrackingModelPerformance(summary,positions,payload){
+    if(typeof preferredPolicyActive==='function'&&preferredPolicyActive())return '';
     const firstBuyDate=positions.map(item=>String(item.buy_date||item.buy_at||'').slice(0,10)).filter(Boolean).sort()[0];
     const gain=value=>value==null?'<span class="pending-return">--</span>':returnPct(value);
     const rate=value=>value==null?'<span class="pending-return">--</span>':`${Number(value).toFixed(1)}%`;
@@ -5157,6 +5164,7 @@ function modelFunnelDateScope(content){
     return shortCycleDate(value==='latest'?label:value);
 }
 function modelFunnelResultsPanel(id,state,content){
+    if(typeof preferredPolicyActive==='function'&&preferredPolicyActive())return '';
     const day=modelFunnelDateScope(content),query=String(state.macdQuery||'').trim().toLowerCase();
     const events=modelFunnelHistory(id).filter(event=>
         (!dailyExtra.historyWindow?.from||shortCycleDate(event.triggered_at)>=dailyExtra.historyWindow.from)&&
@@ -5385,6 +5393,40 @@ style.textContent+=`.class-ii-table{width:100%;min-width:0}.class-ii-table td:nt
 
 function extraArchivePending(){return Boolean(dailyExtra.dailyConsolidationSessionsGzip&&
     !(dailyExtra.dailyConsolidationSessions?.sessions||[]).length)}
+function preferredPolicyActive(){return dailyExtra.preferredRecommendation?.version==='daily-priority-period-confluence-v1'}
+function preferredSuccessPanel(rows,payload){
+    const actual=rows.filter(row=>!row.recalculated),valid=row=>row.outcome?.net_return_pct!=null&&row.outcome.net_return_pct!==''&&typeof row.outcome.net_return_pct!=='boolean'&&Number.isFinite(Number(row.outcome.net_return_pct));
+    const closed=actual.filter(row=>row.outcome?.status==='已退出'&&valid(row)),wins=closed.filter(row=>Number(row.outcome.net_return_pct)>0).length;
+    const count=status=>actual.filter(row=>row.outcome?.status===status).length;
+    const unknown=actual.filter(row=>!row.outcome||row.outcome.status==='待核验'||row.outcome.status==='已退出'&&!valid(row)).length;
+    const held=actual.filter(row=>row.outcome?.status==='持有中'&&valid(row)),operations=[...closed,...held];
+    const average=items=>items.length?returnPct(items.reduce((sum,row)=>sum+Number(row.outcome.net_return_pct),0)/items.length):'--';
+    const operated=actual.filter(row=>['已退出','持有中'].includes(row.outcome?.status)).length;
+    return `<section class="preferred-success" data-preferred-success><h3>优选股成功率</h3><p><strong>${closed.length?(100*wins/closed.length).toFixed(2)+'%':'--'}</strong> · 成功 ${wins} / 已退出可核验 ${closed.length} 笔 · 实际优选 ${actual.length} 只次</p><p class="daily-note">持有 ${count('持有中')} · 待买入 ${count('待买入')} · 未买入 ${count('未买入')} · 待核验 ${unknown}${rows.length>actual.length?` · 本次核验 ${rows.length-actual.length} 只不计实际发布成绩`:''}。</p><p class="daily-note">退出平均净收益 ${average(closed)} · 持有平均净收益 ${average(held)}（已估值 ${held.length}/${count('持有中')}笔） · 全部操作平均净收益 ${average(operations)}（计入 ${operations.length}/${operated}笔，逐笔等权，非账户累计收益）。</p><p class="daily-note">${safe(payload.statistics_definition||'只统计本版实际发布的优选股；未退出与待核验不入成功率分母。')}</p></section>`;
+}
+function installPreferredStatistics(content,id,state){
+    if(!preferredPolicyActive())return;
+    const oldPerformance=document.getElementById('openPerformance');if(oldPerformance)oldPerformance.hidden=true;
+    if(['daily_priority','legacy_history','stock_lookup'].includes(id))return;
+    const payload=dailyExtra.preferredRecommendation,models={daily_macd:'日线MACD底背离选股法',sixty_minute_macd:'60分钟MACD底背离选股法',weekly_first:'周线类二买',weekly_consolidation_first:'周线盘整背驰一买',monthly_consolidation_first:'月线盘整背驰一买',two_centers:'日线趋势一买',d2_alert:'D2第二回调双路径提醒'};
+    const requested=state.weeklySignalDate||state.macdDate||state.monthlySignalDate||state.signalDate||state.date||'latest';
+    const day=requested==='latest'?payload.latest_date:requested==='all'?'all':String(requested).replace(/\D/g,'').slice(0,8);
+    const rows=(payload.sessions||[]).flatMap(session=>session.rows.map(row=>({...row,date:session.date}))).filter(row=>(day==='all'||String(row.date).replace(/\D/g,'')===String(day||'').replace(/\D/g,''))&&(!models[id]||(row.source_models||[]).includes(models[id])));
+    content.insertAdjacentHTML('afterbegin',preferredSuccessPanel(rows,payload));
+}
+function priorityConfluencePanel(state,payload){
+    const latest=payload.latest_scan||{},byDate=new Map((payload.sessions||[]).map(session=>[session.date,session]));
+    if(latest.date&&!byDate.has(latest.date))byDate.set(latest.date,latest);
+    const dates=[...byDate.keys()].sort().reverse(),selected=state.confluenceDate==='all'?'all':dates.includes(state.confluenceDate)?state.confluenceDate:dates[0];
+    const tier=Number(state.priorityTier||0),filter=rows=>(rows||[]).filter(row=>!tier||row.tier===tier);
+    const sessions=[...byDate.values()].filter(session=>selected==='all'||session.date===selected).sort((a,b)=>b.date.localeCompare(a.date));
+    const rows=sessions.flatMap(session=>filter(session.rows).map(row=>({...row,date:session.date,recalculated:session.recalculated})));
+    const filters=`<div class="daily-filters daily-filter-row"><label>优选日期 <select data-confluence-date><option value="all"${selected==='all'?' selected':''}>全部历史</option>${dates.map(date=>`<option value="${safe(date)}"${selected===date?' selected':''}>${safe(formatDate(date))} · ${filter(byDate.get(date).rows).length}只</option>`).join('')}</select></label><label>优选档位 <select data-confluence-tier><option value="0">全部档位</option>${(payload.tiers||[]).map(item=>`<option value="${item.tier}"${tier===item.tier?' selected':''}>第${item.tier}档 · ${safe(item.label)}</option>`).join('')}</select></label><button type="button" data-priority-archive>原优选历史</button></div>`;
+    const periods={month:'月线',week:'周线',day:'日线',m60:'60分钟'};
+    const outcome=row=>row.recalculated?'仅本次核验':`${safe(row.outcome?.status||'待核验')}${row.outcome?.net_return_pct!=null?'<br>'+returnPct(row.outcome.net_return_pct):''}${row.tracking_model?'<br><small>退出沿用 '+safe(modelDisplayText(row.tracking_model))+'</small>':''}`;
+    const body=rows.map(row=>`<tr><td>${safe(formatDate(row.date))}</td><td>第${row.tier}档<br><small>${safe(row.tier_label)}</small></td><td><b>${safe(row.name)}</b><br>${safe(row.code)} · ${safe(row.asset_type)}</td><td>${safe(formatDateTime(row.confirmed_at))}<br><small>${row.tier===5?'60分钟右K收盘':'日线右K收盘'}</small></td><td>${safe(formatDateTime(row.first_selected_at||row.selected_at))}<br><small>${row.recalculated?'本次核验，非当时发布':'实际发现'}</small></td><td>${safe((row.source_models||[]).map(modelDisplayText).join('、'))}</td><td>${outcome(row)}</td><td><details><summary>查看条件</summary><p>底分型中心K：${safe(row.bottom?.center_at)}</p>${Object.entries(row.period_evidence||{}).map(([period,evidence])=>`<p>${periods[period]}：完整参考前低 ${safe(evidence.proof?.reference_price)} → ${safe(evidence.proof?.second?.price)}；DIF ${safe(evidence.proof?.first?.dif)} → ${safe(evidence.proof?.second?.dif)}；DEA ${safe(evidence.proof?.first?.dea)} → ${safe(evidence.proof?.second?.dea)}</p>`).join('')}</details></td></tr>`).join('');
+    return `<section class="holding-pool priority-panel"><h2>优选股</h2><p class="daily-note">每日优选 · 数据确认与实际发现分别记录 · 最近核验 ${safe(formatDateTime(payload.generated_at))}</p>${filters}<p class="daily-note">${safe(payload.description)}</p>${body?`<div class="wrap"><table class="priority-confluence"><thead><tr><th>日期</th><th>优先档位</th><th>个股／ETF</th><th>分型确认</th><th>发现／核验</th><th>来源模型</th><th>跟踪结果</th><th>条件依据</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">当前日期及档位暂无已核验的优选。等待既有扫描更新；当日无匹配不回退旧名单。</p>'}${preferredSuccessPanel(rows,payload)}<p class="daily-note">原冻结名单及其原收益统计保留在“原优选历史”，不作为本版条件的成绩。此处仅为筛选结果，不生成交易指令。</p></section>`;
+}
 function priorityViewSpec(state){
     const close=state.priorityTiming!=='noon';
     return {close,asset:close?'page/tab_daily_priority':'page/tab_daily_priority_noon',
@@ -5404,11 +5446,12 @@ async function selectPriorityDate(state,value){
     const match=/^(research|live):(.+)$/.exec(value);
     state.date=match?match[2]:value;
     state.priorityDetailDate=null;state.priorityDetailModel=null;
-    await loadPriorityResearch(state);
+    if(state.priorityArchive||!dailyExtra.dailyPriorityConfluence)await loadPriorityResearch(state);
 }
 function dailyPriorityPanel(state){
+    if(dailyExtra.dailyPriorityConfluence?.version==='daily-priority-period-confluence-v1'&&!state.priorityArchive)return priorityConfluencePanel(state,dailyExtra.dailyPriorityConfluence);
     const spec=priorityViewSpec(state),close=spec.close,live=dailyExtra[spec.liveKey];
-    const title='每日优选';
+    const title='每日优选 · 原冻结记录';
     if(!live)return `<section class="holding-pool"><h2>${title}</h2><p class="daily-note">所选方案尚未载入，请刷新重试。</p></section>`;
     const payload=live,study=dailyExtra[spec.researchKey]||live.backtest;
     const byDate=new Map((study?.sessions||[]).map(row=>[row.date,{...row,priorityOrigin:'research'}]));
@@ -5478,7 +5521,7 @@ function dailyPriorityPanel(state){
     const evaluationScope=evaluations.map(day=>safe(formatDate(day))).join('—');
     return `<section class="holding-pool priority-panel"><h2>${title}</h2><p class="daily-note">${coverage}</p>${filters}${roster}${payload.selection_policy?`<details><summary>当前优选条件 · ${safe(payload.selection_policy.label)}</summary><p class="daily-note">${safe(payload.selection_policy.description)} 已冻结名单按各自原版本保留，新条件仅用于后续生成；历史研究如有旧版本，以名单所示版本为准。</p></details>`:''}<h3>${selected==='all'?'全部历史':'所选优选日'} · 成功率</h3><p class="daily-note">${safe(payload.definition)} 核验日期 ${evaluationScope||'--'}，各笔沿用可核验的最新结果。成功率＝已退出且扣费盈利笔数÷已退出笔数，浮盈不计入；同股跨模型分别计数，不代表独立样本。持有平均净收益按已买入未退出、有可核验估值的样本等权平均，缺估值不作0；估值日期与覆盖见数字提示，未计尚未发生的卖出费用。全部操作平均净收益合并已退出与持有中各笔可核验净收益，逐笔等权平均，计入笔数见表中；未买入及未知收益不计入，不是账户累计收益。</p><div class="wrap"><table class="priority-summary"><thead><tr><th>来源模型</th><th>优选</th><th>退出 / 成功</th><th>成功率</th><th>退出平均净收益</th><th>持有中</th><th>持有平均净收益</th><th>全部操作平均净收益</th><th>待买入</th><th>未买入</th><th>待核验</th></tr></thead><tbody>${summary}</tbody>${summaryTotal}</table></div>${cards?`<div id="priority-analysis"><h3>量价时空分析 · ${safe(formatDate(detailDate))}</h3>${selected==='all'?'<p class="daily-note">当前展开一个日期的分析；其他日期及模型可点上表“查看分析”。</p>':''}${cards}</div>`:''}<details><summary>评分、成本与统计口径</summary><p class="daily-note">指数15、板块25、量20、价20、时10、空10分。${close?'只用当日收盘及以前可见行情':'只用本日11:30及以前可见行情'}，原模型条件与退出规则保持。${safe(payload.fees)} 停牌、一字板或无法核验的参考进场不算已买入。按所选日期合并统计，同日优先使用实际名单，不重复计入。</p></details></section>`;
 }
-style.textContent+=`.priority-panel details{margin:14px 0}.priority-session{margin-top:24px}.priority-market{border:1px solid #0f817e;background:#f0fafa;border-radius:9px;padding:14px 16px}.priority-model{margin:20px 0}.priority-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.priority-pick{min-width:0;background:#fff;border:1px solid #dbe3ed;border-radius:9px;padding:16px}.priority-pick h4{margin:0 0 10px;font-size:16px;color:#203247}.priority-pick h4 small{font-size:12px;font-weight:400;color:#64748b}.priority-pick dl{margin:12px 0}.priority-pick dl>div{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;margin:8px 0}.priority-pick dt{color:#0f817e;font-weight:700}.priority-pick dd{margin:0;line-height:1.6;overflow-wrap:anywhere}.priority-pick p{line-height:1.7;overflow-wrap:anywhere}.priority-summary{min-width:1180px}.priority-held-average small,.priority-operation-average small{display:block}.priority-summary tfoot{background:#edf2f8;font-weight:600}.priority-roster{min-width:760px}.priority-roster td{vertical-align:top}.priority-roster td small{display:block;margin-top:4px;color:#64758a}.priority-roster button{white-space:nowrap}#priority-analysis{scroll-margin-top:180px}.priority-pick details{border-top:1px solid #e2e8f0;padding-top:10px}.priority-panel summary{cursor:pointer;color:#2563eb}@media(max-width:760px){.priority-grid{grid-template-columns:1fr}.priority-pick{padding:14px}.priority-market{padding:12px}}`;
+style.textContent+=`.priority-panel details{margin:14px 0}.priority-confluence th,.priority-confluence td{text-align:left;vertical-align:top}.priority-confluence td:nth-child(6){max-width:250px;white-space:normal}.priority-confluence td:last-child p{max-width:480px;white-space:normal}.priority-session{margin-top:24px}.priority-market{border:1px solid #0f817e;background:#f0fafa;border-radius:9px;padding:14px 16px}.priority-model{margin:20px 0}.priority-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.priority-pick{min-width:0;background:#fff;border:1px solid #dbe3ed;border-radius:9px;padding:16px}.priority-pick h4{margin:0 0 10px;font-size:16px;color:#203247}.priority-pick h4 small{font-size:12px;font-weight:400;color:#64748b}.priority-pick dl{margin:12px 0}.priority-pick dl>div{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;margin:8px 0}.priority-pick dt{color:#0f817e;font-weight:700}.priority-pick dd{margin:0;line-height:1.6;overflow-wrap:anywhere}.priority-pick p{line-height:1.7;overflow-wrap:anywhere}.priority-summary{min-width:1180px}.priority-held-average small,.priority-operation-average small{display:block}.priority-summary tfoot{background:#edf2f8;font-weight:600}.priority-roster{min-width:760px}.priority-roster td{vertical-align:top}.priority-roster td small{display:block;margin-top:4px;color:#64758a}.priority-roster button{white-space:nowrap}#priority-analysis{scroll-margin-top:180px}.priority-pick details{border-top:1px solid #e2e8f0;padding-top:10px}.priority-panel summary{cursor:pointer;color:#2563eb}@media(max-width:760px){.priority-grid{grid-template-columns:1fr}.priority-pick{padding:14px}.priority-market{padding:12px}}`;
 draw=function(){
     if(!data)return;
     if(publicCloudPage&&!publicCloudAvailable&&publicCloudVersion){
@@ -5596,6 +5639,7 @@ draw=function(){
     standardizeModelHeading(content,id);
     if(['daily_macd','weekly_consolidation_first','monthly_consolidation_first'].includes(id))content.insertAdjacentHTML('beforeend',threeModelComparisonPanel());
     installModelFunnelHandlers(content,id,state);
+    installPreferredStatistics(content,id,state);
     if(id==='second'){
         content.querySelectorAll('[data-class-ii-page]').forEach(button=>button.addEventListener('click',()=>{state.secondPage=Number(button.dataset.classIiPage);draw()}));
         content.querySelector('[data-class-ii-date]')?.addEventListener('change',event=>{state.secondDate=event.target.value;state.secondPage=0;state.secondDetailCode=null;draw()});
@@ -5623,6 +5667,10 @@ draw=function(){
     if(dailyModels.some(x=>x[0]===id))content.setAttribute('aria-labelledby','daily-'+id);else content.removeAttribute('aria-labelledby');
     const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=async()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;try{if(id==='daily_priority'){await selectPriorityDate(state,date.value);history.replaceState(null,'','#daily-priority')}if(id==='daily_consolidation_first')await loadDailyConsolidationDate(state.date);draw()}catch(error){content.innerHTML=`<p class="daily-error">详情加载失败：${safe(error.message)}</p>`}}};
     stickyControls.querySelector('[data-priority-model]')?.addEventListener('change',event=>{state.priorityModel=event.target.value;draw()});
+    content.querySelector('[data-confluence-date]')?.addEventListener('change',event=>{state.confluenceDate=event.target.value;draw()});
+    content.querySelector('[data-confluence-tier]')?.addEventListener('change',event=>{state.priorityTier=event.target.value;draw()});
+    content.querySelector('[data-priority-archive]')?.addEventListener('click',()=>{state.priorityArchive=true;loadDailyData('daily_priority',{checkVersion:false})});
+    if(id==='daily_priority'&&state.priorityArchive){const back=document.createElement('button');back.type='button';back.textContent='返回五档优选';back.onclick=()=>{state.priorityArchive=false;draw()};content.prepend(back)}
     stickyControls.querySelector('[data-priority-timing]')?.addEventListener('change',event=>{state.priorityTiming=event.target.value;state.date='latest';showDailyLoading('daily_priority');loadDailyData('daily_priority',{checkVersion:false})});
     content.querySelector('[data-priority-retry]')?.addEventListener('click',()=>loadPriorityResearch(state));
     content.querySelectorAll('[data-priority-detail-date]').forEach(button=>button.addEventListener('click',()=>{state.priorityDetailDate=button.dataset.priorityDetailDate;state.priorityDetailModel=button.dataset.priorityDetailModel;draw();document.getElementById('priority-analysis')?.scrollIntoView({block:'start'})}));
