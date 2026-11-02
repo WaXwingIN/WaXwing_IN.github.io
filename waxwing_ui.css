@@ -38,6 +38,15 @@ body.waxwing-ui .wx-table-action:hover{background:#eff6ff;border-color:#93b4ed}
 body.waxwing-ui .wx-table-action:active{background:#dbeafe}
 body.waxwing-ui .wx-table-action:focus-visible{outline:2px solid var(--wx-blue);outline-offset:2px}
 body.waxwing-ui .priority-roster td:last-child{vertical-align:middle}
+body.waxwing-ui .market-title-row>.daily-quick-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 0 auto}
+body.waxwing-ui .market-title-row>.daily-quick-actions button{height:36px;min-height:36px;padding:7px 12px;border:1px solid var(--wx-line);border-radius:7px;background:#fff;color:var(--wx-blue);font:400 14px/20px var(--wx-font);white-space:nowrap}
+body.waxwing-ui .daily-tabs>#daily-daily_priority[aria-selected=true]{background:var(--wx-blue);border-color:var(--wx-blue);color:#fff}
+body.waxwing-ui .priority-roster-wrap{max-height:none;overflow-x:auto}
+body.waxwing-ui .priority-roster td:nth-child(1){width:112px;min-width:112px}
+body.waxwing-ui .priority-roster td:nth-child(2){width:180px;min-width:150px}
+body.waxwing-ui .priority-roster td:nth-child(3),body.waxwing-ui .priority-roster td:nth-child(4){min-width:175px}
+body.waxwing-ui .priority-roster td:last-child{width:104px;min-width:104px;text-align:center}
+@media(max-width:700px){body.waxwing-ui .market-title-row>.daily-quick-actions{flex:1 1 100%;margin:0;display:flex}body.waxwing-ui .market-title-row>.daily-quick-actions button{width:auto;min-height:36px;height:36px;white-space:nowrap}body.waxwing-ui .daily-tabs>button,body.waxwing-ui .daily-tabs>.daily-model-link{height:48px;min-height:48px;padding:4px 6px}}
 body.waxwing-ui .wx-table-action{scroll-margin-top:calc(var(--daily-sticky-controls-height,0px) + 12px)}
 @media(max-width:700px){body.waxwing-ui .priority-roster .stock-sticky{position:static!important;left:auto!important;z-index:auto!important}}
 body.waxwing-ui .callout{margin:24px 0;padding:14px 18px;color:var(--wx-teal);font:400 14px/1.7 var(--wx-font)}
