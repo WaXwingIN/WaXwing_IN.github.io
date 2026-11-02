@@ -1441,8 +1441,9 @@ if(!e||"file"!==e.scheme){h=Zt;continue}switch(o){case gt:l.host=e.host,l.path=d
                 if(signal&&signal.removeEventListener)signal.removeEventListener('abort',abort);
                 if(error){reject(error);return;}
                 var body=xhr.responseText,status=xhr.status===1223?204:xhr.status;
-                resolve({ok:status>=200&&status<300,status:status,url:url,
+                function response(){return {ok:status>=200&&status<300,status:status,url:url,
                     headers:{get:function(name){return xhr.getResponseHeader(name);}},
+                    clone:function(){return response();},
                     text:function(){return Promise.resolve(body);},
                     json:function(){return Promise.resolve().then(function(){return JSON.parse(body);});},
                     arrayBuffer:function(){return Promise.resolve().then(function(){
@@ -1450,7 +1451,8 @@ if(!e||"file"!==e.scheme){h=Zt;continue}switch(o){case gt:l.host=e.host,l.path=d
                         var bytes=unescape(encodeURIComponent(body)),array=new Uint8Array(bytes.length),i;
                         for(i=0;i<bytes.length;i++)array[i]=bytes.charCodeAt(i);
                         return array.buffer;
-                    });}});
+                    });}};}
+                resolve(response());
             }
             xhr.open('GET',url,true);xhr.withCredentials=true;xhr.timeout=90000;
             xhr.onload=function(){finish();};
