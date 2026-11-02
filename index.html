@@ -6306,31 +6306,42 @@ style.textContent+=`.short-cycle-outcomes:has(>details):not(:has(>.wrap)){border
 style.textContent+='.d2-proximity-item .d2-ai-application,.d2-history-minute-card .d2-ai-application{color:#17645e}.d2-ai-application strong{display:inline;font-weight:600}';
 </script><script>(function () {
     'use strict';
-    const host = location.hostname.toLowerCase();
-    if (!['localhost', '127.0.0.1', '[::1]', 'waxwingin.github.io'].includes(host)) return;
+    var host = location.hostname.toLowerCase();
+    if (['localhost', '127.0.0.1', '[::1]', 'waxwingin.github.io'].indexOf(host) < 0) return;
     if (window.__waxwingLocalRollingPlanEntry) return;
     window.__waxwingLocalRollingPlanEntry = true;
+    function closest(node, selector) {
+        while (node && node.nodeType === 1) {
+            var matches = node.matches || node.msMatchesSelector || node.webkitMatchesSelector;
+            if (matches && matches.call(node, selector)) return node;
+            node = node.parentElement;
+        }
+        return null;
+    }
     function mount() {
-        const title = [...document.querySelectorAll('h1')].find(node => /市场观察|行情模型/.test(node.textContent));
+        var headings = document.querySelectorAll('h1'), title = null;
+        for (var i = 0; i < headings.length; i++) {
+            if (/市场观察|行情模型/.test(headings[i].textContent)) { title = headings[i]; break; }
+        }
         if (!title) return;
-        let row = title.closest('.market-title-row');
+        var row = closest(title, '.market-title-row');
         if (!row) {
             row = document.createElement('div');
             row.className = 'market-title-row';
             row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:24px 0 18px';
-            title.before(row);
-            row.append(title);
+            title.parentNode.insertBefore(row, title);
+            row.appendChild(title);
         }
-        let heading = title.closest('.market-title-heading');
+        var heading = closest(title, '.market-title-heading');
         if (!heading) {
             heading = document.createElement('div');
             heading.className = 'market-title-heading';
-            title.before(heading);
-            heading.append(title);
+            title.parentNode.insertBefore(heading, title);
+            heading.appendChild(title);
             if (!title.classList.contains('market-page-title')) title.style.margin = '0';
         }
         if (!document.getElementById('localRollingPlanEntry')) {
-            const link = document.createElement('a');
+            var link = document.createElement('a');
             link.id = 'localRollingPlanEntry';
             link.className = 'market-rolling-plan-link';
             link.href = host === 'waxwingin.github.io' ? 'rolling-plan.html' : 'http://localhost:8016/rolling-plan.html';
@@ -6338,20 +6349,20 @@ style.textContent+='.d2-proximity-item .d2-ai-application,.d2-history-minute-car
             link.rel = 'noopener';
             link.textContent = '低波动滚动计划';
             link.title = '打开低波动滚动计划';
-            heading.append(link);
+            heading.appendChild(link);
         }
         if (!document.getElementById('localRollingPlanEntryStyle')) {
-            const style = document.createElement('style');
+            var style = document.createElement('style');
             style.id = 'localRollingPlanEntryStyle';
             style.textContent = '.market-title-heading{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;min-width:0}.market-rolling-plan-link{display:inline;padding:0;border:0;border-radius:0;background:none;color:#1d4ed8;font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}.market-rolling-plan-link:hover{color:#1e40af}.market-rolling-plan-link:focus-visible{outline:2px solid #2563eb;outline-offset:3px}@media(max-width:640px){.market-title-heading{gap:10px}}';
-            document.head.append(style);
+            document.head.appendChild(style);
         }
     }
     function start() {
         mount();
-        new MutationObserver(mount).observe(document.body, {childList:true, subtree:true});
+        if (window.MutationObserver) new MutationObserver(mount).observe(document.body, {childList:true, subtree:true});
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once:true});
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, false);
     else start();
 })();
 </script><script data-waxwing-signal-feed="1">/* Public observed reminders, independent of full Pages builds. No account writes. */
