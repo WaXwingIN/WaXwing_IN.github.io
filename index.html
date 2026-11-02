@@ -56,6 +56,15 @@ body.waxwing-ui .wx-table-action:hover{background:#eff6ff;border-color:#93b4ed}
 body.waxwing-ui .wx-table-action:active{background:#dbeafe}
 body.waxwing-ui .wx-table-action:focus-visible{outline:2px solid var(--wx-blue);outline-offset:2px}
 body.waxwing-ui .priority-roster td:last-child{vertical-align:middle}
+body.waxwing-ui .market-title-row>.daily-quick-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 0 auto}
+body.waxwing-ui .market-title-row>.daily-quick-actions button{height:36px;min-height:36px;padding:7px 12px;border:1px solid var(--wx-line);border-radius:7px;background:#fff;color:var(--wx-blue);font:400 14px/20px var(--wx-font);white-space:nowrap}
+body.waxwing-ui .daily-tabs>#daily-daily_priority[aria-selected=true]{background:var(--wx-blue);border-color:var(--wx-blue);color:#fff}
+body.waxwing-ui .priority-roster-wrap{max-height:none;overflow-x:auto}
+body.waxwing-ui .priority-roster td:nth-child(1){width:112px;min-width:112px}
+body.waxwing-ui .priority-roster td:nth-child(2){width:180px;min-width:150px}
+body.waxwing-ui .priority-roster td:nth-child(3),body.waxwing-ui .priority-roster td:nth-child(4){min-width:175px}
+body.waxwing-ui .priority-roster td:last-child{width:104px;min-width:104px;text-align:center}
+@media(max-width:700px){body.waxwing-ui .market-title-row>.daily-quick-actions{flex:1 1 100%;margin:0;display:flex}body.waxwing-ui .market-title-row>.daily-quick-actions button{width:auto;min-height:36px;height:36px;white-space:nowrap}body.waxwing-ui .daily-tabs>button,body.waxwing-ui .daily-tabs>.daily-model-link{height:48px;min-height:48px;padding:4px 6px}}
 body.waxwing-ui .wx-table-action{scroll-margin-top:calc(var(--daily-sticky-controls-height,0px) + 12px)}
 @media(max-width:700px){body.waxwing-ui .priority-roster .stock-sticky{position:static!important;left:auto!important;z-index:auto!important}}
 body.waxwing-ui .callout{margin:24px 0;padding:14px 18px;color:var(--wx-teal);font:400 14px/1.7 var(--wx-font)}
@@ -1617,7 +1626,7 @@ function renderDailyNavigation(id){
         }
     }
     const known=Boolean(dailyExtra.navigationSignals);
-    dailyNav.innerHTML=dailyModels.filter(([key])=>!['holding_pool','legacy_history','stock_lookup'].includes(key)).map(([key,label])=>{
+    dailyNav.innerHTML=`<button type="button" id="daily-daily_priority" role="tab" data-daily="daily_priority" aria-selected="${id==='daily_priority'}">每日优选</button>`+dailyModels.filter(([key])=>!['holding_pool','legacy_history','stock_lookup'].includes(key)).map(([key,label])=>{
         const count=key==='holding_pool'?(dailyExtra.holdingPool?.positions?.length??null):
             key==='d2_alert'?(dailyExtra.d2Proximity&&dailyExtra.d2History?currentEffectiveAlertCount(key):dailyExtra.navigationSignals?.counts?.d2_alert??null):known?currentEffectiveAlertCount(key):null;
         const countTitle=key==='holding_pool'?'当前跟踪池操作笔数':key==='second'?'所选最新日期当前有效的类二买股票数':key==='d2_alert'?'最新数据日期的已确认提醒，同股只计一次':['daily_macd','sixty_minute_macd'].includes(key)?'最新行情日期的提醒股票数；历史记录见提醒日期':'最新数据日期、全部已确认提醒股票数，不限制漏斗；同股只计一次；历史日期和筛选数量见列表';
@@ -1626,8 +1635,9 @@ function renderDailyNavigation(id){
     const quickActions=document.createElement('div');quickActions.className='daily-quick-actions';quickActions.setAttribute('aria-label','常用入口');
     quickActions.innerHTML=`${publicCloudPage?'<button type="button" data-daily="holding_pool" data-public-holding-view="returns">模型收益</button><button type="button" data-daily="holding_pool" data-public-holding-view="simulation">每日买入试算</button>':'<button type="button" data-daily="holding_pool">持有跟踪池</button>'}<button type="button" data-daily="stock_lookup">股票检索</button><button type="button" data-daily="legacy_history">已停用模型历史</button>`;
     if(publicCloudPage&&id==='holding_pool')quickActions.querySelectorAll('[data-public-holding-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.publicHoldingView===(stateFor('holding_pool').publicHoldingView||'simulation'))));
-    quickActions.insertAdjacentHTML('afterbegin','<button type="button" data-daily="daily_priority" aria-pressed="'+String(id==='daily_priority')+'">每日优选</button>');
-    dailyNav.append(quickActions);
+    document.querySelector('.daily-quick-actions')?.remove();
+    quickActions.onclick=handleDailyNavigationClick;
+    (titleRow||dailyNav).append(quickActions);
     if(publicCloudPage&&!publicStaticPage){
         const button=document.getElementById('publicCloudNotifyToggle');
         let enabled=false;
@@ -1785,10 +1795,13 @@ if(location.hash==='#weekly-first-buy')activeDaily='weekly_first';
 if(location.hash==='#weekly-consolidation-first')activeDaily='weekly_consolidation_first';
 if(location.hash==='#monthly-consolidation-first')activeDaily='monthly_consolidation_first';
 if(['#daily-priority','#daily-priority-research'].includes(location.hash))activeDaily='daily_priority';
+const priorityReferenceRoute=/^#priority-reference\/(\d{4}-\d{2}-\d{2}|all)$/.exec(location.hash);
+if(priorityReferenceRoute)activeDaily='daily_priority';
 let initialD2RouteChecked=false;
 try{const initialUrl=new URL(location.href);if(initialUrl.searchParams.has('model')){initialUrl.searchParams.delete('model');history.replaceState(null,'',initialUrl)}}catch(_error){}
 const modelName=()=> '首踩10日线';
 const stateFor=id=>{if(!dailyState.has(id)){const second=id==='second',sortKey=second?'center_similarity':'rank',sortDirection=second?-1:1,weekly=id==='weekly_first'||id==='weekly_consolidation_first';dailyState.set(id,{date:'latest',reference:id==='limit1'?'001299':'002155',sortKey,sortDirection,sortStack:[{key:sortKey,direction:sortDirection}],combineSort:false,expandAll:second,secondDetailCode:null,shortCycleFilter:weekly||id==='two_centers'?'appeared':'all',funnelLevel:id==='holding_pool'?'strong':'raw'})}return dailyState.get(id)};
+if(priorityReferenceRoute)Object.assign(stateFor('daily_priority'),{priorityArchive:true,date:priorityReferenceRoute[1]});
 if(location.hash==='#d2-ai'){activeDaily='d2_alert';stateFor('d2_alert').d2Section='ai'}
 if(location.hash==='#d2-ideal')stateFor('d2_alert').d2Section='ideal';
 if(location.hash==='#d2-bottom'){activeDaily='d2_alert';stateFor('d2_alert').d2Section='bottom'}
@@ -1927,13 +1940,14 @@ else window.addEventListener('resize',syncDailyStickyOffset);
 requestAnimationFrame(syncDailyStickyOffset);
 function selectDaily(id){
     activeDaily=id;
-    if(id==='daily_priority')history.replaceState(null,'','#daily-priority');
+    if(id==='daily_priority'){stateFor(id).priorityArchive=false;history.replaceState(null,'','#daily-priority')}
     const routes={d2_alert:'d2-alert',holding_pool:'holding-pool',stock_lookup:'stock-lookup',second:'class-ii',legacy_history:'legacy-model-history',daily_macd:'daily-macd',sixty_minute_macd:'sixty-minute-macd',weekly_first:'weekly-first-buy',weekly_consolidation_first:'weekly-consolidation-first',monthly_consolidation_first:'monthly-consolidation-first',two_centers:'daily-first-buy'};
     if(routes[id])history.replaceState(null,'','#'+routes[id]);
     showDailyLoading(id);ensureDailyData(id);document.getElementById('daily-'+id)?.focus()
 }
-dailyNav.onclick=e=>{const b=e.target.closest('[data-daily]');if(b){if(b.dataset.publicHoldingView)stateFor('holding_pool').publicHoldingView=b.dataset.publicHoldingView;selectDaily(b.dataset.daily)}};
-dailyNav.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const tabs=dailyModels.filter(([key])=>!['holding_pool','legacy_history','stock_lookup'].includes(key));let i=tabs.findIndex(x=>x[0]===activeDaily),n=tabs.length;i=e.key==='Home'?0:e.key==='End'?n-1:(i+(e.key==='ArrowRight'?1:-1)+n)%n;selectDaily(tabs[i][0])};
+function handleDailyNavigationClick(e){const b=e.target.closest('[data-daily]');if(b){if(b.dataset.publicHoldingView)stateFor('holding_pool').publicHoldingView=b.dataset.publicHoldingView;selectDaily(b.dataset.daily)}}
+dailyNav.onclick=handleDailyNavigationClick;
+dailyNav.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const tabs=[['daily_priority','每日优选'],...dailyModels.filter(([key])=>!['holding_pool','legacy_history','stock_lookup'].includes(key))];let i=tabs.findIndex(x=>x[0]===activeDaily),n=tabs.length;i=e.key==='Home'?0:e.key==='End'?n-1:(i+(e.key==='ArrowRight'?1:-1)+n)%n;selectDaily(tabs[i][0])};
 function dailyChart(path=[],ref=[]){
     const values=[...path,...ref].filter(Number.isFinite);
     if(!values.length)return '';
@@ -5420,9 +5434,7 @@ function priorityResearchPanel(state,research){
     const failed=session=>['failed','error','失败'].includes(session.status)||session.complete===false;
     const usable=sessions.filter(session=>!failed(session));
     const dates=[...new Set([...tradingDates,...byDate.keys()])].sort().reverse();
-    const selected=state.priorityResearchDate==='all'?'all':dates.includes(state.priorityResearchDate)?state.priorityResearchDate:'all';
     const allRows=usable.flatMap(session=>(session.rows||[]).map(row=>({...row,date:session.date})));
-    const visible=allRows.filter(row=>selected==='all'||row.date===selected).sort((a,b)=>b.date.localeCompare(a.date)||a.tier-b.tier);
     const valid=row=>row.outcome?.net_return_pct!=null&&row.outcome.net_return_pct!==''&&typeof row.outcome.net_return_pct!=='boolean'&&Number.isFinite(Number(row.outcome.net_return_pct));
     const closed=allRows.filter(row=>row.outcome?.status==='已退出'&&valid(row)),wins=closed.filter(row=>Number(row.outcome.net_return_pct)>0).length;
     const count=status=>allRows.filter(row=>row.outcome?.status===status).length;
@@ -5434,22 +5446,28 @@ function priorityResearchPanel(state,research){
     const labels=[['source_stocks','候选','只次'],['not_selected_or_unverified','未入选或未能核验','只次'],['skipped','计算异常或跳过','只次'],['missing_assets','缺少资产资料','只次'],['missing_or_unverified_daily','日线缺失或复权无法核验','只次'],['price_basis_unverified_events','来源证据价格未通过','条事件']];
     const counts=labels.map(([key,label,unit])=>{const value=totalCoverage(key);return value==null?null:`${label} ${value} ${unit}`}).filter(Boolean);
     const coverageCounts=counts.length?counts.join(' · ')+'；各原因可能重叠。':'';
-    const filters=`<div class="daily-filters daily-filter-row"><label>推算日期 <select data-priority-research-date><option value="all"${selected==='all'?' selected':''}>全部推算日期</option>${dates.map(day=>`<option value="${safe(day)}"${selected===day?' selected':''}>${safe(formatDate(day))} · ${byDate.has(day)&&!failed(byDate.get(day))?(byDate.get(day).rows||[]).length+'只':'待核验'}</option>`).join('')}</select></label></div>`;
-    const table=visible.map(row=>`<tr><td>${safe(formatDate(row.date))}</td><td>第${safe(row.tier)}档<br><small>${safe(row.tier_label)}</small></td><td><b>${safe(row.name)}</b><br>${safe(row.code)} · ${safe(row.asset_type)}</td><td>${safe(formatDateTime(row.confirmed_at))}</td><td>${safe((row.source_models||[]).map(modelDisplayText).join('、'))}</td><td>${safe(row.outcome?.status||'待核验')}${valid(row)?'<br>'+returnPct(row.outcome.net_return_pct):''}${row.tracking_model?'<br><small>退出沿用 '+safe(modelDisplayText(row.tracking_model))+'</small>':''}</td></tr>`).join('');
-    return `<section class="preferred-success priority-research" data-priority-research><h3>近30个交易日推算 · 总体胜率</h3><p><strong>${closed.length?(100*wins/closed.length).toFixed(2)+'%':'--'}</strong> · 扣费盈利 ${wins} / 已退出可核验 ${closed.length} 笔 · 推算入选 ${allRows.length} 只次</p><p class="daily-note">收益核验截止 ${research.evaluation_through?safe(formatDate(research.evaluation_through)):'待核验'}。</p><p class="daily-note">持有 ${count('持有中')} · 待买入 ${count('待买入')} · 未买入 ${count('未买入')} · 待核验 ${unknown}。已推算 ${usable.length}/${dates.length} 个交易日${missing?'，尚有 '+missing+' 日未完成':''}；${archiveNote}。${coverageCounts}总体胜率始终统计本次推算的全部日期。</p><p class="daily-note">${safe(research.definition||'按新规则和当时可见数据推算；成功率为扣费盈利笔数除以已退出可核验笔数。持有和无法核验的不计入分母。')} 历史推算不代表当时实际发布。</p>${filters}${table?`<div class="wrap"><table class="priority-confluence"><thead><tr><th>日期</th><th>优先档位</th><th>个股／ETF</th><th>分型确认</th><th>来源模型</th><th>推算跟踪结果</th></tr></thead><tbody>${table}</tbody></table></div>`:'<p class="daily-note">所选日期暂无已核验的推算入选记录。</p>'}</section>`;
+    return `<section class="preferred-success priority-research" data-priority-research><h3>近30个交易日推算 · 总体胜率</h3><p><strong>${closed.length?(100*wins/closed.length).toFixed(2)+'%':'--'}</strong> · 扣费盈利 ${wins} / 已退出可核验 ${closed.length} 笔 · 推算入选 ${allRows.length} 只次</p><p class="daily-note">收益核验截止 ${research.evaluation_through?safe(formatDate(research.evaluation_through)):'待核验'}。</p><p class="daily-note">持有 ${count('持有中')} · 待买入 ${count('待买入')} · 未买入 ${count('未买入')} · 待核验 ${unknown}。已推算 ${usable.length}/${dates.length} 个交易日${missing?'，尚有 '+missing+' 日未完成':''}；${archiveNote}。${coverageCounts}总体胜率始终统计本次推算的全部日期。</p><p class="daily-note">${safe(research.definition||'按新规则和当时可见数据推算；成功率为扣费盈利笔数除以已退出可核验笔数。持有和无法核验的不计入分母。')} 历史推算不代表当时实际发布。</p></section>`;
 }
 function priorityConfluencePanel(state,payload){
-    const latest=payload.latest_scan||{},byDate=new Map((payload.sessions||[]).map(session=>[session.date,session]));
-    if(latest.date&&!byDate.has(latest.date))byDate.set(latest.date,latest);
+    const research=payload.research||{},failed=session=>!session||['failed','error','失败'].includes(session.status)||session.complete===false;
+    const byDate=new Map((research.trading_dates||[]).map(date=>[date,{date,origin:'research',unavailable:true,rows:[]}]));
+    for(const session of research.sessions||[])byDate.set(session.date,{...session,origin:'research',unavailable:failed(session)});
+    const latest=payload.latest_scan||{};
+    if(latest.date)byDate.set(latest.date,{...latest,origin:latest.recalculated?'verification':'actual'});
+    for(const session of payload.sessions||[])byDate.set(session.date,{...session,origin:'actual'});
     const dates=[...byDate.keys()].sort().reverse(),selected=state.confluenceDate==='all'?'all':dates.includes(state.confluenceDate)?state.confluenceDate:dates[0];
     const tier=Number(state.priorityTier||0),filter=rows=>(rows||[]).filter(row=>!tier||row.tier===tier);
     const sessions=[...byDate.values()].filter(session=>selected==='all'||session.date===selected).sort((a,b)=>b.date.localeCompare(a.date));
-    const rows=sessions.flatMap(session=>filter(session.rows).map(row=>({...row,date:session.date,recalculated:session.recalculated})));
-    const filters=`<div class="daily-filters daily-filter-row"><label>优选日期 <select data-confluence-date><option value="all"${selected==='all'?' selected':''}>全部日期</option>${dates.map(date=>`<option value="${safe(date)}"${selected===date?' selected':''}>${safe(formatDate(date))} · ${filter(byDate.get(date).rows).length}只</option>`).join('')}</select></label><label>优选档位 <select data-confluence-tier><option value="0">全部档位</option>${(payload.tiers||[]).map(item=>`<option value="${item.tier}"${tier===item.tier?' selected':''}>第${item.tier}档 · ${safe(item.label)}</option>`).join('')}</select></label></div>`;
+    const rows=sessions.flatMap(session=>session.unavailable?[]:filter(session.rows).map(row=>({...row,date:session.date,recalculated:session.origin!=='actual',origin:session.origin})));
+    const uncertain=session=>session.origin==='research'&&(session.coverage?.verification_complete!==true||session.coverage?.source_archive_complete!==true);
+    const filters=`<div class="daily-filters daily-filter-row"><label>优选日期 <select data-confluence-date><option value="all"${selected==='all'?' selected':''}>全部日期</option>${dates.map(date=>{const session=byDate.get(date),count=filter(session.rows).length;return `<option value="${safe(date)}"${selected===date?' selected':''}>${safe(formatDate(date))} · ${session.unavailable?'待核验':!count&&uncertain(session)?'无记录／待核验':count+'只'}</option>`}).join('')}</select></label><label>优选档位 <select data-confluence-tier><option value="0">全部档位</option>${(payload.tiers||[]).map(item=>`<option value="${item.tier}"${tier===item.tier?' selected':''}>第${item.tier}档 · ${safe(item.label)}</option>`).join('')}</select></label></div>`;
     const periods={month:'月线',week:'周线',day:'日线',m60:'60分钟'};
-    const outcome=row=>row.recalculated?'仅本次核验':`${safe(row.outcome?.status||'待核验')}${row.outcome?.net_return_pct!=null?'<br>'+returnPct(row.outcome.net_return_pct):''}${row.tracking_model?'<br><small>退出沿用 '+safe(modelDisplayText(row.tracking_model))+'</small>':''}`;
-    const body=rows.map(row=>`<tr><td>${safe(formatDate(row.date))}</td><td>第${row.tier}档<br><small>${safe(row.tier_label)}</small></td><td><b>${safe(row.name)}</b><br>${safe(row.code)} · ${safe(row.asset_type)}</td><td>${safe(formatDateTime(row.confirmed_at))}<br><small>${row.tier===5?'60分钟右K收盘':'日线右K收盘'}</small></td><td>${safe(formatDateTime(row.first_selected_at||row.selected_at))}<br><small>${row.recalculated?'本次核验，非当时发布':'实际发现'}</small></td><td>${safe((row.source_models||[]).map(modelDisplayText).join('、'))}</td><td>${outcome(row)}</td><td><details><summary>查看条件</summary><p>底分型中心K：${safe(row.bottom?.center_at)}</p>${Object.entries(row.period_evidence||{}).map(([period,evidence])=>`<p>${periods[period]}：完整参考前低 ${safe(evidence.proof?.reference_price)} → ${safe(evidence.proof?.second?.price)}；DIF ${safe(evidence.proof?.first?.dif)} → ${safe(evidence.proof?.second?.dif)}；DEA ${safe(evidence.proof?.first?.dea)} → ${safe(evidence.proof?.second?.dea)}</p>`).join('')}</details></td></tr>`).join('');
-    return `<section class="holding-pool priority-panel"><h2>优选股</h2><p class="daily-note">每日优选 · 数据确认与实际发现分别记录 · 最近核验 ${safe(formatDateTime(payload.generated_at))}</p>${filters}<p class="daily-note">${safe(payload.description)}</p>${body?`<div class="wrap"><table class="priority-confluence"><thead><tr><th>日期</th><th>优先档位</th><th>个股／ETF</th><th>分型确认</th><th>发现／核验</th><th>来源模型</th><th>跟踪结果</th><th>条件依据</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">当前日期及档位暂无已核验的优选。等待既有扫描更新；当日无匹配不回退旧名单。</p>'}${preferredSuccessPanel(rows,payload)}${priorityResearchPanel(state,payload.research)}<p class="daily-note">此处仅为筛选及历史推算结果，不生成交易指令。</p></section>`;
+    const outcome=row=>{const value=row.outcome?.net_return_pct,valid=value!=null&&value!==''&&typeof value!=='boolean'&&Number.isFinite(Number(value));return row.origin==='verification'?'仅本次核验':`${safe(row.outcome?.status||'待核验')}${valid?'<br>'+returnPct(value):''}${row.tracking_model?'<br><small>退出沿用 '+safe(modelDisplayText(row.tracking_model))+'</small>':''}`};
+    const body=rows.map(row=>`<tr><td>${safe(formatDate(row.date))}${row.origin==='research'?'<br><small>历史推算</small>':''}</td><td>第${row.tier}档<br><small>${safe(row.tier_label)}</small></td><td><b>${safe(row.name)}</b><br>${safe(row.code)} · ${safe(row.asset_type)}</td><td>${safe(formatDateTime(row.confirmed_at))}<br><small>${row.tier===5?'60分钟右K收盘':'日线右K收盘'}</small></td><td>${safe(formatDateTime(row.first_selected_at||row.selected_at))}<br><small>${row.origin==='research'?'历史推算，非当时发布':row.recalculated?'本次核验，非当时发布':'实际发现'}</small></td><td>${safe((row.source_models||[]).map(modelDisplayText).join('、'))}</td><td>${outcome(row)}</td><td><details><summary>查看条件</summary><p>底分型中心K：${safe(row.bottom?.center_at)}</p>${Object.entries(row.period_evidence||{}).map(([period,evidence])=>`<p>${periods[period]}：完整参考前低 ${safe(evidence.proof?.reference_price)} → ${safe(evidence.proof?.second?.price)}；DIF ${safe(evidence.proof?.first?.dif)} → ${safe(evidence.proof?.second?.dif)}；DEA ${safe(evidence.proof?.first?.dea)} → ${safe(evidence.proof?.second?.dea)}</p>`).join('')}</details></td></tr>`).join('');
+    const unavailable=sessions.filter(session=>session.unavailable).length;
+    const incomplete=sessions.filter(session=>!session.unavailable&&uncertain(session)).length;
+    const coverageNote=(unavailable||incomplete)?`<p class="daily-note">${unavailable?`${unavailable} 个日期推算尚未完成或失败。`:''}${incomplete?`${incomplete} 个推算日期的原始归档或行情核验尚不完整；无入选记录不能视为空选。`:''}</p>`:'';
+    return `<section class="holding-pool priority-panel"><h2>优选股</h2><p class="daily-note">每日优选 · 数据确认与实际发现分别记录 · 最近核验 ${safe(formatDateTime(payload.generated_at))}</p>${filters}<p class="daily-note">${safe(payload.description)}</p>${coverageNote}${body?`<div class="wrap"><table class="priority-confluence"><thead><tr><th>日期</th><th>优先档位</th><th>个股／ETF</th><th>分型确认</th><th>发现／核验</th><th>来源模型</th><th>跟踪结果</th><th>条件依据</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="daily-note">当前日期及档位暂无可展示的优选记录。</p>'}${preferredSuccessPanel(rows,payload)}${priorityResearchPanel(state,payload.research)}<p class="daily-note">此处仅为筛选及历史推算结果，不生成交易指令。</p></section>`;
 }
 function priorityViewSpec(state){
     const close=state.priorityTiming!=='noon';
@@ -5493,7 +5511,7 @@ function dailyPriorityPanel(state){
     const shortPick=row=>{
         if(!row)return '<span class="daily-note">无第二只</span>';
         const outcome=row.outcome||{},status=outcome.status||'待核验';
-        return `<b>${safe(row.name)}</b> <span>${safe(row.code)}</span><small>${safe(status)}${outcome.net_return_pct==null?'':' · '+returnPct(outcome.net_return_pct)}</small>`;
+        return `<b>${safe(row.name)}</b> <span>${safe(row.code)}</span><small>${safe(status)}${outcome.net_return_pct==null?'':' · '+returnPct(outcome.net_return_pct)}</small>${outcome.reason?`<small>${safe(outcome.reason)}</small>`:''}`;
     };
     const rosterRows=shown.flatMap(session=>visibleModels.filter(name=>selected!=='all'||session.selection_version||(session.models?.[name]?.picks||[]).length).map(name=>{
         const picks=(session.models?.[name]?.picks||[]).slice().sort((a,b)=>Number(a.rank)-Number(b.rank));
@@ -5540,7 +5558,7 @@ function dailyPriorityPanel(state){
         const sectors=(market.sectors||[]).map(row=>`<tr><td>${safe(row.name)}</td><td>${returnPct(row.return_5_pct)}</td><td>${returnPct(row.relative_5_pct)}</td><td>${number(row.above_ma20_ratio*100)}%</td><td>${safe(row.verified)}/${safe(row.total)}</td></tr>`).join('');
         return `<section class="priority-session"><h3>${safe(formatDate(session.date))} · 每日名单</h3><p class="daily-note">行情截止 ${safe(formatDateTime(session.cutoff))}${session.priorityOrigin==='live'?` · 名单形成 ${safe(formatDateTime(session.frozen_at))}`:''}。</p><div class="priority-market">${index}<p class="daily-note">${safe(market.method)} ${safe(market.membership_method||'')}。${session.selection_version?`${safe(session.selection_policy?.label)}：${safe(session.selection_decision?.message)}。ETF标的板块未核验时不进入优选。`:'ETF未核验标的板块时只引用全行业环境。'}</p></div>${groups}<details><summary>当日各板块强弱与覆盖</summary><div class="wrap"><table><thead><tr><th>板块</th><th>5日表现</th><th>相对三指数</th><th>站上MA20</th><th>成分覆盖</th></tr></thead><tbody>${sectors}</tbody></table></div></details></section>`;
     }).join('');
-    const coverage=(close?'每天收盘后形成，次交易日开盘参考买入，各模型分别最多2只。':'每天11:30后形成，当日13:00参考买入，各模型分别最多2只。')+'当前还未形成名单时不展示旧名单代替。';
+    const coverage='原规则历史研究与冻结记录，不计现行五档成绩。'+(close?'每天收盘后形成，次交易日开盘参考买入，各模型分别最多2只。':'11:30后形成，当日13:00参考买入，各模型分别最多2只。')+'收益核验截至 '+(payload.evaluation_through?safe(formatDate(payload.evaluation_through)):'--')+'；历史推算不代表当时实际发布。';
     const evaluations=[...new Set([live.evaluation_through,study?.evaluation_through].filter(Boolean))].sort();
     const evaluationScope=evaluations.map(day=>safe(formatDate(day))).join('—');
     return `<section class="holding-pool priority-panel"><h2>${title}</h2><p class="daily-note">${coverage}</p>${filters}${roster}${payload.selection_policy?`<details><summary>当前优选条件 · ${safe(payload.selection_policy.label)}</summary><p class="daily-note">${safe(payload.selection_policy.description)} 已冻结名单按各自原版本保留，新条件仅用于后续生成；历史研究如有旧版本，以名单所示版本为准。</p></details>`:''}<h3>${selected==='all'?'全部历史':'所选优选日'} · 成功率</h3><p class="daily-note">${safe(payload.definition)} 核验日期 ${evaluationScope||'--'}，各笔沿用可核验的最新结果。成功率＝已退出且扣费盈利笔数÷已退出笔数，浮盈不计入；同股跨模型分别计数，不代表独立样本。持有平均净收益按已买入未退出、有可核验估值的样本等权平均，缺估值不作0；估值日期与覆盖见数字提示，未计尚未发生的卖出费用。全部操作平均净收益合并已退出与持有中各笔可核验净收益，逐笔等权平均，计入笔数见表中；未买入及未知收益不计入，不是账户累计收益。</p><div class="wrap"><table class="priority-summary"><thead><tr><th>来源模型</th><th>优选</th><th>退出 / 成功</th><th>成功率</th><th>退出平均净收益</th><th>持有中</th><th>持有平均净收益</th><th>全部操作平均净收益</th><th>待买入</th><th>未买入</th><th>待核验</th></tr></thead><tbody>${summary}</tbody>${summaryTotal}</table></div>${cards?`<div id="priority-analysis"><h3>量价时空分析 · ${safe(formatDate(detailDate))}</h3>${selected==='all'?'<p class="daily-note">当前展开一个日期的分析；其他日期及模型可点上表“查看分析”。</p>':''}${cards}</div>`:''}<details><summary>评分、成本与统计口径</summary><p class="daily-note">指数15、板块25、量20、价20、时10、空10分。${close?'只用当日收盘及以前可见行情':'只用本日11:30及以前可见行情'}，原模型条件与退出规则保持。${safe(payload.fees)} 停牌、一字板或无法核验的参考进场不算已买入。按所选日期合并统计，同日优先使用实际名单，不重复计入。</p></details></section>`;
@@ -5688,12 +5706,11 @@ draw=function(){
     if(id==='daily_priority')document.getElementById('ruleGate').hidden=true;
     renderDailyNavigation(id);updatePageMeta();
     content.setAttribute('role','tabpanel');content.setAttribute('tabindex','0');
-    if(dailyModels.some(x=>x[0]===id))content.setAttribute('aria-labelledby','daily-'+id);else content.removeAttribute('aria-labelledby');
-    const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=async()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;try{if(id==='daily_priority'){await selectPriorityDate(state,date.value);history.replaceState(null,'','#daily-priority')}if(id==='daily_consolidation_first')await loadDailyConsolidationDate(state.date);draw()}catch(error){content.innerHTML=`<p class="daily-error">详情加载失败：${safe(error.message)}</p>`}}};
+    if(id==='daily_priority'||dailyModels.some(x=>x[0]===id))content.setAttribute('aria-labelledby','daily-'+id);else content.removeAttribute('aria-labelledby');
+    const date=document.getElementById('dailyDate');if(date){stickyControls.append(date.closest('.daily-filters'));date.onchange=async()=>{state.date=date.value;state.focusCode=null;state.focusDate=null;state.secondDetailCode=null;try{if(id==='daily_priority'){await selectPriorityDate(state,date.value);history.replaceState(null,'',state.priorityArchive?'#priority-reference/'+state.date:'#daily-priority')}if(id==='daily_consolidation_first')await loadDailyConsolidationDate(state.date);draw()}catch(error){content.innerHTML=`<p class="daily-error">详情加载失败：${safe(error.message)}</p>`}}};
     stickyControls.querySelector('[data-priority-model]')?.addEventListener('change',event=>{state.priorityModel=event.target.value;draw()});
     content.querySelector('[data-confluence-date]')?.addEventListener('change',event=>{state.confluenceDate=event.target.value;draw()});
     content.querySelector('[data-confluence-tier]')?.addEventListener('change',event=>{state.priorityTier=event.target.value;draw()});
-    content.querySelector('[data-priority-research-date]')?.addEventListener('change',event=>{state.priorityResearchDate=event.target.value;draw()});
     stickyControls.querySelector('[data-priority-timing]')?.addEventListener('change',event=>{state.priorityTiming=event.target.value;state.date='latest';showDailyLoading('daily_priority');loadDailyData('daily_priority',{checkVersion:false})});
     content.querySelector('[data-priority-retry]')?.addEventListener('click',()=>loadPriorityResearch(state));
     content.querySelectorAll('[data-priority-detail-date]').forEach(button=>button.addEventListener('click',()=>{state.priorityDetailDate=button.dataset.priorityDetailDate;state.priorityDetailModel=button.dataset.priorityDetailModel;draw();document.getElementById('priority-analysis')?.scrollIntoView({block:'start'})}));
