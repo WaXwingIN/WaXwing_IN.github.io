@@ -1381,6 +1381,19 @@ function mergeDailyBundle(payload){
     if(payload.secondBuyBottom){dailyExtra.secondBuyBottom=previous.secondBuyBottom;mergeSecondBuyBottom(payload.secondBuyBottom)}
     if(payload.d2AiApplication){dailyExtra.d2AiApplication=previous.d2AiApplication;mergeD2AiMembership(payload.d2AiApplication)}
     if(previous.legacyModelHistory?.rows?.length>(dailyExtra.legacyModelHistory?.rows?.length||0))dailyExtra.legacyModelHistory=previous.legacyModelHistory;
+    const legacy=dailyExtra.legacyModelHistory,window=dailyExtra.historyWindow;
+    if(Array.isArray(legacy?.rows)&&window?.from&&window?.through){
+        const from=dateKey(window.from),through=dateKey(window.through),models={};
+        const rows=legacy.rows.filter(row=>{const d=dateKey(row.date||row.signal);return d&&d>=from&&d<=through});
+        rows.forEach(row=>{if(row.model)models[row.model]=(models[row.model]||0)+1});
+        dailyExtra.legacyModelHistory={...legacy,rows,models};
+    }
+    if(Array.isArray(dailyExtra.stockLookupLegacyRows)&&window?.from&&window?.through){
+        const from=dateKey(window.from),through=dateKey(window.through);
+        dailyExtra.stockLookupLegacyRows=dailyExtra.stockLookupLegacyRows.filter(row=>{
+            const day=dateKey(row.date);return day&&day>=from&&day<=through;
+        });
+    }
     dailyExtra.macdModelHistory=mergeMacdHistory(payload.macdModelHistory,previous.macdModelHistory);
     if(previous.dailyCloseReminders&&!dailyCloseSnapshotNewer(dailyExtra.dailyCloseReminders,previous.dailyCloseReminders))dailyExtra.dailyCloseReminders=previous.dailyCloseReminders;
     if(previous.d2Proximity&&!d2SnapshotNewer(dailyExtra.d2Proximity,previous.d2Proximity))dailyExtra.d2Proximity=previous.d2Proximity;
@@ -1686,9 +1699,8 @@ async function loadDailyData(id,{checkVersion=true}={}){
         }
         if(checkVersion&&(privatePage()||publicCloudPage))await refreshPageVersion();
         if(id==='legacy_history'){
-            const {payload}=await fetchLiveJson('legacy_model_history.json',{live:false});
-            dailyExtra.legacyModelHistory=payload;
-            dailyBundlesReady.add('page/tab_legacy_history');
+            await loadDailyBundle('page/tab_legacy_history');
+            if(!Array.isArray(dailyExtra.legacyModelHistory?.rows))throw new Error('已停用模型历史不可用');
         }else if(id==='second'){
             let bundleError;
             if(!dailyExtra.stockSectorMap)try{dailyExtra.stockSectorMap=(await fetchLiveJson('stock_sector_map.json',{live:false})).payload}catch(_error){}
