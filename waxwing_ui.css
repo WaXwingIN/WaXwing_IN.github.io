@@ -57,6 +57,8 @@ dialog[data-market-reminders]{box-sizing:border-box;width:min(900px,calc(100vw -
 dialog[data-market-reminders][open]{display:flex;flex-direction:column}
 body.market-reminder-open{overflow:hidden}
 dialog[data-market-reminders]::backdrop{background:rgba(15,23,42,.65)}
+.wx-reminder-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;background:rgba(15,23,42,.65)}
+dialog[data-market-reminders].wx-reminder-legacy[open]{position:fixed;z-index:2147483001;top:50%;left:50%;right:auto;bottom:auto;margin:0;width:90%;max-width:900px;max-height:80vh;transform:translate(-50%,-50%);display:flex;flex-direction:column;background:#fff;color:#203247;border:1px solid #dbe3ed;border-top:4px solid #17645e}
 dialog[data-market-reminders] .wx-reminder-head{display:flex;flex:none;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--wx-line)}
 dialog[data-market-reminders] h2{margin:0;color:var(--wx-ink);font-size:20px}
 dialog[data-market-reminders] [data-market-reminder-count]{display:block;color:var(--wx-muted);font-size:12px}

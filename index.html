@@ -75,6 +75,8 @@ dialog[data-market-reminders]{box-sizing:border-box;width:min(900px,calc(100vw -
 dialog[data-market-reminders][open]{display:flex;flex-direction:column}
 body.market-reminder-open{overflow:hidden}
 dialog[data-market-reminders]::backdrop{background:rgba(15,23,42,.65)}
+.wx-reminder-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;background:rgba(15,23,42,.65)}
+dialog[data-market-reminders].wx-reminder-legacy[open]{position:fixed;z-index:2147483001;top:50%;left:50%;right:auto;bottom:auto;margin:0;width:90%;max-width:900px;max-height:80vh;transform:translate(-50%,-50%);display:flex;flex-direction:column;background:#fff;color:#203247;border:1px solid #dbe3ed;border-top:4px solid #17645e}
 dialog[data-market-reminders] .wx-reminder-head{display:flex;flex:none;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--wx-line)}
 dialog[data-market-reminders] h2{margin:0;color:var(--wx-ink);font-size:20px}
 dialog[data-market-reminders] [data-market-reminder-count]{display:block;color:var(--wx-muted);font-size:12px}
@@ -780,9 +782,20 @@ function integratedMacdPanel(tab,state){
                 dialog.addEventListener('cancel',event=>event.preventDefault());
                 dialog.querySelector('[data-market-reminder-close]').onclick=()=>this.acknowledge();
                 dialog.querySelector('[data-market-reminder-ack]').onclick=()=>this.acknowledge();
+                if(typeof dialog.showModal!=='function'){
+                    // Chrome on XP has no native dialog. Keep the same explicit
+                    // acknowledgement and a visible, independently removable backdrop.
+                    this.backdrop=doc.createElement('div');
+                    this.backdrop.className='wx-reminder-backdrop';
+                    this.backdrop.setAttribute('aria-hidden','true');
+                    doc.body.appendChild(this.backdrop);
+                    dialog.classList.add('wx-reminder-legacy');
+                    dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');
+                }
                 doc.body.appendChild(dialog);
                 doc.body.classList.add('market-reminder-open');
             }
+            try{
             const body=this.dialog.querySelector('.wx-reminder-body'),scroll=body.scrollTop;
             const expanded=new Set([...body.querySelectorAll('details[open][data-reminder-detail]')].map(item=>item.dataset.reminderDetail));
             const focused=doc.activeElement?.closest?.('[data-reminder-detail]')?.dataset.reminderDetail;
@@ -795,13 +808,27 @@ function integratedMacdPanel(tab,state){
             body.scrollTop=scroll;
             const stocks=new Set(items.map(item=>item.code)).size;
             this.dialog.querySelector('[data-market-reminder-count]').textContent=`${items.length}条提醒 · ${stocks}只股票 · 按类别汇总`;
-            if(!this.dialog.open){this.dialog.showModal();this.dialog.querySelector('[data-market-reminder-ack]').focus({preventScroll:true})}
+            if(!this.dialog.hasAttribute('open')){
+                if(typeof this.dialog.showModal==='function')this.dialog.showModal();
+                else this.dialog.setAttribute('open','');
+                this.dialog.querySelector('[data-market-reminder-ack]').focus({preventScroll:true});
+            }
+            }catch(error){
+                // A failed render must not trap the page behind an invisible
+                // modal; retain the pending events for a later retry.
+                if(this.dialog){try{if(this.dialog.open&&typeof this.dialog.close==='function')this.dialog.close()}catch(_error){}this.dialog.remove();this.dialog=null}
+                if(this.backdrop){this.backdrop.remove();this.backdrop=null}
+                doc.body.classList.remove('market-reminder-open');
+                throw error;
+            }
         }
         acknowledge(){
             const items=this.rendered.map(key=>this.pending.get(key)).filter(Boolean);
             for(const item of items){this.pending.delete(item.key);this.acknowledged.add(item.key)}
             try{this.options.acknowledge(items)}finally{
-                this.persist();this.dialog.close();this.dialog.remove();this.dialog=null;this.notifiedDialog=null;
+                this.persist();try{if(typeof this.dialog.close==='function')this.dialog.close()}catch(_error){}
+                this.dialog.remove();this.dialog=null;this.notifiedDialog=null;
+                if(this.backdrop){this.backdrop.remove();this.backdrop=null}
                 this.options.document.body.classList.remove('market-reminder-open');
                 this.previousFocus?.focus?.({preventScroll:true});
                 if(this.pending.size)this.enqueue([]);
