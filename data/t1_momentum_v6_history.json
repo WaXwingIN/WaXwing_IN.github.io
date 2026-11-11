@@ -22348,9 +22348,9 @@
       "planned_exit_date": "2026-11-11",
       "settlement": {
         "balanced": {
-          "status": "待退出结算",
+          "status": "已结算",
           "execution_date": "2026-11-10",
-          "exit_date": null,
+          "exit_date": "2026-11-11",
           "trades": [
             {
               "rank": 1,
@@ -22359,18 +22359,25 @@
               "entry_date": "2026-11-10",
               "entry_price": 5.77,
               "gap_pct": 4.72,
-              "quantity": 1000
+              "quantity": 1000,
+              "exit_date": "2026-11-11",
+              "exit_price": 6.27,
+              "exit_rule": "次日开盘止盈",
+              "gross_return_pct": 8.67,
+              "gross_pnl": 500.0,
+              "net_return_pct": 8.37,
+              "net_win": true
             }
           ],
-          "portfolio_gross_pnl": null,
-          "portfolio_gross_return_pct": null,
-          "portfolio_net_return_pct": null,
+          "portfolio_gross_pnl": 500.0,
+          "portfolio_gross_return_pct": 1.0,
+          "portfolio_net_return_pct": 0.97,
           "invested_cash": 5770.0
         },
         "profit_boost": {
-          "status": "待退出结算",
+          "status": "已结算",
           "execution_date": "2026-11-10",
-          "exit_date": null,
+          "exit_date": "2026-11-11",
           "trades": [
             {
               "rank": 1,
@@ -22379,7 +22386,14 @@
               "entry_date": "2026-11-10",
               "entry_price": 5.77,
               "gap_pct": 4.72,
-              "quantity": 800
+              "quantity": 800,
+              "exit_date": "2026-11-11",
+              "exit_price": 6.27,
+              "exit_rule": "次日开盘止盈",
+              "gross_return_pct": 8.67,
+              "gross_pnl": 400.0,
+              "net_return_pct": 8.37,
+              "net_win": true
             },
             {
               "rank": 3,
@@ -22388,12 +22402,19 @@
               "entry_date": "2026-11-10",
               "entry_price": 5.15,
               "gap_pct": -4.28,
-              "quantity": 900
+              "quantity": 900,
+              "exit_date": "2026-11-11",
+              "exit_price": 5.5,
+              "exit_rule": "次日开盘止盈",
+              "gross_return_pct": 6.8,
+              "gross_pnl": 315.0,
+              "net_return_pct": 6.5,
+              "net_win": true
             }
           ],
-          "portfolio_gross_pnl": null,
-          "portfolio_gross_return_pct": null,
-          "portfolio_net_return_pct": null,
+          "portfolio_gross_pnl": 715.0,
+          "portfolio_gross_return_pct": 1.43,
+          "portfolio_net_return_pct": 1.37,
           "invested_cash": 9251.0
         },
         "balanced_reference_audit": {
@@ -22408,7 +22429,14 @@
               "entry_date": "2026-11-10",
               "entry_price": 5.77,
               "gap_pct": 4.72,
-              "quantity": 1000
+              "quantity": 1000,
+              "exit_date": "2026-11-11",
+              "exit_price": 6.27,
+              "exit_rule": "次日开盘止盈",
+              "gross_return_pct": 8.67,
+              "gross_pnl": 500.0,
+              "net_return_pct": 8.37,
+              "net_win": true
             }
           ],
           "portfolio_gross_pnl": null,
@@ -22431,15 +22459,20 @@
           "price_basis_verified": false,
           "reason": "历史行情真实前复权来源尚未独立核验",
           "unverified_calculation": {
-            "portfolio_gross_pnl": null,
-            "portfolio_gross_return_pct": null,
-            "portfolio_net_return_pct": null,
-            "exit_date": null,
-            "status": "待退出结算"
+            "portfolio_gross_pnl": 500.0,
+            "portfolio_gross_return_pct": 1.0,
+            "portfolio_net_return_pct": 0.97,
+            "exit_date": "2026-11-11",
+            "status": "已结算"
           },
           "frozen_match": {
-            "status": "待核验",
-            "trades": []
+            "status": "已核验",
+            "trades": [
+              {
+                "code": "002578",
+                "net_win": true
+              }
+            ]
           }
         },
         "balanced_without_reserves": {
@@ -22454,7 +22487,14 @@
               "entry_date": "2026-11-10",
               "entry_price": 5.77,
               "gap_pct": 4.72,
-              "quantity": 4300
+              "quantity": 4300,
+              "exit_date": "2026-11-11",
+              "exit_price": 6.27,
+              "exit_rule": "次日开盘止盈",
+              "gross_return_pct": 8.67,
+              "gross_pnl": 2150.0,
+              "net_return_pct": 8.37,
+              "net_win": true
             }
           ],
           "portfolio_gross_pnl": null,
@@ -22483,15 +22523,20 @@
           "price_basis_verified": false,
           "reason": "历史行情真实前复权来源尚未独立核验",
           "unverified_calculation": {
-            "portfolio_gross_pnl": null,
-            "portfolio_gross_return_pct": null,
-            "portfolio_net_return_pct": null,
-            "exit_date": null,
-            "status": "待退出结算"
+            "portfolio_gross_pnl": 2150.0,
+            "portfolio_gross_return_pct": 4.3,
+            "portfolio_net_return_pct": 4.15,
+            "exit_date": "2026-11-11",
+            "status": "已结算"
           },
           "reference": {
-            "status": "待核验",
-            "trades": []
+            "status": "已结算",
+            "trades": [
+              {
+                "code": "002578",
+                "net_win": true
+              }
+            ]
           }
         },
         "balanced_with_reserves": {
@@ -22506,7 +22551,14 @@
               "entry_date": "2026-11-10",
               "entry_price": 5.77,
               "gap_pct": 4.72,
-              "quantity": 4300
+              "quantity": 4300,
+              "exit_date": "2026-11-11",
+              "exit_price": 6.27,
+              "exit_rule": "次日开盘止盈",
+              "gross_return_pct": 8.67,
+              "gross_pnl": 2150.0,
+              "net_return_pct": 8.37,
+              "net_win": true
             },
             {
               "rank": 3,
@@ -22515,7 +22567,14 @@
               "entry_date": "2026-11-10",
               "entry_price": 5.15,
               "gap_pct": -4.28,
-              "quantity": 4800
+              "quantity": 4800,
+              "exit_date": "2026-11-11",
+              "exit_price": 5.5,
+              "exit_rule": "次日开盘止盈",
+              "gross_return_pct": 6.8,
+              "gross_pnl": 1680.0,
+              "net_return_pct": 6.5,
+              "net_win": true
             }
           ],
           "portfolio_gross_pnl": null,
@@ -22550,15 +22609,20 @@
           "price_basis_verified": false,
           "reason": "历史行情真实前复权来源尚未独立核验",
           "unverified_calculation": {
-            "portfolio_gross_pnl": null,
-            "portfolio_gross_return_pct": null,
-            "portfolio_net_return_pct": null,
-            "exit_date": null,
-            "status": "待退出结算"
+            "portfolio_gross_pnl": 3830.0,
+            "portfolio_gross_return_pct": 7.66,
+            "portfolio_net_return_pct": 7.36,
+            "exit_date": "2026-11-11",
+            "status": "已结算"
           },
           "reference": {
-            "status": "待核验",
-            "trades": []
+            "status": "已结算",
+            "trades": [
+              {
+                "code": "002578",
+                "net_win": true
+              }
+            ]
           }
         },
         "open_exit_v1": {
@@ -22568,9 +22632,9 @@
           "research_only": true,
           "settlement": {
             "balanced": {
-              "status": "待退出结算",
+              "status": "已结算",
               "execution_date": "2026-11-10",
-              "exit_date": null,
+              "exit_date": "2026-11-11",
               "trades": [
                 {
                   "rank": 1,
@@ -22579,18 +22643,25 @@
                   "entry_date": "2026-11-10",
                   "entry_price": 5.77,
                   "gap_pct": 4.72,
-                  "quantity": 1000
+                  "quantity": 1000,
+                  "exit_date": "2026-11-11",
+                  "exit_price": 6.27,
+                  "exit_rule": "次日开盘退出",
+                  "gross_return_pct": 8.67,
+                  "gross_pnl": 500.0,
+                  "net_return_pct": 8.37,
+                  "net_win": true
                 }
               ],
-              "portfolio_gross_pnl": null,
-              "portfolio_gross_return_pct": null,
-              "portfolio_net_return_pct": null,
+              "portfolio_gross_pnl": 500.0,
+              "portfolio_gross_return_pct": 1.0,
+              "portfolio_net_return_pct": 0.97,
               "invested_cash": 5770.0
             },
             "profit_boost": {
-              "status": "待退出结算",
+              "status": "已结算",
               "execution_date": "2026-11-10",
-              "exit_date": null,
+              "exit_date": "2026-11-11",
               "trades": [
                 {
                   "rank": 1,
@@ -22599,7 +22670,14 @@
                   "entry_date": "2026-11-10",
                   "entry_price": 5.77,
                   "gap_pct": 4.72,
-                  "quantity": 800
+                  "quantity": 800,
+                  "exit_date": "2026-11-11",
+                  "exit_price": 6.27,
+                  "exit_rule": "次日开盘退出",
+                  "gross_return_pct": 8.67,
+                  "gross_pnl": 400.0,
+                  "net_return_pct": 8.37,
+                  "net_win": true
                 },
                 {
                   "rank": 3,
@@ -22608,12 +22686,19 @@
                   "entry_date": "2026-11-10",
                   "entry_price": 5.15,
                   "gap_pct": -4.28,
-                  "quantity": 900
+                  "quantity": 900,
+                  "exit_date": "2026-11-11",
+                  "exit_price": 5.5,
+                  "exit_rule": "次日开盘退出",
+                  "gross_return_pct": 6.8,
+                  "gross_pnl": 315.0,
+                  "net_return_pct": 6.5,
+                  "net_win": true
                 }
               ],
-              "portfolio_gross_pnl": null,
-              "portfolio_gross_return_pct": null,
-              "portfolio_net_return_pct": null,
+              "portfolio_gross_pnl": 715.0,
+              "portfolio_gross_return_pct": 1.43,
+              "portfolio_net_return_pct": 1.37,
               "invested_cash": 9251.0
             },
             "balanced_reference_audit": {
@@ -22628,7 +22713,14 @@
                   "entry_date": "2026-11-10",
                   "entry_price": 5.77,
                   "gap_pct": 4.72,
-                  "quantity": 1000
+                  "quantity": 1000,
+                  "exit_date": "2026-11-11",
+                  "exit_price": 6.27,
+                  "exit_rule": "次日开盘退出",
+                  "gross_return_pct": 8.67,
+                  "gross_pnl": 500.0,
+                  "net_return_pct": 8.37,
+                  "net_win": true
                 }
               ],
               "portfolio_gross_pnl": null,
@@ -22651,11 +22743,11 @@
               "price_basis_verified": false,
               "reason": "历史行情真实前复权来源尚未独立核验",
               "unverified_calculation": {
-                "portfolio_gross_pnl": null,
-                "portfolio_gross_return_pct": null,
-                "portfolio_net_return_pct": null,
-                "exit_date": null,
-                "status": "待退出结算"
+                "portfolio_gross_pnl": 500.0,
+                "portfolio_gross_return_pct": 1.0,
+                "portfolio_net_return_pct": 0.97,
+                "exit_date": "2026-11-11",
+                "status": "已结算"
               },
               "frozen_match": {
                 "status": "待核验",
@@ -22674,7 +22766,14 @@
                   "entry_date": "2026-11-10",
                   "entry_price": 5.77,
                   "gap_pct": 4.72,
-                  "quantity": 4300
+                  "quantity": 4300,
+                  "exit_date": "2026-11-11",
+                  "exit_price": 6.27,
+                  "exit_rule": "次日开盘退出",
+                  "gross_return_pct": 8.67,
+                  "gross_pnl": 2150.0,
+                  "net_return_pct": 8.37,
+                  "net_win": true
                 }
               ],
               "portfolio_gross_pnl": null,
@@ -22703,11 +22802,11 @@
               "price_basis_verified": false,
               "reason": "历史行情真实前复权来源尚未独立核验",
               "unverified_calculation": {
-                "portfolio_gross_pnl": null,
-                "portfolio_gross_return_pct": null,
-                "portfolio_net_return_pct": null,
-                "exit_date": null,
-                "status": "待退出结算"
+                "portfolio_gross_pnl": 2150.0,
+                "portfolio_gross_return_pct": 4.3,
+                "portfolio_net_return_pct": 4.15,
+                "exit_date": "2026-11-11",
+                "status": "已结算"
               },
               "reference": {
                 "status": "待核验",
@@ -22726,7 +22825,14 @@
                   "entry_date": "2026-11-10",
                   "entry_price": 5.77,
                   "gap_pct": 4.72,
-                  "quantity": 4300
+                  "quantity": 4300,
+                  "exit_date": "2026-11-11",
+                  "exit_price": 6.27,
+                  "exit_rule": "次日开盘退出",
+                  "gross_return_pct": 8.67,
+                  "gross_pnl": 2150.0,
+                  "net_return_pct": 8.37,
+                  "net_win": true
                 },
                 {
                   "rank": 3,
@@ -22735,7 +22841,14 @@
                   "entry_date": "2026-11-10",
                   "entry_price": 5.15,
                   "gap_pct": -4.28,
-                  "quantity": 4800
+                  "quantity": 4800,
+                  "exit_date": "2026-11-11",
+                  "exit_price": 5.5,
+                  "exit_rule": "次日开盘退出",
+                  "gross_return_pct": 6.8,
+                  "gross_pnl": 1680.0,
+                  "net_return_pct": 6.5,
+                  "net_win": true
                 }
               ],
               "portfolio_gross_pnl": null,
@@ -22770,11 +22883,11 @@
               "price_basis_verified": false,
               "reason": "历史行情真实前复权来源尚未独立核验",
               "unverified_calculation": {
-                "portfolio_gross_pnl": null,
-                "portfolio_gross_return_pct": null,
-                "portfolio_net_return_pct": null,
-                "exit_date": null,
-                "status": "待退出结算"
+                "portfolio_gross_pnl": 3830.0,
+                "portfolio_gross_return_pct": 7.66,
+                "portfolio_net_return_pct": 7.36,
+                "exit_date": "2026-11-11",
+                "status": "已结算"
               },
               "reference": {
                 "status": "待核验",
@@ -22784,7 +22897,7 @@
           }
         }
       },
-      "settlement_status": "待退出结算"
+      "settlement_status": "已结算"
     },
     {
       "model": "T+1 momentum v6",
@@ -23210,6 +23323,874 @@
       "planned_exit_date": "2026-11-12",
       "settlement": {
         "balanced": {
+          "status": "待退出结算",
+          "execution_date": "2026-11-11",
+          "exit_date": null,
+          "trades": [
+            {
+              "rank": 1,
+              "code": "000530",
+              "name": "冰山冷热",
+              "entry_date": "2026-11-11",
+              "entry_price": 11.19,
+              "gap_pct": 6.27,
+              "quantity": 500
+            }
+          ],
+          "portfolio_gross_pnl": null,
+          "portfolio_gross_return_pct": null,
+          "portfolio_net_return_pct": null,
+          "invested_cash": 5595.0
+        },
+        "profit_boost": {
+          "status": "待退出结算",
+          "execution_date": "2026-11-11",
+          "exit_date": null,
+          "trades": [
+            {
+              "rank": 1,
+              "code": "000530",
+              "name": "冰山冷热",
+              "entry_date": "2026-11-11",
+              "entry_price": 11.19,
+              "gap_pct": 6.27,
+              "quantity": 400
+            },
+            {
+              "rank": 2,
+              "code": "603381",
+              "name": "永臻股份",
+              "entry_date": "2026-11-11",
+              "entry_price": 21.68,
+              "gap_pct": -0.96,
+              "quantity": 200
+            }
+          ],
+          "portfolio_gross_pnl": null,
+          "portfolio_gross_return_pct": null,
+          "portfolio_net_return_pct": null,
+          "invested_cash": 8812.0
+        },
+        "balanced_reference_audit": {
+          "status": "待核验",
+          "execution_date": "2026-11-11",
+          "exit_date": null,
+          "trades": [
+            {
+              "rank": 1,
+              "code": "000530",
+              "name": "冰山冷热",
+              "entry_date": "2026-11-11",
+              "entry_price": 11.19,
+              "gap_pct": 6.27,
+              "quantity": 500
+            }
+          ],
+          "portfolio_gross_pnl": null,
+          "portfolio_gross_return_pct": null,
+          "portfolio_net_return_pct": null,
+          "invested_cash": 5595.0,
+          "allocation": "frozen_plan_reference_v1",
+          "candidate_count": 10,
+          "slot_budget": 6000.0,
+          "candidate_checks": [
+            {
+              "rank": 1,
+              "code": "000530",
+              "name": "冰山冷热",
+              "status": "模拟买入"
+            }
+          ],
+          "max_trades": 1,
+          "comparison_exposure": 0.12,
+          "price_basis_verified": false,
+          "reason": "历史行情真实前复权来源尚未独立核验",
+          "unverified_calculation": {
+            "portfolio_gross_pnl": null,
+            "portfolio_gross_return_pct": null,
+            "portfolio_net_return_pct": null,
+            "exit_date": null,
+            "status": "待退出结算"
+          },
+          "frozen_match": {
+            "status": "待核验",
+            "trades": []
+          }
+        },
+        "balanced_without_reserves": {
+          "status": "待核验",
+          "execution_date": "2026-11-11",
+          "exit_date": null,
+          "trades": [
+            {
+              "rank": 1,
+              "code": "000530",
+              "name": "冰山冷热",
+              "entry_date": "2026-11-11",
+              "entry_price": 11.19,
+              "gap_pct": 6.27,
+              "quantity": 2200
+            },
+            {
+              "rank": 2,
+              "code": "603381",
+              "name": "永臻股份",
+              "entry_date": "2026-11-11",
+              "entry_price": 21.68,
+              "gap_pct": -0.96,
+              "quantity": 1100
+            }
+          ],
+          "portfolio_gross_pnl": null,
+          "portfolio_gross_return_pct": null,
+          "portfolio_net_return_pct": null,
+          "invested_cash": 48466.0,
+          "allocation": "ranked_top_two_v1",
+          "candidate_count": 10,
+          "slot_budget": 25000.0,
+          "candidate_checks": [
+            {
+              "rank": 1,
+              "code": "000530",
+              "name": "冰山冷热",
+              "status": "模拟买入"
+            },
+            {
+              "rank": 2,
+              "code": "603381",
+              "name": "永臻股份",
+              "status": "模拟买入"
+            }
+          ],
+          "max_trades": 2,
+          "comparison_exposure": 1.0,
+          "price_basis_verified": false,
+          "reason": "历史行情真实前复权来源尚未独立核验",
+          "unverified_calculation": {
+            "portfolio_gross_pnl": null,
+            "portfolio_gross_return_pct": null,
+            "portfolio_net_return_pct": null,
+            "exit_date": null,
+            "status": "待退出结算"
+          },
+          "reference": {
+            "status": "待核验",
+            "trades": []
+          }
+        },
+        "balanced_with_reserves": {
+          "status": "待核验",
+          "execution_date": "2026-11-11",
+          "exit_date": null,
+          "trades": [
+            {
+              "rank": 1,
+              "code": "000530",
+              "name": "冰山冷热",
+              "entry_date": "2026-11-11",
+              "entry_price": 11.19,
+              "gap_pct": 6.27,
+              "quantity": 2200
+            },
+            {
+              "rank": 2,
+              "code": "603381",
+              "name": "永臻股份",
+              "entry_date": "2026-11-11",
+              "entry_price": 21.68,
+              "gap_pct": -0.96,
+              "quantity": 1100
+            }
+          ],
+          "portfolio_gross_pnl": null,
+          "portfolio_gross_return_pct": null,
+          "portfolio_net_return_pct": null,
+          "invested_cash": 48466.0,
+          "allocation": "ranked_replacement_v2",
+          "candidate_count": 10,
+          "slot_budget": 25000.0,
+          "candidate_checks": [
+            {
+              "rank": 1,
+              "code": "000530",
+              "name": "冰山冷热",
+              "status": "模拟买入"
+            },
+            {
+              "rank": 2,
+              "code": "603381",
+              "name": "永臻股份",
+              "status": "模拟买入"
+            }
+          ],
+          "max_trades": 2,
+          "comparison_exposure": 1.0,
+          "price_basis_verified": false,
+          "reason": "历史行情真实前复权来源尚未独立核验",
+          "unverified_calculation": {
+            "portfolio_gross_pnl": null,
+            "portfolio_gross_return_pct": null,
+            "portfolio_net_return_pct": null,
+            "exit_date": null,
+            "status": "待退出结算"
+          },
+          "reference": {
+            "status": "待核验",
+            "trades": []
+          }
+        },
+        "open_exit_v1": {
+          "rule": "next_open_v1",
+          "effective_from_exit_date": "2026-11-04",
+          "applies_to_plan": true,
+          "research_only": true,
+          "settlement": {
+            "balanced": {
+              "status": "待退出结算",
+              "execution_date": "2026-11-11",
+              "exit_date": null,
+              "trades": [
+                {
+                  "rank": 1,
+                  "code": "000530",
+                  "name": "冰山冷热",
+                  "entry_date": "2026-11-11",
+                  "entry_price": 11.19,
+                  "gap_pct": 6.27,
+                  "quantity": 500
+                }
+              ],
+              "portfolio_gross_pnl": null,
+              "portfolio_gross_return_pct": null,
+              "portfolio_net_return_pct": null,
+              "invested_cash": 5595.0
+            },
+            "profit_boost": {
+              "status": "待退出结算",
+              "execution_date": "2026-11-11",
+              "exit_date": null,
+              "trades": [
+                {
+                  "rank": 1,
+                  "code": "000530",
+                  "name": "冰山冷热",
+                  "entry_date": "2026-11-11",
+                  "entry_price": 11.19,
+                  "gap_pct": 6.27,
+                  "quantity": 400
+                },
+                {
+                  "rank": 2,
+                  "code": "603381",
+                  "name": "永臻股份",
+                  "entry_date": "2026-11-11",
+                  "entry_price": 21.68,
+                  "gap_pct": -0.96,
+                  "quantity": 200
+                }
+              ],
+              "portfolio_gross_pnl": null,
+              "portfolio_gross_return_pct": null,
+              "portfolio_net_return_pct": null,
+              "invested_cash": 8812.0
+            },
+            "balanced_reference_audit": {
+              "status": "待核验",
+              "execution_date": "2026-11-11",
+              "exit_date": null,
+              "trades": [
+                {
+                  "rank": 1,
+                  "code": "000530",
+                  "name": "冰山冷热",
+                  "entry_date": "2026-11-11",
+                  "entry_price": 11.19,
+                  "gap_pct": 6.27,
+                  "quantity": 500
+                }
+              ],
+              "portfolio_gross_pnl": null,
+              "portfolio_gross_return_pct": null,
+              "portfolio_net_return_pct": null,
+              "invested_cash": 5595.0,
+              "allocation": "frozen_plan_reference_v1",
+              "candidate_count": 10,
+              "slot_budget": 6000.0,
+              "candidate_checks": [
+                {
+                  "rank": 1,
+                  "code": "000530",
+                  "name": "冰山冷热",
+                  "status": "模拟买入"
+                }
+              ],
+              "max_trades": 1,
+              "comparison_exposure": 0.12,
+              "price_basis_verified": false,
+              "reason": "历史行情真实前复权来源尚未独立核验",
+              "unverified_calculation": {
+                "portfolio_gross_pnl": null,
+                "portfolio_gross_return_pct": null,
+                "portfolio_net_return_pct": null,
+                "exit_date": null,
+                "status": "待退出结算"
+              },
+              "frozen_match": {
+                "status": "待核验",
+                "trades": []
+              }
+            },
+            "balanced_without_reserves": {
+              "status": "待核验",
+              "execution_date": "2026-11-11",
+              "exit_date": null,
+              "trades": [
+                {
+                  "rank": 1,
+                  "code": "000530",
+                  "name": "冰山冷热",
+                  "entry_date": "2026-11-11",
+                  "entry_price": 11.19,
+                  "gap_pct": 6.27,
+                  "quantity": 2200
+                },
+                {
+                  "rank": 2,
+                  "code": "603381",
+                  "name": "永臻股份",
+                  "entry_date": "2026-11-11",
+                  "entry_price": 21.68,
+                  "gap_pct": -0.96,
+                  "quantity": 1100
+                }
+              ],
+              "portfolio_gross_pnl": null,
+              "portfolio_gross_return_pct": null,
+              "portfolio_net_return_pct": null,
+              "invested_cash": 48466.0,
+              "allocation": "ranked_top_two_v1",
+              "candidate_count": 10,
+              "slot_budget": 25000.0,
+              "candidate_checks": [
+                {
+                  "rank": 1,
+                  "code": "000530",
+                  "name": "冰山冷热",
+                  "status": "模拟买入"
+                },
+                {
+                  "rank": 2,
+                  "code": "603381",
+                  "name": "永臻股份",
+                  "status": "模拟买入"
+                }
+              ],
+              "max_trades": 2,
+              "comparison_exposure": 1.0,
+              "price_basis_verified": false,
+              "reason": "历史行情真实前复权来源尚未独立核验",
+              "unverified_calculation": {
+                "portfolio_gross_pnl": null,
+                "portfolio_gross_return_pct": null,
+                "portfolio_net_return_pct": null,
+                "exit_date": null,
+                "status": "待退出结算"
+              },
+              "reference": {
+                "status": "待核验",
+                "trades": []
+              }
+            },
+            "balanced_with_reserves": {
+              "status": "待核验",
+              "execution_date": "2026-11-11",
+              "exit_date": null,
+              "trades": [
+                {
+                  "rank": 1,
+                  "code": "000530",
+                  "name": "冰山冷热",
+                  "entry_date": "2026-11-11",
+                  "entry_price": 11.19,
+                  "gap_pct": 6.27,
+                  "quantity": 2200
+                },
+                {
+                  "rank": 2,
+                  "code": "603381",
+                  "name": "永臻股份",
+                  "entry_date": "2026-11-11",
+                  "entry_price": 21.68,
+                  "gap_pct": -0.96,
+                  "quantity": 1100
+                }
+              ],
+              "portfolio_gross_pnl": null,
+              "portfolio_gross_return_pct": null,
+              "portfolio_net_return_pct": null,
+              "invested_cash": 48466.0,
+              "allocation": "ranked_replacement_v2",
+              "candidate_count": 10,
+              "slot_budget": 25000.0,
+              "candidate_checks": [
+                {
+                  "rank": 1,
+                  "code": "000530",
+                  "name": "冰山冷热",
+                  "status": "模拟买入"
+                },
+                {
+                  "rank": 2,
+                  "code": "603381",
+                  "name": "永臻股份",
+                  "status": "模拟买入"
+                }
+              ],
+              "max_trades": 2,
+              "comparison_exposure": 1.0,
+              "price_basis_verified": false,
+              "reason": "历史行情真实前复权来源尚未独立核验",
+              "unverified_calculation": {
+                "portfolio_gross_pnl": null,
+                "portfolio_gross_return_pct": null,
+                "portfolio_net_return_pct": null,
+                "exit_date": null,
+                "status": "待退出结算"
+              },
+              "reference": {
+                "status": "待核验",
+                "trades": []
+              }
+            }
+          }
+        }
+      },
+      "settlement_status": "待退出结算"
+    },
+    {
+      "model": "T+1 momentum v6",
+      "generated_at": "2026-11-11T07:59:59.805138+00:00",
+      "signal_date": "2026-11-11",
+      "execution": "下一交易日开盘确认可买性与整手金额，T+2按规则退出",
+      "status": "research_only",
+      "deployment_ready": false,
+      "capital": 50000,
+      "universe": "主板+创业板+沪深场内ETF；排除科创板、北交所、ST/退市和少于250日样本的品种",
+      "regime": {
+        "scale": 0.5,
+        "label": "中性市",
+        "market_ret_20": -0.02166731136084328,
+        "breadth_5": 0.5493509607368854,
+        "volatility_rank_120": 0.38333333333333336
+      },
+      "profiles": {
+        "balanced": {
+          "action": "计划轻仓",
+          "top_k": 1,
+          "exposure": 0.12,
+          "reason": "中性市影子组合通过门槛",
+          "gate": {
+            "active": true,
+            "observations": 20,
+            "required_observations": 16,
+            "window": 20,
+            "win_rate": 0.65,
+            "required_win_rate": 0.5,
+            "mean_return": 0.001632468035677448,
+            "through": "2026-09-16"
+          }
+        },
+        "profit_boost": {
+          "action": "计划半仓",
+          "top_k": 2,
+          "exposure": 0.19,
+          "reason": "中性市基础仓位",
+          "gate": {
+            "active": false,
+            "observations": 40,
+            "required_observations": 16,
+            "window": 40,
+            "win_rate": 0.475,
+            "required_win_rate": 0.55,
+            "mean_return": 0.001434815942775458,
+            "through": "2026-09-16"
+          }
+        }
+      },
+      "candidates": [
+        {
+          "rank": 1,
+          "code": "600327",
+          "name": "大东方",
+          "asset_type": "股票",
+          "close": 6.53,
+          "score": 0.982,
+          "base_rank": 1.0,
+          "stable_rank": 0.82,
+          "balanced_selected_proxy": true,
+          "profit_selected_proxy": true
+        },
+        {
+          "rank": 2,
+          "code": "000530",
+          "name": "冰山冷热",
+          "asset_type": "股票",
+          "close": 11.28,
+          "score": 0.977,
+          "base_rank": 0.98,
+          "stable_rank": 0.95,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": true
+        },
+        {
+          "rank": 3,
+          "code": "601595",
+          "name": "上海电影",
+          "asset_type": "股票",
+          "close": 46.83,
+          "score": 0.963,
+          "base_rank": 0.99,
+          "stable_rank": 0.72,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 4,
+          "code": "001219",
+          "name": "青岛食品",
+          "asset_type": "股票",
+          "close": 22.61,
+          "score": 0.962,
+          "base_rank": 0.97,
+          "stable_rank": 0.89,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 5,
+          "code": "603381",
+          "name": "永臻股份",
+          "asset_type": "股票",
+          "close": 21.4,
+          "score": 0.924,
+          "base_rank": 0.94,
+          "stable_rank": 0.78,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 6,
+          "code": "301052",
+          "name": "果麦文化",
+          "asset_type": "股票",
+          "close": 48.96,
+          "score": 0.924,
+          "base_rank": 0.95,
+          "stable_rank": 0.69,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 7,
+          "code": "000678",
+          "name": "襄阳轴承",
+          "asset_type": "股票",
+          "close": 21.19,
+          "score": 0.917,
+          "base_rank": 0.91,
+          "stable_rank": 0.98,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 8,
+          "code": "601599",
+          "name": "浙文影业",
+          "asset_type": "股票",
+          "close": 5.55,
+          "score": 0.911,
+          "base_rank": 0.92,
+          "stable_rank": 0.83,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 9,
+          "code": "002164",
+          "name": "宁波东力",
+          "asset_type": "股票",
+          "close": 21.91,
+          "score": 0.908,
+          "base_rank": 0.93,
+          "stable_rank": 0.71,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        },
+        {
+          "rank": 10,
+          "code": "300949",
+          "name": "奥雅股份",
+          "asset_type": "股票",
+          "close": 50.54,
+          "score": 0.894,
+          "base_rank": 0.9,
+          "stable_rank": 0.84,
+          "balanced_selected_proxy": false,
+          "profit_selected_proxy": false
+        }
+      ],
+      "candidate_pool_size": 100,
+      "eligible_candidates": 99,
+      "stable_weight": 0.10000000149011612,
+      "stable_weight_source": "v5_score_artifact",
+      "cache_failures": 1,
+      "live_cache": {
+        "training_cache_end": "20260921",
+        "scanner_updated_codes": 5534,
+        "signal_date_coverage": 5529,
+        "gate_source": "v5_score_artifacts",
+        "backtest_source": "previous_v6_snapshot"
+      },
+      "backtest": {
+        "balanced": {
+          "2024": {
+            "cost_0.30pct": {
+              "samples": 94,
+              "days": 242,
+              "coverage": 0.3884297520661157,
+              "net_win_rate": 0.5851063829787234,
+              "win_rate_ci_low": 0.48407836075523214,
+              "win_rate_ci_high": 0.6794512626360452,
+              "avg_net_return": 0.0012862143498337405,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.11431497165063564,
+              "compound_return": 0.33890447232211596,
+              "annualized_return": 0.35514940481290025,
+              "annualized_volatility": 0.20109206105704416,
+              "sharpe": 1.61182900237,
+              "profit_factor": 1.5724848261389077,
+              "trading_days": 94
+            },
+            "cost_0.50pct": {
+              "samples": 94,
+              "days": 242,
+              "coverage": 0.3884297520661157,
+              "net_win_rate": 0.5851063829787234,
+              "win_rate_ci_low": 0.48407836075523214,
+              "win_rate_ci_high": 0.6794512626360452,
+              "avg_net_return": 0.0011241135381312255,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.11622082669244449,
+              "compound_return": 0.2875795122065967,
+              "annualized_return": 0.3010984986036902,
+              "annualized_volatility": 0.20047585834274398,
+              "sharpe": 1.4130210687252147,
+              "profit_factor": 1.4863052969060135,
+              "trading_days": 94
+            },
+            "dynamic_signal_days": 54
+          },
+          "2025": {
+            "cost_0.30pct": {
+              "samples": 115,
+              "days": 243,
+              "coverage": 0.4732510288065844,
+              "net_win_rate": 0.5652173913043478,
+              "win_rate_ci_low": 0.4739559762173702,
+              "win_rate_ci_high": 0.6522624523463649,
+              "avg_net_return": 0.0013669849914276337,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.1281958787944928,
+              "compound_return": 0.37558968655657243,
+              "annualized_return": 0.3919323549858922,
+              "annualized_volatility": 0.1655068044983222,
+              "sharpe": 2.081365892380913,
+              "profit_factor": 1.6607325734378682,
+              "trading_days": 115
+            },
+            "cost_0.50pct": {
+              "samples": 115,
+              "days": 243,
+              "coverage": 0.4732510288065844,
+              "net_win_rate": 0.5304347826086957,
+              "win_rate_ci_low": 0.43971596277968295,
+              "win_rate_ci_high": 0.6191859705500602,
+              "avg_net_return": 0.0010998568254706944,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.13558543439536241,
+              "compound_return": 0.28956978865467753,
+              "annualized_return": 0.3017734212827996,
+              "annualized_volatility": 0.1637553363994815,
+              "sharpe": 1.692548933748779,
+              "profit_factor": 1.506081387230761,
+              "trading_days": 115
+            },
+            "dynamic_signal_days": 40
+          },
+          "2026": {
+            "cost_0.30pct": {
+              "samples": 53,
+              "days": 172,
+              "coverage": 0.3081395348837209,
+              "net_win_rate": 0.5849056603773585,
+              "win_rate_ci_low": 0.45094182384453757,
+              "win_rate_ci_high": 0.7073929169087134,
+              "avg_net_return": 0.000790617199781145,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.06142444198682362,
+              "compound_return": 0.13961826701735025,
+              "annualized_return": 0.21104177324098528,
+              "annualized_volatility": 0.12503175089477087,
+              "sharpe": 1.5934795195544296,
+              "profit_factor": 1.6305164811463704,
+              "trading_days": 53
+            },
+            "cost_0.50pct": {
+              "samples": 53,
+              "days": 172,
+              "coverage": 0.3081395348837209,
+              "net_win_rate": 0.5660377358490566,
+              "win_rate_ci_low": 0.4326511497976876,
+              "win_rate_ci_high": 0.6904980930103964,
+              "avg_net_return": 0.0007435766572936785,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.06045589587070899,
+              "compound_return": 0.13042017536063422,
+              "annualized_return": 0.19674781785070405,
+              "annualized_volatility": 0.1251973041740121,
+              "sharpe": 1.4966881186001033,
+              "profit_factor": 1.5677162927217525,
+              "trading_days": 53
+            },
+            "dynamic_signal_days": 27
+          }
+        },
+        "profit_boost": {
+          "2024": {
+            "cost_0.30pct": {
+              "samples": 143,
+              "days": 242,
+              "coverage": 0.5909090909090909,
+              "net_win_rate": 0.5664335664335665,
+              "win_rate_ci_low": 0.4845211293810815,
+              "win_rate_ci_high": 0.6448699968392811,
+              "avg_net_return": 0.0016538424798372116,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.11594476604281456,
+              "compound_return": 0.45514388139750483,
+              "annualized_return": 0.477874609469239,
+              "annualized_volatility": 0.2285227653905238,
+              "sharpe": 1.823749612896377,
+              "profit_factor": 1.5181017812324749,
+              "trading_days": 143
+            },
+            "cost_0.50pct": {
+              "samples": 143,
+              "days": 242,
+              "coverage": 0.5909090909090909,
+              "net_win_rate": 0.5594405594405595,
+              "win_rate_ci_low": 0.47757133478487557,
+              "win_rate_ci_high": 0.6381996728859753,
+              "avg_net_return": 0.0013765771382619157,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.12156038327729168,
+              "compound_return": 0.3609306584875289,
+              "annualized_return": 0.3783719002679735,
+              "annualized_volatility": 0.2280977791645403,
+              "sharpe": 1.5208277788262257,
+              "profit_factor": 1.4144491275142759,
+              "trading_days": 143
+            },
+            "dynamic_signal_days": 100
+          },
+          "2025": {
+            "cost_0.30pct": {
+              "samples": 179,
+              "days": 243,
+              "coverage": 0.7366255144032922,
+              "net_win_rate": 0.547486033519553,
+              "win_rate_ci_low": 0.47433396250553805,
+              "win_rate_ci_high": 0.6186426905099682,
+              "avg_net_return": 0.0015692215368780212,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.13924978154000767,
+              "compound_return": 0.438648442160392,
+              "annualized_return": 0.45815890049801444,
+              "annualized_volatility": 0.19045787457050198,
+              "sharpe": 2.0762797452456057,
+              "profit_factor": 1.5202235220908433,
+              "trading_days": 179
+            },
+            "cost_0.50pct": {
+              "samples": 179,
+              "days": 243,
+              "coverage": 0.7366255144032922,
+              "net_win_rate": 0.5307262569832403,
+              "win_rate_ci_low": 0.4577397208888863,
+              "win_rate_ci_high": 0.6024216428270297,
+              "avg_net_return": 0.0011826555020417327,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.14744815469981076,
+              "compound_return": 0.31016205410957,
+              "annualized_return": 0.323336794436031,
+              "annualized_volatility": 0.18893240966181132,
+              "sharpe": 1.5774381274657343,
+              "profit_factor": 1.3727233314871026,
+              "trading_days": 179
+            },
+            "dynamic_signal_days": 94
+          },
+          "2026": {
+            "cost_0.30pct": {
+              "samples": 111,
+              "days": 172,
+              "coverage": 0.6453488372093024,
+              "net_win_rate": 0.5045045045045045,
+              "win_rate_ci_low": 0.4129089369409994,
+              "win_rate_ci_high": 0.5957987090688087,
+              "avg_net_return": 0.0008630444367448691,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.11399692647207649,
+              "compound_return": 0.15073462571639906,
+              "annualized_return": 0.2283884680026118,
+              "annualized_volatility": 0.15395491005957948,
+              "sharpe": 1.4126681505353806,
+              "profit_factor": 1.3464847812268967,
+              "trading_days": 111
+            },
+            "cost_0.50pct": {
+              "samples": 111,
+              "days": 172,
+              "coverage": 0.6453488372093024,
+              "net_win_rate": 0.4864864864864865,
+              "win_rate_ci_low": 0.39552234608017617,
+              "win_rate_ci_high": 0.578354715890399,
+              "avg_net_return": 0.0006773507900720159,
+              "median_net_return": 0.0,
+              "max_drawdown": -0.12096413262028505,
+              "compound_return": 0.11460054434017208,
+              "annualized_return": 0.17229032687503643,
+              "annualized_volatility": 0.15378243194718647,
+              "sharpe": 1.109960331208502,
+              "profit_factor": 1.2590319166667208,
+              "trading_days": 111
+            },
+            "dynamic_signal_days": 23
+          }
+        }
+      },
+      "warning": "候选按收盘价估算整手可负担性；真实名单必须在下一交易日开盘后按实际开盘价、涨停可买性和流动性再次确认。ETF使用共享日线缓存推导成交量，缺少基金份额口径时换手率按中性值处理；股票回测指标不能直接代表ETF表现。2026参与过方案选择，本信号仅供前瞻记录，不代表收益保证。",
+      "research_reconstruction": false,
+      "market_cutoff": "2026-11-11 15:00:00",
+      "training_through": "2026-09-17",
+      "training_cache_source": "training.parquet",
+      "signal_price_basis": "shared_qfq_daily",
+      "history_origin": "收盘实际生成",
+      "producer": "tencent-cloud-v6-v1",
+      "execution_date": "2026-11-12",
+      "planned_exit_date": "2026-11-13",
+      "settlement": {
+        "balanced": {
           "status": "待开盘落实",
           "execution_date": null,
           "exit_date": null,
@@ -23244,8 +24225,8 @@
           "candidate_checks": [
             {
               "rank": 1,
-              "code": "000530",
-              "name": "冰山冷热",
+              "code": "600327",
+              "name": "大东方",
               "status": "开盘行情待核验"
             }
           ],
@@ -23273,8 +24254,8 @@
           "candidate_checks": [
             {
               "rank": 1,
-              "code": "000530",
-              "name": "冰山冷热",
+              "code": "600327",
+              "name": "大东方",
               "status": "开盘行情待核验"
             }
           ],
@@ -23302,8 +24283,8 @@
           "candidate_checks": [
             {
               "rank": 1,
-              "code": "000530",
-              "name": "冰山冷热",
+              "code": "600327",
+              "name": "大东方",
               "status": "开盘行情待核验"
             }
           ],
@@ -23357,8 +24338,8 @@
               "candidate_checks": [
                 {
                   "rank": 1,
-                  "code": "000530",
-                  "name": "冰山冷热",
+                  "code": "600327",
+                  "name": "大东方",
                   "status": "开盘行情待核验"
                 }
               ],
@@ -23386,8 +24367,8 @@
               "candidate_checks": [
                 {
                   "rank": 1,
-                  "code": "000530",
-                  "name": "冰山冷热",
+                  "code": "600327",
+                  "name": "大东方",
                   "status": "开盘行情待核验"
                 }
               ],
@@ -23415,8 +24396,8 @@
               "candidate_checks": [
                 {
                   "rank": 1,
-                  "code": "000530",
-                  "name": "冰山冷热",
+                  "code": "600327",
+                  "name": "大东方",
                   "status": "开盘行情待核验"
                 }
               ],
@@ -23435,7 +24416,7 @@
       "settlement_status": "待开盘落实"
     }
   ],
-  "updated_at": "2026-11-10T11:42:51.256982+00:00",
+  "updated_at": "2026-11-11T09:28:31.640056+00:00",
   "window_recovery": {
     "generated_at": "2026-11-02T10:31:08.267236+00:00",
     "skipped": [
