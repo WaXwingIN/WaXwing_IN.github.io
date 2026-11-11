@@ -71,28 +71,30 @@ body.waxwing-ui .callout{margin:24px 0;padding:14px 18px;color:var(--wx-teal);fo
 body.waxwing-ui .callout.error{color:#a33e38}
 body.waxwing-ui small.return-date-note{display:block;white-space:normal}
 body.waxwing-ui .return-date-note>span,body.waxwing-ui .return-date-note>time{display:inline-block;white-space:nowrap;overflow-wrap:normal;word-break:normal}
-dialog[data-market-reminders]{box-sizing:border-box;width:min(900px,calc(100vw - 28px));max-width:calc(100vw - 28px);max-height:80vh;max-height:80dvh;padding:0;border:1px solid var(--wx-line);border-top:4px solid var(--wx-teal);border-radius:12px;background:#fff;color:var(--wx-ink);font:14px/1.7 var(--wx-font);overflow:hidden}
-dialog[data-market-reminders][open]{display:flex;flex-direction:column}
+[data-market-reminders]{box-sizing:border-box;width:min(900px,calc(100vw - 28px));max-width:calc(100vw - 28px);max-height:80vh;max-height:80dvh;padding:0;border:1px solid var(--wx-line);border-top:4px solid var(--wx-teal);border-radius:12px;background:#fff;color:var(--wx-ink);font:14px/1.7 var(--wx-font);overflow:hidden}
+[data-market-reminders][open]{display:flex;flex-direction:column}
 body.market-reminder-open{overflow:hidden}
 dialog[data-market-reminders]::backdrop{background:rgba(15,23,42,.65)}
-.wx-reminder-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;background:rgba(15,23,42,.65)}
-dialog[data-market-reminders].wx-reminder-legacy[open]{position:fixed;z-index:2147483001;top:50%;left:50%;right:auto;bottom:auto;margin:0;width:90%;max-width:900px;max-height:80vh;transform:translate(-50%,-50%);display:flex;flex-direction:column;background:#fff;color:#203247;border:1px solid #dbe3ed;border-top:4px solid #17645e}
-dialog[data-market-reminders] .wx-reminder-head{display:flex;flex:none;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--wx-line)}
-dialog[data-market-reminders] h2{margin:0;color:var(--wx-ink);font-size:20px}
-dialog[data-market-reminders] [data-market-reminder-count]{display:block;color:var(--wx-muted);font-size:12px}
-dialog[data-market-reminders] .wx-reminder-close{flex:none;width:40px;height:40px;border:1px solid var(--wx-line);border-radius:7px;background:#fff;color:var(--wx-ink);font:24px/1 var(--wx-font);cursor:pointer}
-dialog[data-market-reminders] .wx-reminder-body{min-height:0;padding:12px 18px;overflow:auto;overscroll-behavior:contain}
-dialog[data-market-reminders] .wx-reminder-foot{flex:none;padding:10px 18px;border-top:1px solid var(--wx-line)}
-dialog[data-market-reminders] [data-market-reminder-ack]{width:100%;min-height:42px;border:0;border-radius:7px;background:var(--wx-blue);color:#fff;font:500 14px/1.7 var(--wx-font);cursor:pointer}
+.wx-reminder-backdrop{position:fixed;pointer-events:none;top:0;right:0;bottom:0;left:0;z-index:2147483000;background:rgba(15,23,42,.65)}
+[data-market-reminders].wx-reminder-legacy[open]{position:fixed;z-index:2147483001;top:10%;left:0;right:0;margin:0 auto;width:90%;max-width:900px;max-height:80vh;display:flex;flex-direction:column;background:#fff;color:#203247;border:1px solid #dbe3ed;border-top:4px solid #17645e}
+[data-market-reminders] .wx-reminder-head{display:flex;flex:none;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--wx-line)}
+[data-market-reminders] h2{margin:0;color:var(--wx-ink);font-size:20px}
+[data-market-reminders] [data-market-reminder-count]{display:block;color:var(--wx-muted);font-size:12px}
+[data-market-reminders] .wx-reminder-close{flex:none;width:40px;height:40px;border:1px solid var(--wx-line);border-radius:7px;background:#fff;color:var(--wx-ink);font:24px/1 var(--wx-font);cursor:pointer}
+[data-market-reminders] .wx-reminder-body{min-height:0;padding:12px 18px;overflow:auto;overscroll-behavior:contain}
+[data-market-reminders] .wx-reminder-foot{flex:none;padding:10px 18px;border-top:1px solid var(--wx-line)}
+[data-market-reminders] [data-market-reminder-ack]{width:100%;min-height:42px;border:0;border-radius:7px;background:var(--wx-blue);color:#fff;font:500 14px/1.7 var(--wx-font);cursor:pointer}
+[data-market-reminders].wx-reminder-legacy .wx-reminder-close{border:1px solid #dbe3ed;color:#203247}
+[data-market-reminders].wx-reminder-legacy [data-market-reminder-ack]{background:#2563eb}
 .market-reminder-group+.market-reminder-group{margin-top:16px}
-dialog[data-market-reminders] .market-reminder-group h3{margin:0 0 8px;color:var(--wx-teal);font-size:15px;font-weight:600}
+[data-market-reminders] .market-reminder-group h3{margin:0 0 8px;color:var(--wx-teal);font-size:15px;font-weight:600}
 .market-reminder-group h3 small{margin-left:6px;color:var(--wx-muted);font-size:12px;font-weight:400}
 .market-reminder-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .market-reminder-item{min-width:0;padding:10px 12px;border:1px solid var(--wx-line);border-radius:8px;background:#f8fafc;overflow-wrap:anywhere}
 .market-reminder-item>b{font-weight:600}.market-reminder-item>small{display:block;margin-top:3px;color:var(--wx-muted);font-size:12px}
 .market-reminder-item>details{margin-top:7px}.market-reminder-item>details>summary{color:var(--wx-blue);cursor:pointer}
 .market-reminder-item>details>.d2-proximity-item{margin-top:8px}.market-reminder-item .d2-bottom-facts>div{grid-template-columns:100px minmax(0,1fr)}
-@media(max-width:700px){dialog[data-market-reminders]{max-height:72vh;max-height:72dvh}.market-reminder-items{grid-template-columns:minmax(0,1fr)}dialog[data-market-reminders] .wx-reminder-head,dialog[data-market-reminders] .wx-reminder-body{padding:10px 12px}dialog[data-market-reminders] .wx-reminder-foot{padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom))}}
+@media(max-width:700px){[data-market-reminders]{max-height:72vh;max-height:72dvh}.market-reminder-items{grid-template-columns:minmax(0,1fr)}[data-market-reminders] .wx-reminder-head,[data-market-reminders] .wx-reminder-body{padding:10px 12px}[data-market-reminders] .wx-reminder-foot{padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom))}}
 @media(max-width:700px){
  :root{--wx-page-padding:14px;--wx-title-size:25px}
  body.waxwing-ui main{padding-top:20px!important}
@@ -776,15 +778,17 @@ function integratedMacdPanel(tab,state){
             const doc=this.options.document;
             if(!this.dialog){
                 this.previousFocus=doc.activeElement;
-                const dialog=doc.createElement('dialog');this.dialog=dialog;
+                const nativeDialog=this.options.legacy?null:doc.createElement('dialog');
+                const legacy=typeof nativeDialog?.showModal!=='function';
+                const dialog=legacy?doc.createElement('div'):nativeDialog;this.dialog=dialog;
                 dialog.setAttribute('data-market-reminders','');dialog.setAttribute('aria-labelledby','marketReminderTitle');
                 dialog.innerHTML='<header class="wx-reminder-head"><div><h2 id="marketReminderTitle">市场提醒</h2><small data-market-reminder-count aria-live="polite"></small></div><button type="button" class="wx-reminder-close" data-market-reminder-close aria-label="全部已知晓并关闭提醒">×</button></header><div class="wx-reminder-body"></div><footer class="wx-reminder-foot"><button type="button" data-market-reminder-ack>全部已知晓，关闭提醒</button></footer>';
                 dialog.addEventListener('cancel',event=>event.preventDefault());
                 dialog.querySelector('[data-market-reminder-close]').onclick=()=>this.acknowledge();
                 dialog.querySelector('[data-market-reminder-ack]').onclick=()=>this.acknowledge();
-                if(typeof dialog.showModal!=='function'){
-                    // Chrome on XP has no native dialog. Keep the same explicit
-                    // acknowledgement and a visible, independently removable backdrop.
+                if(legacy){
+                    // Older Chromium may expose showModal while drawing only
+                    // its native backdrop. Keep the confirmation in the page.
                     this.backdrop=doc.createElement('div');
                     this.backdrop.className='wx-reminder-backdrop';
                     this.backdrop.setAttribute('aria-hidden','true');
@@ -1095,7 +1099,8 @@ async function fetchStaticObject(urls,path,expectedHash=null){
                     }
                     // Parse before selecting a winner; headers alone do not
                     // establish that a stalled response body has completed.
-                    JSON.parse(new TextDecoder().decode(bytes));
+                    if(typeof TextDecoder==='function')JSON.parse(new TextDecoder().decode(bytes));
+                    else await response.clone().json();
                     if(!settled){winner=index;settled=true;resolve(response)}
                 }catch(error){lastError=error;if(!settled)backups()}
                 finally{clearTimeout(timer);finished++;if(!settled&&finished===urls.length){settled=true;reject(lastError)}}
@@ -1775,10 +1780,6 @@ async function loadDailyData(id,{checkVersion=true}={}){
                 await loadDailyConsolidationDate(view.dates.includes(requested)?requested:view.dates[0]);
             }
         }
-        if(id==='holding_pool'){
-            const {payload}=await fetchLiveJson('next_day_buy_plan.json');
-            dailyExtra.nextDayBuyPlan=payload;
-        }
         if(id==='d2_alert'){
             updatePageMeta();
             d2DataInitialized=true;
@@ -2389,6 +2390,7 @@ function marketReminderCards(items){
 }
 function marketReminderCenter(){
     if(!marketReminders)marketReminders=new window.WaxwingMarketReminderCenter({document,storage:localStorage,render:marketReminderCards,
+        legacy:document.documentElement.hasAttribute('data-waxwing-compat'),
         url:()=>location.href.split('#')[0]+'#d2-alert',deliver:dispatchD2SystemNotification,
         acknowledge:items=>{
             const d2=items.filter(item=>item.kind==='d2').map(item=>item.eventKey),bottom=items.filter(item=>item.kind!=='d2').map(item=>item.event.event_id);
@@ -3886,7 +3888,7 @@ function enhanceStockCodeCopy(root=document){
         let cursor=0,match,found=false;
         while((match=pattern.exec(text))){
             const start=match.index+match[1].length,code=match[2];
-            fragment.append(document.createTextNode(text.slice(cursor,start)));
+            fragment.appendChild(document.createTextNode(text.slice(cursor,start)));
             const insideControl=Boolean(node.parentElement?.closest('button,a,summary,label'));
             const control=document.createElement(insideControl?'span':'button');
             if(!insideControl)control.type='button';
@@ -3896,10 +3898,13 @@ function enhanceStockCodeCopy(root=document){
             control.title='点击复制股票编号';
             control.setAttribute('aria-label','复制股票编号 '+code);
             control.textContent=code;
-            fragment.append(control);
+            fragment.appendChild(control);
             cursor=start+code.length;found=true;
         }
-        if(found){fragment.append(document.createTextNode(text.slice(cursor)));node.replaceWith(fragment)}
+        if(found&&node.parentNode){
+            fragment.appendChild(document.createTextNode(text.slice(cursor)));
+            node.parentNode.replaceChild(fragment,node);
+        }
     });
 }
 function handleStockCodeCopy(event){
@@ -4110,12 +4115,16 @@ function installConditionDialogs(root){
         headline.textContent=[final?.cells?.[0]?.textContent,final?.cells?.[1]?.textContent].filter(Boolean).join(' · ');
         const detail=document.createElement('details');detail.className='m30-condition-detail';
         const summary=document.createElement('summary');summary.textContent=block.classList.contains('d2-sell-conditions')?'查看卖出条件':'查看买入条件';
-        detail.append(summary,block.cloneNode(true));compact.append(headline,detail);block.replaceWith(compact);
+        detail.appendChild(summary);
+        detail.appendChild(block.cloneNode(true));
+        compact.appendChild(headline);
+        compact.appendChild(detail);
+        block.parentNode.replaceChild(compact,block);
     }
     for(const detail of root.querySelectorAll('details.m30-condition-detail')){
         if(detail.closest('.d2-proximity-item,.d2-history-minute-card,.integrated-evidence-dialog'))continue;
-        const summary=detail.querySelector(':scope>summary');
-        if(!summary)continue;
+        const summary=detail.firstElementChild;
+        if(summary?.tagName!=='SUMMARY')continue;
         const selling=summary.textContent.includes('卖出');
         const content=[...detail.children].filter(child=>child!==summary).map(child=>child.outerHTML).join('');
         const row=detail.closest('tr'),card=detail.closest('.d2-proximity-item,.d2-history-minute-card');
@@ -4143,18 +4152,18 @@ function installConditionDialogs(root){
             });
             root.append(modal);modal.querySelector('[data-condition-close]').focus();
         };
-        detail.replaceWith(button);
+        detail.parentNode.replaceChild(button,detail);
     }
     for(const card of root.querySelectorAll('.d2-proximity-item,.d2-history-minute-card')){
         const selling=card.querySelector('[data-condition-open="sell"]')?.closest('.reminder-condition-compact');
         const buying=[...card.children].find(child=>child.classList.contains('reminder-condition-compact')&&child.querySelector('[data-condition-open="buy"]'));
-        if(selling&&buying)buying.insertAdjacentElement('afterend',selling);
+        if(selling&&buying)buying.parentNode.insertBefore(selling,buying.nextSibling);
     }
 }
 style.textContent+=`
 .condition-dialog-open{display:block;margin-top:8px;padding:0;border:0;background:transparent;color:#2563eb;font:inherit;font-size:13px;font-weight:600;line-height:1.5;text-align:left;cursor:pointer}
-.condition-dialog-overlay{position:fixed;inset:0;z-index:15000;background:rgba(15,23,42,.48);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
-.condition-dialog{box-sizing:border-box;width:min(860px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:12px;padding:22px;text-align:left;box-shadow:0 18px 60px rgba(15,23,42,.2)}
+.condition-dialog-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:15000;background:rgba(15,23,42,.48);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
+.condition-dialog{box-sizing:border-box;width:100%;max-width:860px;max-height:90vh;overflow:auto;background:#fff;border-radius:12px;padding:22px;text-align:left;box-shadow:0 18px 60px rgba(15,23,42,.2)}
 .condition-dialog header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
 .condition-dialog h3{margin:0;color:#172033;font-size:18px;line-height:1.5}
 .condition-dialog [data-condition-close]{flex:none;border:1px solid #dbe3ed;border-radius:50%;width:32px;height:32px;background:#fff;font-size:22px;color:#475569;cursor:pointer}
